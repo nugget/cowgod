@@ -101,7 +101,7 @@ function lag_say (text) {
 }
 
 function id_to_name (user_id) {
-	if (user_id == USERID) {
+	if (user_id == settings.userid) {
 		return 'The Bot';
 	}
 	for (var k in users) {
@@ -139,7 +139,7 @@ function do_command (data) {
 		case 'jump':
             logger('= '+id_to_name(data.senderid)+' tried j command '+command+'('+args+')');
 			if (args == 'down') {
-				bot.remDj(USERID);
+				bot.remDj(settings.userid);
 			} else {
 				bot.addDj();
 			}
