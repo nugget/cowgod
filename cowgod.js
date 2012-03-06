@@ -197,6 +197,7 @@ bot.on('snagged', function (data) {
 	logger('* '+id_to_name(data.userid)+' snagged this song');
 	if (global['cursong'] != 'none') {
 		if (global['myvote'] != 'down' ) {
+			logger('- I will add this song to my queue');
 			bot.playlistAdd(global['cursong']);
 		}
 	}
