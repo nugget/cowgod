@@ -186,7 +186,7 @@ function do_command (data) {
 
 console.log('connecting as '+settings.userid);
 var bot = new Bot(settings.token, settings.userid, settings.roomid);
-bot.debug = true;
+bot.debug = settings.debug;
 bot.modifyLaptop(config['laptop']);
 
 bot.on('registered', function (data) {

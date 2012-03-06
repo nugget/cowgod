@@ -4,4 +4,6 @@ settings.token  = 'auth+live+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx';
 settings.userid = 'xxxxxxxxxxxxxxxxxxxxxxxx';
 settings.roomid = 'xxxxxxxxxxxxxxxxxxxxxxxx';
 
+settings.debug = false;
+
 module.exports = settings;
