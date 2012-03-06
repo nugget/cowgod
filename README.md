@@ -15,6 +15,6 @@ Getting Started
 Useful Links
 ------------
 
-* [https://github.com/alaingilbert/Turntable-API](Turntable-API) : github project
-* [http://alaingilbert.github.com/Turntable-API/bookmarklet.html](Auth Capture Bookmarklet) : how to determine your auth token, user id, and room id.
+* (Turntable-API)[https://github.com/alaingilbert/Turntable-API] : github project
+* (Auth Capture Bookmarklet)[http://alaingilbert.github.com/Turntable-API/bookmarklet.html] : how to determine your auth token, user id, and room id.
 
