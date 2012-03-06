@@ -1,0 +1,7 @@
+var settings = {};
+
+settings.token  = 'auth+live+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx';
+settings.userid = 'xxxxxxxxxxxxxxxxxxxxxxxx';
+settings.roomid = 'xxxxxxxxxxxxxxxxxxxxxxxx';
+
+module.exports = settings;
