@@ -7,5 +7,5 @@ Getting Started
 ---------------
 
 * copy settings.js.default to settings.js and edit to taste
-* run "npm install api"
+* run "npm install ttapi"
 * run "node cowgod.js"
