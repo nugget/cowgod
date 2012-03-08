@@ -169,6 +169,11 @@ function do_command (data) {
 			say_config(command,data.senderid);
 			logger('= '+id_to_name(data.senderid)+' set '+command+' to '+config[command]);
 			break;
+		case 'snag':
+			logger('- '+id_to_name(data.senderid)+' wants me to add this song to my queue');
+			bot.playlistAdd(global['cursong']);
+			bot.snag();
+			break;
 		case 'debug':
 			if (args != 'on') {
 				logger('= '+id_to_name(data.senderid)+' set debug off');
@@ -197,7 +202,7 @@ bot.on('snagged', function (data) {
 	logger('* '+id_to_name(data.userid)+' snagged this song');
 	if (global['cursong'] != 'none') {
 		if (global['myvote'] != 'down' ) {
-			logger('- I will add this song to my queue');
+			logger('- Adding this song to my queue');
 			bot.playlistAdd(global['cursong']);
 		}
 	}
