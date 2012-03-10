@@ -1,4 +1,5 @@
 var fs = require('fs');
+var util = require('util');
 
 var Bot  = require('ttapi');
 var settings = require('./settings.js');
@@ -131,6 +132,10 @@ function id_to_name (user_id) {
 			}
 		}
 	}
+	bot.getProfile(userid, function(userdata) {
+		return userdata.name;
+	});
+
 	return user_id;
 }
 
@@ -157,7 +162,7 @@ function do_command (data) {
 
 	switch(command) {
 		case 'jump':
-            logger('= '+id_to_name(data.senderid)+' tried j command '+command+'('+args+')');
+            logger('= '+id_to_name(data.senderid)+' tried jump command '+command+'('+args+')');
 			if (args == 'down') {
 				bot.remDj(settings.userid);
 			} else {
@@ -192,6 +197,10 @@ function do_command (data) {
 		case 'snag':
 			logger('- '+id_to_name(data.senderid)+' wants me to add this song to my queue');
 			add_current_song_to_queue(true);
+			break;
+		case 'comehere':
+            logger('= '+id_to_name(data.senderid)+' beckoned me');
+			follow_user(data.senderid);
 			break;
 		case 'debug':
 			if (args != 'on') {
@@ -240,6 +249,22 @@ function add_current_song_to_queue(visible) {
 	});
 }
 
+function follow_user(userid) {
+	bot.stalk(userid, true, function(userdata) {
+		util.log(util.inspect(userdata));
+		var target_id = userdata.roomId;
+
+		if (target_id != global['roomid']) {
+			logger('* Following '+id_to_name(userid)+' to room_id '+target_id);
+			bot.roomDeregister( function(data) {
+				bot.roomRegister(target_id);
+			});
+		} else {
+			logger('* I am already in that room');
+		}
+	});
+}
+
 function clear_entire_queue() {
 	for (i=0; i<= 500; i++) {
 		bot.playlistRemove('default',i,function(resp) {
@@ -262,7 +287,10 @@ var bot = new Bot(settings.token, settings.userid, settings.roomid);
 bot.debug = settings.debug;
 
 bot.on('roomChanged', function (data) { 
-	logger('! Room changed');
+	global['roomid'] = data.room.roomid;
+	logger('! Room changed to '+data.room.name+' ('+data.room.roomid+')');
+	global['cursong'] = data.room.metadata.current_song._id;
+	logger('! Now Playing '+data.room.metadata.current_song.metadata.song);
 	bot.modifyLaptop(config['laptop']);
 	// clear_entire_queue();
 	bot.playlistAll(function(data) { 
