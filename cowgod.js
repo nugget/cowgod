@@ -61,6 +61,26 @@ function log_tsv(buf) {
 	}
 }
 
+function dump_queue() {
+	bot.playlistAll(function(data) { 
+		global['queuelen'] = data.list.length;
+		logger('- I have '+global['queuelen']+' songs in my queue.');
+	});
+	return;
+
+	bot.playlistAll( function(data) {
+		var qf = fs.createWriteStream('log/queue.dat', {'flags': 'w'});
+		var d=new Date();
+		qf.write('['+d+']\n\n');
+		if (data.success == false) {
+			qf.write('Failed: '+data.err);
+		} else {
+			qf.write(data);
+		}
+	});
+	qf.end();
+}
+
 function is_admin(userid) {
 	return (admins.indexOf(userid) != -1);
 }
@@ -171,8 +191,7 @@ function do_command (data) {
 			break;
 		case 'snag':
 			logger('- '+id_to_name(data.senderid)+' wants me to add this song to my queue');
-			bot.playlistAdd(global['cursong']);
-			bot.snag();
+			add_current_song_to_queue(true);
 			break;
 		case 'debug':
 			if (args != 'on') {
@@ -189,28 +208,90 @@ function do_command (data) {
 	}
 }
 
+function add_current_song_to_queue(visible) {
+	if (global['cursong'] == 'none') {
+		logger('! I do not know what song is playing');
+		return;
+	}
+
+	bot.playlistAll(function(data) { 
+		global['queuelen'] = data.list.length;
+		global['addok'] = 1;
+
+		data.list.forEach(function(song) {
+			// logger('- comparo '+song._id+' and '+global['cursong']);
+			if (song._id == global['cursong']) {
+				logger('! '+song.metadata.song+' by '+song.metadata.artist+' is already in my queue -- skipping');
+				global['addok'] = 0;
+				return;
+			}
+		});
+		// logger('post-scan global ok is '+global['addok']);
+
+		if (global['addok'] == 1) {
+			bot.playlistAdd('default',global['cursong'],global['queuelen'],function(resp) {
+				logger('* Song '+global['cursong']+' added to index '+global['queuelen']);
+				if (visible == true) {
+					logger('- making hearts');
+					bot.snag();
+				}
+			});
+		}
+	});
+}
+
+function clear_entire_queue() {
+	for (i=0; i<= 500; i++) {
+		bot.playlistRemove('default',i,function(resp) {
+			// > ~m~77~m~{"msgid": 6, "success": true, "song": {"fileid": "4e1e27ef99968e3cc5000428"}}
+			if (resp.success == true) {
+			    if (typeof resp.song.fileid === 'undefined') {
+					logger('! Removed song index '+i+' (success='+resp.success+')');
+				} else {
+					logger('! Removed song index '+i+' (success='+resp.success+', song='+resp.song.fileid+')');
+				}
+			} else {
+				// logger('Removed song index '+i+' (success='+resp.success+')');
+			}
+		});
+	}
+}
+
 console.log('connecting as '+settings.userid);
 var bot = new Bot(settings.token, settings.userid, settings.roomid);
 bot.debug = settings.debug;
-bot.modifyLaptop(config['laptop']);
+
+bot.on('roomChanged', function (data) { 
+	logger('! Room changed');
+	bot.modifyLaptop(config['laptop']);
+	// clear_entire_queue();
+	bot.playlistAll(function(data) { 
+		global['queuelen'] = data.list.length;
+		logger('- I have '+global['queuelen']+' songs in my queue.');
+	});
+});
 
 bot.on('registered', function (data) {
 	logger('* '+data.user[0].name+' joined the room on a '+data.user[0].laptop+' ('+data.user[0].points+' points) uid '+data.user[0].userid);
 });
 
 bot.on('snagged', function (data) {
+	if (data.userid == settings.userid) {
+		// logger('- ignoring self-snag');
+		// this is me!  ignore it
+		return;
+	}
 	logger('* '+id_to_name(data.userid)+' snagged this song');
 	if (global['cursong'] != 'none') {
 		if (global['myvote'] != 'down' ) {
-			logger('- Adding this song to my queue');
-			bot.playlistAdd(global['cursong']);
+			add_current_song_to_queue(false);
 		}
 	}
 });
 
 bot.on('deregistered', function (data) {
 	logger('* '+data.user[0].name+' left the room');
-	return
+	return;
 
 	if (is_admin(data.user[0].userid)) {
 		lag_say('Oh no!');
@@ -234,7 +315,7 @@ bot.on('newsong', function (data) {
 
 bot.on('update_votes', function (data) {
 	if (config['follow'] == 'off') {
-		return
+		return;
 	}
 
 	user = data.room.metadata.votelog[0][0];
@@ -267,7 +348,7 @@ bot.on('update_votes', function (data) {
 
 bot.on('add_dj', function (data) {
 	logger('* New DJ '+data.user[0].name);
-	return
+	return;
 
 	if (data.user[0].userid == users['Bagel']) {
 		say('Bagel Time!');
