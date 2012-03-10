@@ -132,7 +132,7 @@ function id_to_name (user_id) {
 			}
 		}
 	}
-	bot.getProfile(userid, function(userdata) {
+	bot.getProfile(user_id, function(userdata) {
 		return userdata.name;
 	});
 
@@ -289,8 +289,16 @@ bot.debug = settings.debug;
 bot.on('roomChanged', function (data) { 
 	global['roomid'] = data.room.roomid;
 	logger('! Room changed to '+data.room.name+' ('+data.room.roomid+')');
-	global['cursong'] = data.room.metadata.current_song._id;
-	logger('! Now Playing '+data.room.metadata.current_song.metadata.song);
+
+	// util.log(util.inspect(data));
+
+	if (data.room.metadata.current_song == null) {
+		logger('- Nothing is currently playing');
+	} else {
+		global['cursong'] = data.room.metadata.current_song._id;
+		logger('! Now Playing '+data.room.metadata.current_song.metadata.song);
+	}
+
 	bot.modifyLaptop(config['laptop']);
 	// clear_entire_queue();
 	bot.playlistAll(function(data) { 
@@ -353,9 +361,11 @@ bot.on('update_votes', function (data) {
 
 	if (user == '') {
 		if (vote == 'down') {
-			logger('- Voting '+vote+'!  Because I will dump on anyone');
-			global['myvote'] = vote;
-			lag_vote(vote);
+			if (global['myvote] != 'down') {
+				logger('- Voting '+vote+'!  Because I will dump on anyone');
+				global['myvote'] = vote;
+				lag_vote(vote);
+			}
 		}
 	} else if (is_leader(user)) {
 		if (global['myvote'] == 'none') {
