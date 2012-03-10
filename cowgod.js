@@ -251,7 +251,7 @@ function add_current_song_to_queue(visible) {
 
 function follow_user(userid) {
 	bot.stalk(userid, true, function(userdata) {
-		util.log(util.inspect(userdata));
+		// util.log(util.inspect(userdata));
 		var target_id = userdata.roomId;
 
 		if (target_id != global['roomid']) {
@@ -361,7 +361,7 @@ bot.on('update_votes', function (data) {
 
 	if (user == '') {
 		if (vote == 'down') {
-			if (global['myvote] != 'down') {
+			if (global['myvote'] != 'down') {
 				logger('- Voting '+vote+'!  Because I will dump on anyone');
 				global['myvote'] = vote;
 				lag_vote(vote);
