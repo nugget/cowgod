@@ -258,9 +258,11 @@ function follow_user(userid) {
 			logger('* Following '+id_to_name(userid)+' to room_id '+target_id);
 			bot.roomDeregister( function(data) {
 				bot.roomRegister(target_id);
+				bot.pm('I am here now!',userid);
 			});
 		} else {
 			logger('* I am already in that room');
+			bot.pm('I am already in that room, silly',userid);
 		}
 	});
 }
