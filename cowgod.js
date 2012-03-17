@@ -65,21 +65,34 @@ function log_tsv(buf) {
 function dump_queue() {
 	bot.playlistAll(function(data) { 
 		global['queuelen'] = data.list.length;
-		logger('- I have '+global['queuelen']+' songs in my queue.');
-	});
-	return;
 
-	bot.playlistAll( function(data) {
 		var qf = fs.createWriteStream('log/queue.dat', {'flags': 'w'});
 		var d=new Date();
 		qf.write('['+d+']\n\n');
+
+		var i = 0;
+
+		data.list.forEach(function(song) {
+			qf.write('index\t'+i);
+			qf.write('\t_id\t'+song._id);
+			qf.write('\tsong\t'+song.metadata.song);
+			qf.write('\tartist\t'+song.metadata.artist);
+			qf.write('\talbum\t'+song.metadata.album);
+			qf.write('\tlength\t'+song.metadata.length);
+			qf.write('\tmnid\t'+song.metadata.mnid);
+			qf.write('\tgenre\t'+song.metadata.genre);
+			qf.write('\tcoverart\t'+song.metadata.coverart);
+			qf.write('\n');
+			i = i + 1;
+		});
+
 		if (data.success == false) {
 			qf.write('Failed: '+data.err);
 		} else {
-			qf.write(data);
+			qf.write('Success');
 		}
+		qf.end();
 	});
-	qf.end();
 }
 
 function is_admin(userid) {
@@ -147,7 +160,7 @@ function lag_vote (vote) {
 
 function do_vote (vote) {
 	bot.roomInfo(false, function(roominfo) {
-		util.log(util.inspect(roominfo));
+		// util.log(util.inspect(roominfo));
 		if(roominfo.room.metadata.current_dj == settings.userid) {
 			logger('- ignoring self-vote');
 		} else {
@@ -211,6 +224,9 @@ function do_command (data) {
 			break;
 		case 'skip':
 			bot.stopSong();
+			break;
+		case 'dumpqueue':
+			dump_queue();
 			break;
 		case 'comehere':
             logger('= '+id_to_name(data.senderid)+' beckoned me');
@@ -317,6 +333,7 @@ bot.on('roomChanged', function (data) {
 
 	bot.modifyLaptop(config['laptop']);
 	// clear_entire_queue();
+	dump_queue();
 	bot.playlistAll(function(data) { 
 		global['queuelen'] = data.list.length;
 		logger('- I have '+global['queuelen']+' songs in my queue.');
