@@ -198,6 +198,9 @@ function do_command (data) {
 			logger('- '+id_to_name(data.senderid)+' wants me to add this song to my queue');
 			add_current_song_to_queue(true);
 			break;
+		case 'skip':
+			bot.stopSong();
+			break;
 		case 'comehere':
             logger('= '+id_to_name(data.senderid)+' beckoned me');
 			follow_user(data.senderid);
