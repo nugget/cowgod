@@ -142,7 +142,18 @@ function id_to_name (user_id) {
 function lag_vote (vote) {
 	waitms = parseInt(Math.random() * 20000)+500;
 	logger('- will vote '+vote+' in '+waitms+' ms');
-	setTimeout(function(){ bot.vote(vote); }, waitms);
+	setTimeout(function(){ do_vote(vote); }, waitms);
+}
+
+function do_vote (vote) {
+	bot.roomInfo(false, function(roominfo) {
+		util.log(util.inspect(roominfo));
+		if(roominfo.room.metadata.current_dj == settings.userid) {
+			logger('- ignoring self-vote');
+		} else {
+			bot.vote(vote);
+		}
+	});
 }
 
 function do_command (data) {
@@ -170,12 +181,12 @@ function do_command (data) {
 			}
 			break;
 		case 'awesome':
-			bot.vote('up');
+			do_vote('up');
             logger('= '+id_to_name(data.senderid)+' made me vote awesome');
 			break;
 
 		case 'lame':
-			bot.vote('down');
+			do_vote('down');
             logger('= '+id_to_name(data.senderid)+' made me vote lame');
 			break;
 		case 'autobop':
