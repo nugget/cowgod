@@ -63,12 +63,14 @@ function log_tsv(buf) {
 }
 
 function dump_queue() {
+	logger('- dumping queue to file');
 	bot.playlistAll(function(data) { 
 		global['queuelen'] = data.list.length;
 
 		var qf = fs.createWriteStream('log/queue.dat', {'flags': 'w'});
-		var d=new Date();
-		qf.write('['+d+']\n\n');
+		
+		//var d=new Date();
+		//qf.write('['+d+']\n\n');
 
 		var i = 0;
 
@@ -93,6 +95,20 @@ function dump_queue() {
 		}
 		qf.end();
 	});
+}
+
+function pick_random(count) {
+	var indexFrom = 0;
+	count = parseInt(count);
+
+	// logger('- random count is '+count);
+
+	for (i=1; i<= count; i++) {
+		indexFrom = parseInt(Math.random() * global['queuelen']);
+		logger('- Moving song index '+indexFrom+' to the top');
+		bot.playlistReorder(indexFrom, 0);
+	}
+	setTimeout(function(){ dump_queue(); }, 5000);
 }
 
 function is_admin(userid) {
@@ -223,14 +239,20 @@ function do_command (data) {
 			add_current_song_to_queue(true);
 			break;
 		case 'skip':
+            logger('= '+id_to_name(data.senderid)+' skipped this song');
 			bot.stopSong();
 			break;
 		case 'dumpqueue':
+            logger('= '+id_to_name(data.senderid)+' dumped the queue');
 			dump_queue();
 			break;
 		case 'comehere':
             logger('= '+id_to_name(data.senderid)+' beckoned me');
 			follow_user(data.senderid);
+			break;
+		case 'random':
+            logger('= '+id_to_name(data.senderid)+' wants '+args+' new random tracks');
+			pick_random(args);
 			break;
 		case 'debug':
 			if (args != 'on') {
