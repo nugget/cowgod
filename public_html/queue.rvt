@@ -1,5 +1,27 @@
 <?
 
-puts "Moo."
+set qbuf [read_file "queue.tsv"]
+
+puts "<h1>Songs in Queue</h1>"
+
+set i 0
+puts "<table>"
+foreach line [split $qbuf "\n"] {
+	if {![catch {array set buf [split $line "\t"]} err]} {
+		puts "<tr>"
+		puts "<td align=\"right\">$i</td>"
+
+		foreach f {song artist length} {
+			if {[info exists buf($f)]} {
+				puts "<td>$buf($f)</td>"
+			} else {
+				puts "<td>&nbsp</td>"
+			}
+		}
+		puts "</tr>"
+		incr i
+	}
+}
+puts "</table>"
 
 ?>
