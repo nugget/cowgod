@@ -4,14 +4,14 @@ set qbuf [read_file "queue.tsv"]
 
 puts "<h1>Songs in Queue</h1>"
 
-set i 0
 puts "<table>"
+puts "<tr><th>Index</th><th>Song</th><th>Artist</th><th>Album</th><th>Genre</th><th>Length</th></tr>"
 foreach line [split $qbuf "\n"] {
 	if {![catch {array set buf [split $line "\t"]} err]} {
 		puts "<tr>"
-		puts "<td align=\"right\">$i</td>"
+		puts "<td align=\"right\">$buf(index)</td>"
 
-		foreach f {song artist length} {
+		foreach f {song artist album genre length} {
 			if {[info exists buf($f)]} {
 				puts "<td>$buf($f)</td>"
 			} else {
@@ -19,7 +19,6 @@ foreach line [split $qbuf "\n"] {
 			}
 		}
 		puts "</tr>"
-		incr i
 	}
 }
 puts "</table>"
