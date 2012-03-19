@@ -11,6 +11,20 @@ Getting Started
 * mkdir log
 * run "node cowgod.js"
 
+Bot Commands
+------------
+
+* `/jump up` Jump up to a DJ spot if available
+* `/jump down` Go back to the pit
+* `/awesome` Vote up the current song
+* `/lame` Vote down the current song
+* `/autobop (on|off)` Auto-awesome every song played by anyone
+* `/mute (on|off)` Squelch all speech to the channel
+* `/follow (on|off)` Copy the up-votes of any cool user
+* `/snag` Add the currently playing song to the bot's queue
+* `/skip` Skip the currently playing song
+* `/comehere` Bot will join you in whatever room you're in
+* `/random #` Pick any # songs at random and push them to the top of the queue
 
 Useful Links
 ------------
