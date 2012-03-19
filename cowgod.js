@@ -67,7 +67,7 @@ function dump_queue() {
 	bot.playlistAll(function(data) { 
 		global['queuelen'] = data.list.length;
 
-		var qf = fs.createWriteStream('log/queue.dat', {'flags': 'w'});
+		var qf = fs.createWriteStream('public_html/queue.tsv', {'flags': 'w'});
 		
 		//var d=new Date();
 		//qf.write('['+d+']\n\n');
@@ -336,6 +336,7 @@ function clear_entire_queue() {
 	}
 }
 
+process.umask(022);
 console.log('connecting as '+settings.userid);
 var bot = new Bot(settings.token, settings.userid, settings.roomid);
 bot.debug = settings.debug;
