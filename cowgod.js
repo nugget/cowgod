@@ -36,6 +36,9 @@ var leaders = new Array();
 leaders.push(users['Bagel']);
 leaders.push(users['Jello']);
 
+//Bagel added this to track pending queue dump
+var pendingQueueDump;
+
 if (config['log_chat'] != 'none') {
 	var log_chat = fs.createWriteStream(config['log_chat'], {'flags': 'a'});
 }
@@ -108,13 +111,20 @@ function pick_random(count) {
 		logger('- Moving song index '+indexFrom+' to the top');
 		bump_song(indexFrom);
 	}
-	setTimeout(function(){ dump_queue(); }, 5000);
 }
 
 function bump_song(indexFrom) {
 	indexFrom = parseInt(indexFrom);
 	
 	bot.playlistReorder(indexFrom, 0);
+	schedule_queue_dump();
+}
+
+//Clear any pending dumps and schedule a new one (currently hardcoded at 5 sec)
+function schedule_queue_dump() {
+	if( pendingQueueDump )
+		clearTimeout(pendingQueueDump);
+	pendingQueueDump = setTimeout(function(){ dump_queue(); }, 5000);
 }
 
 function is_admin(userid) {
