@@ -106,9 +106,15 @@ function pick_random(count) {
 	for (i=1; i<= count; i++) {
 		indexFrom = parseInt(Math.random() * global['queuelen']);
 		logger('- Moving song index '+indexFrom+' to the top');
-		bot.playlistReorder(indexFrom, 0);
+		bump_song(indexFrom);
 	}
 	setTimeout(function(){ dump_queue(); }, 5000);
+}
+
+function bump_song(indexFrom) {
+	indexFrom = parseInt(indexFrom);
+	
+	bot.playlistReorder(indexFrom, 0);
 }
 
 function is_admin(userid) {
@@ -253,6 +259,10 @@ function do_command (data) {
 		case 'random':
             logger('= '+id_to_name(data.senderid)+' wants '+args+' new random tracks');
 			pick_random(args);
+			break;
+		case 'bump':
+	    logger('= '+id_to_name(data.senderid)+' bumped track '+args+' to the top');
+	    		bump_song(args);
 			break;
 		case 'debug':
 			if (args != 'on') {
