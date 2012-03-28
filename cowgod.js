@@ -36,6 +36,9 @@ var leaders = new Array();
 leaders.push(users['Bagel']);
 leaders.push(users['Jello']);
 
+//Bagel added this to track pending queue dump
+var pendingQueueDump;
+
 if (config['log_chat'] != 'none') {
 	var log_chat = fs.createWriteStream(config['log_chat'], {'flags': 'a'});
 }
@@ -106,9 +109,22 @@ function pick_random(count) {
 	for (i=1; i<= count; i++) {
 		indexFrom = parseInt(Math.random() * global['queuelen']);
 		logger('- Moving song index '+indexFrom+' to the top');
-		bot.playlistReorder(indexFrom, 0);
+		bump_song(indexFrom);
 	}
-	setTimeout(function(){ dump_queue(); }, 5000);
+}
+
+function bump_song(indexFrom) {
+	indexFrom = parseInt(indexFrom);
+	
+	bot.playlistReorder(indexFrom, 0);
+	schedule_queue_dump();
+}
+
+//Clear any pending dumps and schedule a new one (currently hardcoded at 5 sec)
+function schedule_queue_dump() {
+	if( pendingQueueDump )
+		clearTimeout(pendingQueueDump);
+	pendingQueueDump = setTimeout(function(){ dump_queue(); }, 5000);
 }
 
 function is_admin(userid) {
@@ -218,6 +234,9 @@ function do_command (data) {
 			do_vote('down');
             logger('= '+id_to_name(data.senderid)+' made me vote lame');
 			break;
+		case 'avatar':
+			args = parseInt(args);
+			bot.setAvatar(args);
 		case 'autobop':
 		case 'mute':
 		case 'follow':
@@ -253,6 +272,10 @@ function do_command (data) {
 		case 'random':
             logger('= '+id_to_name(data.senderid)+' wants '+args+' new random tracks');
 			pick_random(args);
+			break;
+		case 'bump':
+	    logger('= '+id_to_name(data.senderid)+' bumped track '+args+' to the top');
+	    		bump_song(args);
 			break;
 		case 'debug':
 			if (args != 'on') {
@@ -340,6 +363,9 @@ process.umask(022);
 console.log('connecting as '+settings.userid);
 var bot = new Bot(settings.token, settings.userid, settings.roomid);
 bot.debug = settings.debug;
+
+bot.modifyLaptop(settings.laptop);
+bot.setAvatar(settings.avatar);
 
 bot.on('roomChanged', function (data) { 
 	global['roomid'] = data.room.roomid;
