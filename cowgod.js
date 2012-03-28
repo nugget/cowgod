@@ -8,7 +8,6 @@ var config = new Object();
 config['autobop']	= 'off';
 config['mute']		= 'off';
 config['follow']	= 'on';
-config['laptop']	= 'mac';
 config['log_chat']	= 'log/chat.log';	// filename or set to 'none' to disable logging
 config['log_tsv']	= 'none';			// filename or set to 'none' to disable logging
 
@@ -354,7 +353,7 @@ bot.on('roomChanged', function (data) {
 		logger('! Now Playing '+data.room.metadata.current_song.metadata.song);
 	}
 
-	bot.modifyLaptop(config['laptop']);
+	bot.modifyLaptop(settings.laptop);
 	// clear_entire_queue();
 	dump_queue();
 	bot.playlistAll(function(data) { 
