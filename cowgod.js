@@ -23,6 +23,7 @@ users['Jello']		= '4e15df8a4fe7d0665e02a9ef';
 users['Storm(e)']	= '4e3e10a94fe7d05787083cf1';
 users['Olive']		= '4e0a03aaa3f7517d0f0e639d';
 users['PitDemon']	= '4f50ed44590ca261fa004904';
+users['Dario']		= '4e00e584a3f75104e30b9fec';
 
 config['owner']	= users['nugget'];
 
