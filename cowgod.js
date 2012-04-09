@@ -3,6 +3,19 @@ var util = require('util');
 
 var Bot  = require('ttapi');
 var settings = require('./settings.js');
+settings.db = false;
+
+if (settings.dbname) {
+	logger('connecting to posgresql database '+settings.dbname);
+	var Client = require('pg').Client;
+
+	var connstring = 'postgres://'+settings.dbuser+':'+settings.dbpass+'@'+settings.dbhost+':'+settings.dbport+'/'+settings.dbname;
+
+	var botdb = new Client(connstring);
+	botdb.connect();
+
+	settings.db = true;
+}
 
 var config = new Object();
 config['autobop']	= 'off';
@@ -82,6 +95,8 @@ function dump_queue() {
 		var i = 0;
 
 		data.list.forEach(function(song) {
+			db_songdb(song);
+
 			qf.write('index\t'+i);
 			qf.write('\t_id\t'+song._id);
 			qf.write('\tsong\t'+song.metadata.song);
@@ -101,6 +116,69 @@ function dump_queue() {
 			qf.write('Success');
 		}
 		qf.end();
+	});
+}
+
+function db_newsong(data) {
+	if (!settings.db) {
+		return;
+	}
+	logger('db_newsong firing');
+	botdb.query=('INSERT INTO songlog (song_id,room_id,dj_id) VALUES ($1,$2,$3)',
+		data.room.metadata.current_song._id,
+		data.room.roomid,
+		data.room.metadata.current_dj);
+}
+
+function db_endsong(data) {
+	if (!settings.db) {
+		return;
+	}
+	botdb.query('UPDATE songlog SET stats_djcount = $1, stats_listeners = $2, stats_djs = $3 WHERE song_id = $4 AND room_id = $5 AND stats_djcount IS NULL', [
+		data.room.metadata.djcount,
+		data.room.metadata.listeners,
+		data.room.metadata.djs,
+		data.room.metadata.current_song._id,
+		data.room.roomid
+	], function(err) {
+		var moo = util.inspect(err);
+		if (moo != 'null') {
+			logger('db error');
+			util.log(util.inspect(song));
+			util.log(util.inspect(err));
+		}
+	});
+}
+
+
+function db_songdb(song) {
+	if (!settings.db) {
+		return;
+	}
+
+	song.metadata.album = song.metadata.album.replace(/\u0000/g,'');
+	song.metadata.artist = song.metadata.artist.replace(/\u0000/g,'');
+	song.metadata.song = song.metadata.song.replace(/\u0000/g,'');
+
+	botdb.query('INSERT INTO songs (song_id,artist,song,album,genre,length,mnid,coverart,md5,labelid)  SELECT $1,$2,$3,$4,$5,$6,$7,$8,$9,$10 WHERE 1 NOT IN (SELECT 1 FROM songs WHERE song_id = $11)', [
+		song._id,
+		song.metadata.artist,
+		song.metadata.song,
+		song.metadata.album,
+		song.metadata.genre,
+		song.metadata.length,
+		song.metadata.mnid,
+		song.metadata.coverart,
+		song.metadata.md5,
+		song.metadata.labelid,
+		song._id
+	], function(err) {
+		var moo = util.inspect(err);
+		if (moo != 'null') {
+			logger('db error');
+			util.log(util.inspect(song));
+			util.log(util.inspect(err));
+		}
 	});
 }
 
@@ -451,6 +529,8 @@ bot.on('newsong', function (data) {
 				'length',data.room.metadata.current_song.metadata.length
 			   ]);
 
+	db_newsong(data);
+
 	global['cursong']      = data.room.metadata.current_song._id;
 	global['cursongname']  = data.room.metadata.current_song.metadata.song;
 	global['curdjid']      = data.room.metadata.current_song.djid;
@@ -463,6 +543,10 @@ bot.on('newsong', function (data) {
 		global['myvote'] = 'none';
 		// logger('= Clearing my vote for the new song');
 	}
+});
+
+bot.on('endsong', function (data) { 
+	db_endsong(data);
 });
 
 bot.on('update_votes', function (data) {
