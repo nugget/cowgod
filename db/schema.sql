@@ -43,15 +43,20 @@ CREATE TABLE users (
 GRANT SELECT,INSERT,UPDATE ON users TO bots;
 CREATE TRIGGER onupdate BEFORE UPDATE ON users FOR EACH ROW EXECUTE PROCEDURE onupdate_changed();
 
-CREATE TABLE users_nicknames (
+CREATE TABLE users_joins (
 	id SERIAL NOT NULL,
-	userid varchar NOT NULL REFERENCES users(user_id),
-	added timestamp(0) without time zone NOT NULL DEFAULT (current_timestamp at time zone 'utc'),
+	ts timestamp(0) without time zone NOT NULL DEFAULT (current_timestamp at time zone 'utc'),
+	user_id varchar NOT NULL REFERENCES users(user_id),
 	nickname varchar NOT NULL,
+	device varchar,
+	acl integer,
+	fans integer,
+	points integer,
+	avatarid integer,
 	PRIMARY KEY(id)
 );
-GRANT SELECT,INSERT ON users_nicknames TO bots;
-GRANT ALL ON users_nicknames_id_seq TO bots;
+GRANT SELECT,INSERT ON users_joins TO bots;
+GRANT ALL ON users_joins_id_seq TO bots;
 
 CREATE TABLE songlog (
 	id serial NOT NULL,
@@ -82,7 +87,7 @@ CREATE TABLE votelog (
 	ts timestamp(0) without time zone NOT NULL DEFAULT (current_timestamp at time zone 'utc'),
 	play_id integer NOT NULL REFERENCES songlog(id),
 	user_id varchar,
-	vote integer NOT NULL DEFAULT 1,
+	vote varchar,
 	PRIMARY KEY(id)
 );
 GRANT SELECT,INSERT ON votelog TO bots;
