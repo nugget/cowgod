@@ -225,11 +225,16 @@ function do_command (data) {
 				bot.addDj();
 			}
 			break;
+		case 'pm':
+			moo			 = args.text.indexOf(' ');
+			var receiver = args.text.substr(1,moo-1);
+			var msg      = args.text.substr(moo+1);
+			bot.pm(msg,receiver);
+			break;
 		case 'awesome':
 			do_vote('up');
             logger('= '+id_to_name(data.senderid)+' made me vote awesome');
 			break;
-
 		case 'lame':
 			do_vote('down');
             logger('= '+id_to_name(data.senderid)+' made me vote lame');
@@ -237,6 +242,9 @@ function do_command (data) {
 		case 'avatar':
 			args = parseInt(args);
 			bot.setAvatar(args);
+		case 'say':
+			say(args);
+			break;
 		case 'autobop':
 		case 'mute':
 		case 'follow':
@@ -482,8 +490,6 @@ bot.on('add_dj', function (data) {
 bot.on('pmmed', function (data) {
 	if (data.text.match(/^\//)) {
 		do_command(data);
-	} else if (is_admin(data.senderid)) {
-		say(data.text);
 	} else {
 		bot.pm(id_to_name(data.senderid)+' PMmed '+data.text,config['owner']);
 		logger(id_to_name(data.senderid)+' PMmed '+data.text);
