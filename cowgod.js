@@ -240,8 +240,9 @@ function db_registered(data) {
 		data.user[0].userid
 	]);
 
-	botdb.query('INSERT INTO users_joins (user_id,nickname,device,acl,fans,points,avatarid) SELECT $1,$2,$3,$4,$5,$6,$7', [
+	botdb.query('INSERT INTO users_joins (user_id,room_id,nickname,device,acl,fans,points,avatarid) SELECT $1,$2,$3,$4,$5,$6,$7,$8', [
 		data.user[0].userid,
+		global['roomid'],
 		data.user[0].name,
 		data.user[0].laptop,
 		data.user[0].acl,

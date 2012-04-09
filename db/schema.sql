@@ -47,6 +47,7 @@ CREATE TABLE users_joins (
 	id SERIAL NOT NULL,
 	ts timestamp(0) without time zone NOT NULL DEFAULT (current_timestamp at time zone 'utc'),
 	user_id varchar NOT NULL REFERENCES users(user_id),
+	room_id varchar NOT NULL,
 	nickname varchar NOT NULL,
 	device varchar,
 	acl integer,
