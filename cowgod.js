@@ -202,7 +202,7 @@ function db_snag(data) {
 
 	logger('logging snag to db');
 
-	botdb.query('INSERT INTO snaglog (play_id, user_id) SELECT max(id), $1 FROM songlog WHERE room_id = $2' [
+	botdb.query('INSERT INTO snaglog (play_id, user_id) SELECT max(id), $1 FROM songlog WHERE room_id = $2', [
 		data.userid,
 		global['roomid']
 	]);
@@ -213,12 +213,12 @@ function db_vote(data) {
 		return;
 	}
 
-	logger('logging vote to db');
+	logger('logging vote to db for'+global['roomid']);
 
-	user = data.room.metadata.votelog[0][0];
-	vote = data.room.metadata.votelog[0][1];
+	var user = data.room.metadata.votelog[0][0];
+	var vote = data.room.metadata.votelog[0][1];
 
-	botdb.query('INSERT INTO votelog (play_id, user_id, vote) SELECT max(id), $1, $2 FROM songlog WHERE room_id = $3' [
+	botdb.query('INSERT INTO votelog (play_id, user_id, vote) SELECT max(id), $1, $2 FROM songlog WHERE room_id = $3', [
 		user,
 		vote,
 		global['roomid']
