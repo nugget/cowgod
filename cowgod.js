@@ -127,10 +127,11 @@ function db_newsong(data) {
 	logger('logging a new song to the database');
 	//util.log(util.inspect(data));
 
-	botdb.query('INSERT INTO songlog (song_id,room_id,dj_id) SELECT $1,$2,$3', [
+	botdb.query('INSERT INTO songlog (song_id,room_id,dj_id,stats_djs) SELECT $1,$2,$3,$4', [
 		data.room.metadata.current_song._id,
 		data.roomid,
-		data.room.metadata.current_dj
+		data.room.metadata.current_dj,
+		data.room.metadata.djs
 	], function(err) {
 		var moo = util.inspect(err);
 		if (moo != 'null') {
@@ -139,16 +140,17 @@ function db_newsong(data) {
 			util.log(util.inspect(err));
 		}
 	});
+
+	db_songdb(data.room.metadata.current_song);
 }
 
 function db_endsong(data) {
 	if (!settings.db) {
 		return;
 	}
-	botdb.query('UPDATE songlog SET stats_djcount = $1, stats_listeners = $2, stats_djs = $3 WHERE song_id = $4 AND room_id = $5 AND stats_djcount IS NULL', [
+	botdb.query('UPDATE songlog SET stats_djcount = $1, stats_listeners = $2 WHERE song_id = $3 AND room_id = $4 AND stats_djcount IS NULL', [
 		data.room.metadata.djcount,
 		data.room.metadata.listeners,
-		data.room.metadata.djs,
 		data.room.metadata.current_song._id,
 		data.room.roomid
 	], function(err) {
@@ -159,8 +161,8 @@ function db_endsong(data) {
 			util.log(util.inspect(err));
 		}
 	});
+	db_songdb(data.room.metadata.current_song);
 }
-
 
 function db_songdb(song) {
 	if (!settings.db) {
@@ -192,6 +194,75 @@ function db_songdb(song) {
 		}
 	});
 }
+
+function db_snag(data) {
+	if (!settings.db) {
+		return;
+	}
+
+	logger('logging snag to db');
+
+	botdb.query('INSERT INTO snaglog (play_id, user_id) SELECT max(id), $1 FROM songlog WHERE room_id = $2' [
+		data.userid,
+		global['roomid']
+	]);
+}
+
+function db_vote(data) {
+	if (!settings.db) {
+		return;
+	}
+
+	logger('logging vote to db');
+
+	user = data.room.metadata.votelog[0][0];
+	vote = data.room.metadata.votelog[0][1];
+
+	botdb.query('INSERT INTO votelog (play_id, user_id, vote) SELECT max(id), $1, $2 FROM songlog WHERE room_id = $3' [
+		user,
+		vote,
+		global['roomid']
+	]);
+}
+
+function db_registered(data) {
+	if (!settings.db) {
+		return;
+	}
+
+	logger('logging join to db');
+
+	util.log(util.inspect(data));
+
+	botdb.query('INSERT INTO users (user_id,nickname) SELECT $1,$2 WHERE 1 NOT IN (SELECT 1 FROM users WHERE user_id = $3)', [
+		data.user[0].userid,
+		data.user[0].name,
+		data.user[0].userid
+	]);
+
+	botdb.query('INSERT INTO users_joins (user_id,nickname,device,acl,fans,points,avatarid) SELECT $1,$2,$3,$4,$5,$6,$7', [
+		data.user[0].userid,
+		data.user[0].name,
+		data.user[0].laptop,
+		data.user[0].acl,
+		data.user[0].fans,
+		data.user[0].points,
+		data.user[0].avatarid
+	], function (err) {
+		var moo = util.inspect(err);
+		if (moo != 'null') {
+			logger('db error');
+			util.log(util.inspect(data));
+			util.log(util.inspect(err));
+		}
+	});
+
+	botdb.query('UPDATE users SET nickname = $1 WHERE user_id = $2', [
+		data.user[0].name,
+		data.user[0].userid
+	]);
+}
+
 
 function pick_random(count) {
 	var indexFrom = 0;
@@ -494,10 +565,12 @@ bot.on('roomChanged', function (data) {
 bot.on('registered', function (data) {
 	logger('* '+data.user[0].name+' joined the room on a '+data.user[0].laptop+' ('+data.user[0].points+' points) uid '+data.user[0].userid);
 	logger_tsv([ 'event','joined','userid',data.user[0].userid,'username',data.user[0].name,'device',data.user[0].laptop ]);
+	db_registered(data);
 });
 
 bot.on('snagged', function (data) {
 	logger_tsv([ 'event','snag','userid',data.userid,'songid',global['cursong'],'djid',	global['curdjid'],'songname',global['cursongname'],'djname',global['curdjname']	]);
+	db_snag(data);
 
 	if (data.userid == settings.userid) {
 		// logger('- ignoring self-snag');
@@ -565,6 +638,7 @@ bot.on('update_votes', function (data) {
 	vote = data.room.metadata.votelog[0][1];
 
 	logger_tsv([ 'event','vote','songid',global['cursong'],'userid',user,'vote',vote ]);
+	db_vote(data);
 
 	if (config['follow'] == 'off') {
 		return;
