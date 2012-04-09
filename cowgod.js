@@ -8,8 +8,6 @@ var config = new Object();
 config['autobop']	= 'off';
 config['mute']		= 'off';
 config['follow']	= 'on';
-config['log_chat']	= 'log/chat.log';	// filename or set to 'none' to disable logging
-config['log_tsv']	= 'none';			// filename or set to 'none' to disable logging
 
 var global = new Object();
 global['myvote']	= 'none';
@@ -39,11 +37,11 @@ leaders.push(users['Jello']);
 //Bagel added this to track pending queue dump
 var pendingQueueDump;
 
-if (config['log_chat'] != 'none') {
-	var log_chat = fs.createWriteStream(config['log_chat'], {'flags': 'a'});
+if (settings.log_chat) {
+	var log_chat = fs.createWriteStream(settings.log_chat, {'flags': 'a'});
 }
-if (config['log_tsv'] != 'none') {
-	var log_tsv = fs.createWriteStream(config['log_tsv'], {'flags': 'a'});
+if (settings.log_tsv) {
+	var log_tsv  = fs.createWriteStream(settings.log_tsv,  {'flags': 'a'});
 }
 
 function logger(buf) {
@@ -56,12 +54,17 @@ function logger(buf) {
 	console.log(buf)
 }
 
-function log_tsv(buf) {
+function logger_tsv(larray) {
 	if (typeof log_tsv === 'undefined') {
 	} else {
-		var currTime = Math.round(new Date().getTime() / 1000.0);
-		log_tsv.write('clock\t'+currTime+'\t');
-		log_tsv.write(buf+'\n');
+		var d = Math.round(new Date().getTime() / 1000.0);
+
+		log_tsv.write('clock\t'+d);
+		log_tsv.write('\tmyid\t'+settings.userid);
+		log_tsv.write('\troomid\t'+global['roomid']);
+		log_tsv.write('\t');
+		log_tsv.write(larray.join('\t'));
+		log_tsv.write('\n');
 	}
 }
 
@@ -378,6 +381,7 @@ bot.setAvatar(settings.avatar);
 bot.on('roomChanged', function (data) { 
 	global['roomid'] = data.room.roomid;
 	logger('! Room changed to '+data.room.name+' ('+data.room.roomid+')');
+	logger_tsv([ 'event','newroom','roomname',data.room.name ]);
 
 	// util.log(util.inspect(data));
 
@@ -399,14 +403,18 @@ bot.on('roomChanged', function (data) {
 
 bot.on('registered', function (data) {
 	logger('* '+data.user[0].name+' joined the room on a '+data.user[0].laptop+' ('+data.user[0].points+' points) uid '+data.user[0].userid);
+	logger_tsv([ 'event','joined','userid',data.user[0].userid,'username',data.user[0].name,'device',data.user[0].laptop ]);
 });
 
 bot.on('snagged', function (data) {
+	logger_tsv([ 'event','snag','userid',data.userid,'songid',global['cursong'],'djid',	global['curdjid'],'songname',global['cursongname'],'djname',global['curdjname']	]);
+
 	if (data.userid == settings.userid) {
 		// logger('- ignoring self-snag');
 		// this is me!  ignore it
 		return;
 	}
+
 	logger('* '+id_to_name(data.userid)+' snagged this song');
 	if (global['cursong'] != 'none') {
 		if (global['myvote'] != 'down' ) {
@@ -417,6 +425,7 @@ bot.on('snagged', function (data) {
 
 bot.on('deregistered', function (data) {
 	logger('* '+data.user[0].name+' left the room');
+	logger_tsv([ 'event','part','userid',data.user[0].userid,'username',data.user[0].name ]);
 	return;
 
 	if (is_admin(data.user[0].userid)) {
@@ -429,7 +438,13 @@ bot.on('deregistered', function (data) {
 
 bot.on('newsong', function (data) { 
 	logger('* '+data.room.metadata.current_song.djname+' played '+data.room.metadata.current_song.metadata.song+' by '+data.room.metadata.current_song.metadata.artist);
-	global['cursong'] = data.room.metadata.current_song._id;
+	logger_tsv([ 'event','newsong','songid',data.room.metadata.current_song._id,'metadata',util.inspect(data.room.metadata.current_song.metadata) ]);
+
+	global['cursong']      = data.room.metadata.current_song._id;
+	global['cursongname']  = data.room.metadata.current_song.metadata.song;
+	global['curdjid']      = data.room.metadata.current_song.djid;
+	global['curdjname']     = data.room.metadata.current_song.djname;
+
 	if (config['autobop'] == 'on') {
 		global['myvote'] = 'up';
 		lag_vote('up');
@@ -440,12 +455,14 @@ bot.on('newsong', function (data) {
 });
 
 bot.on('update_votes', function (data) {
+	user = data.room.metadata.votelog[0][0];
+	vote = data.room.metadata.votelog[0][1];
+
+	logger_tsv([ 'event','vote','songid',global['cursong'],'userid',user,'vote',vote ]);
+
 	if (config['follow'] == 'off') {
 		return;
 	}
-
-	user = data.room.metadata.votelog[0][0];
-	vote = data.room.metadata.votelog[0][1];
 
 	logger('* '+id_to_name(user)+' voted '+vote);
 
@@ -476,6 +493,8 @@ bot.on('update_votes', function (data) {
 
 bot.on('add_dj', function (data) {
 	logger('* New DJ '+data.user[0].name);
+	logger_tsv([ 'event','newdj','userid',data.user[0].userid ]);
+
 	return;
 
 	if (data.user[0].userid == users['Bagel']) {
