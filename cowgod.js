@@ -232,7 +232,7 @@ function db_registered(data) {
 
 	logger('logging join to db');
 
-	util.log(util.inspect(data));
+	//util.log(util.inspect(data));
 
 	botdb.query('INSERT INTO users (user_id,nickname) SELECT $1,$2 WHERE 1 NOT IN (SELECT 1 FROM users WHERE user_id = $3)', [
 		data.user[0].userid,
