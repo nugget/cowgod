@@ -123,11 +123,22 @@ function db_newsong(data) {
 	if (!settings.db) {
 		return;
 	}
-	logger('db_newsong firing');
-	botdb.query=('INSERT INTO songlog (song_id,room_id,dj_id) VALUES ($1,$2,$3)',
+
+	logger('logging a new song to the database');
+	//util.log(util.inspect(data));
+
+	botdb.query('INSERT INTO songlog (song_id,room_id,dj_id) SELECT $1,$2,$3', [
 		data.room.metadata.current_song._id,
-		data.room.roomid,
-		data.room.metadata.current_dj);
+		data.roomid,
+		data.room.metadata.current_dj
+	], function(err) {
+		var moo = util.inspect(err);
+		if (moo != 'null') {
+			logger('db error');
+			util.log(util.inspect(data));
+			util.log(util.inspect(err));
+		}
+	});
 }
 
 function db_endsong(data) {
@@ -144,7 +155,7 @@ function db_endsong(data) {
 		var moo = util.inspect(err);
 		if (moo != 'null') {
 			logger('db error');
-			util.log(util.inspect(song));
+			util.log(util.inspect(data));
 			util.log(util.inspect(err));
 		}
 	});
