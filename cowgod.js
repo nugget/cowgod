@@ -21,6 +21,7 @@ var config = new Object();
 config['autobop']	= 'off';
 config['mute']		= 'off';
 config['follow']	= 'on';
+config['database']	= 'on';
 
 var global = new Object();
 global['myvote']	= 'none';
@@ -120,7 +121,7 @@ function dump_queue() {
 }
 
 function db_newsong(data) {
-	if (!settings.db) {
+	if (!settings.db || config['autobop'] != 'on') {
 		return;
 	}
 
@@ -145,7 +146,7 @@ function db_newsong(data) {
 }
 
 function db_endsong(data) {
-	if (!settings.db) {
+	if (!settings.db || config['autobop'] != 'on') {
 		return;
 	}
 	botdb.query('UPDATE songlog SET stats_djcount = $1, stats_listeners = $2 WHERE song_id = $3 AND room_id = $4 AND stats_djcount IS NULL', [
@@ -165,7 +166,7 @@ function db_endsong(data) {
 }
 
 function db_songdb(song) {
-	if (!settings.db) {
+	if (!settings.db || config['autobop'] != 'on') {
 		return;
 	}
 
@@ -196,7 +197,7 @@ function db_songdb(song) {
 }
 
 function db_snag(data) {
-	if (!settings.db) {
+	if (!settings.db || config['autobop'] != 'on') {
 		return;
 	}
 
@@ -209,7 +210,7 @@ function db_snag(data) {
 }
 
 function db_vote(data) {
-	if (!settings.db) {
+	if (!settings.db || config['autobop'] != 'on') {
 		return;
 	}
 
@@ -226,7 +227,7 @@ function db_vote(data) {
 }
 
 function db_registered(data) {
-	if (!settings.db) {
+	if (!settings.db || config['autobop'] != 'on') {
 		return;
 	}
 
@@ -414,6 +415,7 @@ function do_command (data) {
 		case 'mute':
 		case 'follow':
 		case 'autoskip':
+		case 'database':
 			if (args == '') {
 				toggle_config(command);
 			} else {
