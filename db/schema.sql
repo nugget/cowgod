@@ -108,3 +108,24 @@ CREATE TRIGGER onupdate BEFORE UPDATE ON users FOR EACH ROW EXECUTE PROCEDURE on
 
 GRANT SELECT,INSERT ON votelog TO bots;
 GRANT ALL ON votelog_id_seq TO bots;
+
+
+CREATE FUNCTION nick(varchar) RETURNS varchar AS $$
+	DECLARE
+		nick varchar;
+	BEGIN
+		nick := (SELECT nickname FROM users_joins WHERE user_id = $1 ORDER BY ts DESC LIMIT 1);
+		
+		IF nick IS NULL THEN
+			nick := $1;
+		END IF;
+
+		RETURN nick;
+	END;
+$$ LANGUAGE plpgsql;
+
+CREATE VIEW songlog_expanded AS
+	SELECT l.*, nick(l.dj_id) as nickname, s.artist, s.song FROM songlog l LEFT JOIN songs s ON s.song_id = l.song_id;
+
+CREATE VIEW snaglog_expanded AS
+	SELECT s.ts,s.user_id,nick(s.user_id) as nickname,l.dj_id, nick(l.dj_id) as dj_nickname,l.artist,l.song FROM snaglog s LEFT JOIN songlog_expanded l ON s.play_id = l.id;
