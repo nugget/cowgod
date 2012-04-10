@@ -110,11 +110,11 @@ GRANT SELECT,INSERT ON votelog TO bots;
 GRANT ALL ON votelog_id_seq TO bots;
 
 
-CREATE FUNCTION nick(varchar) RETURNS varchar AS $$
+CREATE OR REPLACE FUNCTION nick(varchar) RETURNS varchar AS $$
 	DECLARE
 		nick varchar;
 	BEGIN
-		nick := (SELECT nickname FROM users_joins WHERE user_id = $1 ORDER BY ts DESC LIMIT 1);
+		nick := (SELECT nickname FROM users WHERE user_id = $1 LIMIT 1);
 		
 		IF nick IS NULL THEN
 			nick := $1;
