@@ -218,7 +218,7 @@ function db_vote(data) {
 	var user = data.room.metadata.votelog[0][0];
 	var vote = data.room.metadata.votelog[0][1];
 
-	botdb.query('INSERT INTO votelog (play_id, user_id, vote) SELECT max(id), $1, $2 FROM songlog WHERE room_id = $3', [
+	botdb.query('INSERT INTO votelog (play_id, user_id, vote) SELECT id, $1, $2 FROM songlog WHERE room_id = $3 ORDER BY ts DESC LIMIT 1', [
 		user,
 		vote,
 		global['roomid']
