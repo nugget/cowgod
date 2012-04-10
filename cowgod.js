@@ -295,12 +295,13 @@ function db_saysnag(data) {
 			util.log(util.inspect(err));
 		}
 
-	    if (typeof result.nickname === 'undefined') {
+	    if (typeof result.rows[0].nickname === 'undefined') {
 			logger('No record of this song having been snagged');
 		} else {
-			logger('! Woot!  '+result.ts+' snag date!');
-			var saybuf = result.nickname+' snagged this song from '+result.dj_nickname+'!';
+			logger('! Woot!  '+result.rows[0].ts+' snag date!');
+			var saybuf = result.rows[0].nickname+' snagged this song from '+result.rows[0].dj_nickname+'!';
 			logger(saybuf);
+			lag_say(saybuf);
 		}
 	});
 }
