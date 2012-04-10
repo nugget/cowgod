@@ -22,6 +22,7 @@ config['autobop']	= 'off';
 config['mute']		= 'off';
 config['follow']	= 'on';
 config['database']	= 'on';
+config['say_snags']	= 'on';
 
 var global = new Object();
 global['myvote']	= 'none';
@@ -202,9 +203,9 @@ function db_snag(data) {
 		return;
 	}
 
-	logger('logging snag to db');
+	logger('logging snag to db for'+global['roomid']);
 
-	botdb.query('INSERT INTO snaglog (play_id, user_id) SELECT max(id), $1 FROM songlog WHERE room_id = $2', [
+	botdb.query('INSERT INTO snaglog (play_id, user_id) SELECT id, $1 FROM songlog WHERE room_id = $2 ORDER BY ts DESC LIMIT 1', [
 		data.userid,
 		global['roomid']
 	]);
@@ -266,6 +267,43 @@ function db_registered(data) {
 	]);
 }
 
+function db_saysnag(data) {
+	if (!settings.db || config['database'] != 'on' || config['say_snags'] != 'on') {
+		return;
+	}
+
+	//util.log(util.inspect(data));
+	//
+	global['cursong']      = data.room.metadata.current_song._id;
+	global['cursongname']  = data.room.metadata.current_song.metadata.song;
+	global['curdjid']      = data.room.metadata.current_song.djid;
+	global['curdjname']     = data.room.metadata.current_song.djname;
+
+	botdb.query('SELECT * FROM snaglog_expanded WHERE song_id = $1 AND user_id = $2', [
+		data.room.metadata.current_song._id,
+		data.room.metadata.current_song.djid
+	], function (err,result) {
+		logger('Here is result');
+		util.log(util.inspect(result));
+		logger('Here is err');
+		util.log(util.inspect(err));
+
+		var moo = util.inspect(err);
+		if (moo != 'null') {
+			logger('db error');
+			util.log(util.inspect(data));
+			util.log(util.inspect(err));
+		}
+
+	    if (typeof result.nickname === 'undefined') {
+			logger('No record of this song having been snagged');
+		} else {
+			logger('! Woot!  '+result.ts+' snag date!');
+			var saybuf = result.nickname+' snagged this song from '+result.dj_nickname+'!';
+			logger(saybuf);
+		}
+	});
+}
 
 function pick_random(count) {
 	var indexFrom = 0;
@@ -631,6 +669,8 @@ bot.on('newsong', function (data) {
 		global['myvote'] = 'none';
 		// logger('= Clearing my vote for the new song');
 	}
+
+	db_saysnag(data);
 });
 
 bot.on('endsong', function (data) { 
