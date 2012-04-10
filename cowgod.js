@@ -121,7 +121,7 @@ function dump_queue() {
 }
 
 function db_newsong(data) {
-	if (!settings.db || config['autobop'] != 'on') {
+	if (!settings.db || config['database'] != 'on') {
 		return;
 	}
 
@@ -146,7 +146,7 @@ function db_newsong(data) {
 }
 
 function db_endsong(data) {
-	if (!settings.db || config['autobop'] != 'on') {
+	if (!settings.db || config['database'] != 'on') {
 		return;
 	}
 	botdb.query('UPDATE songlog SET stats_djcount = $1, stats_listeners = $2 WHERE song_id = $3 AND room_id = $4 AND stats_djcount IS NULL', [
@@ -166,7 +166,7 @@ function db_endsong(data) {
 }
 
 function db_songdb(song) {
-	if (!settings.db || config['autobop'] != 'on') {
+	if (!settings.db || config['database'] != 'on') {
 		return;
 	}
 
@@ -197,7 +197,7 @@ function db_songdb(song) {
 }
 
 function db_snag(data) {
-	if (!settings.db || config['autobop'] != 'on') {
+	if (!settings.db || config['database'] != 'on') {
 		return;
 	}
 
@@ -210,7 +210,7 @@ function db_snag(data) {
 }
 
 function db_vote(data) {
-	if (!settings.db || config['autobop'] != 'on') {
+	if (!settings.db || config['database'] != 'on') {
 		return;
 	}
 
@@ -227,7 +227,7 @@ function db_vote(data) {
 }
 
 function db_registered(data) {
-	if (!settings.db || config['autobop'] != 'on') {
+	if (!settings.db || config['database'] != 'on') {
 		return;
 	}
 
