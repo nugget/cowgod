@@ -303,7 +303,7 @@ function db_saysnag(data) {
 			logger('! Woot!  '+result.rows[0].ts+' snag date!');
 			var saybuf = result.rows[0].nickname+' snagged this song from '+result.rows[0].dj_nickname+' '+result.rows[0].age_text+'!';
 			logger(saybuf);
-			// lag_say(saybuf);
+			lag_say(saybuf);
 		}
 	});
 }
