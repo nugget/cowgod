@@ -122,11 +122,14 @@ function dump_queue() {
 
 function db_newsong(data) {
 	if (!settings.db || config['database'] != 'on') {
+		logger('no database configured');
 		return;
 	}
 
 	logger('logging a new song to the database');
 	//util.log(util.inspect(data));
+	//
+	db_songdb(data.room.metadata.current_song);
 
 	botdb.query('INSERT INTO songlog (song_id,room_id,dj_id,stats_djs) SELECT $1,$2,$3,$4', [
 		data.room.metadata.current_song._id,
@@ -141,8 +144,6 @@ function db_newsong(data) {
 			util.log(util.inspect(err));
 		}
 	});
-
-	db_songdb(data.room.metadata.current_song);
 }
 
 function db_endsong(data) {
