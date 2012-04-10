@@ -46,7 +46,7 @@ CREATE TRIGGER onupdate BEFORE UPDATE ON users FOR EACH ROW EXECUTE PROCEDURE on
 CREATE TABLE users_joins (
 	id SERIAL NOT NULL,
 	ts timestamp(0) without time zone NOT NULL DEFAULT (current_timestamp at time zone 'utc'),
-	user_id varchar NOT NULL REFERENCES users(user_id),
+	user_id varchar NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
 	room_id varchar NOT NULL,
 	nickname varchar NOT NULL,
 	device varchar,
@@ -62,9 +62,9 @@ GRANT ALL ON users_joins_id_seq TO bots;
 CREATE TABLE songlog (
 	id serial NOT NULL,
 	ts timestamp(0) without time zone NOT NULL DEFAULT (current_timestamp at time zone 'utc'),
-	song_id varchar NOT NULL,
+	song_id varchar NOT NULL REFERENCES songs(song_id) ON DELETE CASCADE,
 	room_id varchar NOT NULL,
-	user_id varchar NOT NULL,
+	dj_id varchar NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
 	stats_djcount integer,
 	stats_listeners integer,
 	stats_djs varchar,
@@ -87,7 +87,7 @@ CREATE TABLE votelog (
 	id serial NOT NULL,
 	ts timestamp(0) without time zone NOT NULL DEFAULT (current_timestamp at time zone 'utc'),
 	play_id integer NOT NULL REFERENCES songlog(id),
-	user_id varchar,
+	user_id varchar NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
 	vote varchar,
 	PRIMARY KEY(id)
 );
@@ -100,8 +100,8 @@ CREATE TABLE queue (
 	changed timestamp(0) without time zone NOT NULL DEFAULT (current_timestamp at time zone 'utc'),
 	deleted timestamp(0) without time zone,
 	sequence integer NOT NULL,
-	user_id varchar NOT NULL,
-	song_id varchar NOT NULL,
+	user_id varchar NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+	song_id varchar NOT NULL REFERENCES songs(song_id) ON DELETE CASCADE,
 	PRIMARY KEY(id)
 );
 CREATE TRIGGER onupdate BEFORE UPDATE ON users FOR EACH ROW EXECUTE PROCEDURE onupdate_changed();
