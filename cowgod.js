@@ -241,7 +241,14 @@ function db_registered(data) {
 		data.user[0].userid,
 		data.user[0].name,
 		data.user[0].userid
-	]);
+	], function (err) {
+		var moo = util.inspect(err);
+		if (moo != 'null') {
+			logger('db error');
+			util.log(util.inspect(data));
+			util.log(util.inspect(err));
+		}
+	});
 
 	botdb.query('INSERT INTO users_joins (user_id,room_id,nickname,device,acl,fans,points,avatarid) SELECT $1,$2,$3,$4,$5,$6,$7,$8', [
 		data.user[0].userid,
