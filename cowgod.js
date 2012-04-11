@@ -290,11 +290,6 @@ function db_saysnag(data) {
 		data.room.metadata.current_song._id,
 		data.room.metadata.current_song.djid
 	], function (err,result) {
-		logger('Here is result');
-		util.log(util.inspect(result));
-		logger('Here is err');
-		util.log(util.inspect(err));
-
 		var moo = util.inspect(err);
 		if (moo != 'null') {
 			logger('db error');
@@ -303,13 +298,11 @@ function db_saysnag(data) {
 		}
 
 	    if (result.rows.length != 1) {
-			logger('No record of this song having been snagged');
+			// logger('No record of this song having been snagged');
 		} else {
-			logger('age text');
 			util.log(util.inspect(result.rows[0].age_text));
-			logger('! Woot!  '+result.rows[0].ts+' snag date!');
 			var saybuf = result.rows[0].nickname+' snagged this song from '+result.rows[0].dj_nickname+' '+result.rows[0].age_text+'!';
-			logger(saybuf);
+			// logger(saybuf);
 			lag_say(saybuf);
 		}
 	});
