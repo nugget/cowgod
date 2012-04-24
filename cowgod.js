@@ -450,6 +450,7 @@ function do_command (data) {
 		case 'avatar':
 			args = parseInt(args);
 			bot.setAvatar(args);
+			break;
 		case 'say':
 			say(args);
 			break;
@@ -582,7 +583,7 @@ var bot = new Bot(settings.token, settings.userid, settings.roomid);
 bot.debug = settings.debug;
 
 // bot.modifyLaptop(settings.laptop);
-bot.setAvatar(settings.avatar);
+// bot.setAvatar(settings.avatar);
 
 bot.on('roomChanged', function (data) { 
 	global['roomid'] = data.room.roomid;
