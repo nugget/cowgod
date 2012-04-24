@@ -38,6 +38,9 @@ users['Storm(e)']	= '4e3e10a94fe7d05787083cf1';
 users['Olive']		= '4e0a03aaa3f7517d0f0e639d';
 users['PitDemon']	= '4f50ed44590ca261fa004904';
 users['Dario']		= '4e00e584a3f75104e30b9fec';
+users['Becca']		= '4eeabf24590ca2576200265b';
+users['Buff']		= '4e123f71a3f75114d000f378';
+users['Bubba_Hotep']= '4e15cf89a3f751698c020b2f';
 
 config['owner']	= users['nugget'];
 
@@ -47,8 +50,11 @@ admins.push(users['SnS']);
 admins.push(users['Bagel']);
 
 var leaders = new Array();
-leaders.push(users['Bagel']);
 leaders.push(users['Jello']);
+leaders.push(users['Becca']);
+leaders.push(users['Dario']);
+leaders.push(users['Buff']);
+leaders.push(users['Bubba_Hotep']);
 
 //Bagel added this to track pending queue dump
 var pendingQueueDump;
