@@ -222,16 +222,32 @@ function db_vote(data) {
 		return;
 	}
 
-	logger('logging vote to db for'+global['roomid']);
-
 	var user = data.room.metadata.votelog[0][0];
 	var vote = data.room.metadata.votelog[0][1];
+
+	if (user == '') {
+		logger('Ignoring anonymous downvote');
+		return;
+	}
+
+	logger('logging vote to db for room:'+global['roomid']+' user:'+user+' vote:'+vote);
 
 	botdb.query('INSERT INTO votelog (play_id, user_id, vote) SELECT id, $1, $2 FROM songlog WHERE room_id = $3 ORDER BY ts DESC LIMIT 1', [
 		user,
 		vote,
 		global['roomid']
 	]);
+}
+
+function join_response(data) {
+	if (settings.userid != '4f50ea86a3f7517d6c006f16') {
+		// This stuff only works for cowgod.
+		return;
+	}
+
+	if (data.user[0].userid == users['Becca']) {
+		lag_heart('Yay! I <3 Becca!');
+	}
 }
 
 function db_registered(data) {
@@ -378,6 +394,14 @@ function say(text) {
 function lag_say (text) {
 	waitms = parseInt(Math.random() * 8000)+500;
 	setTimeout(function(){ say(text); }, waitms);
+}
+
+function lag_heart (text) {
+	waitms = parseInt(Math.random() * 8000)+500;
+	setTimeout(function(){ 
+		say(text);
+		bot.snag();
+	}, waitms);
 }
 
 function id_to_name (user_id) {
@@ -618,6 +642,8 @@ bot.on('registered', function (data) {
 	logger('* '+data.user[0].name+' joined the room on a '+data.user[0].laptop+' ('+data.user[0].points+' points) uid '+data.user[0].userid);
 	logger_tsv([ 'event','joined','userid',data.user[0].userid,'username',data.user[0].name,'device',data.user[0].laptop ]);
 	db_registered(data);
+
+	join_response(data);
 });
 
 bot.on('snagged', function (data) {
@@ -703,9 +729,9 @@ bot.on('update_votes', function (data) {
 	if (user == '') {
 		if (vote == 'down') {
 			if (global['myvote'] != 'down') {
-				logger('- Voting '+vote+'!  Because I will dump on anyone');
-				global['myvote'] = vote;
-				lag_vote(vote);
+				// logger('- Voting '+vote+'!  Because I will dump on anyone');
+				// global['myvote'] = vote;
+				// lag_vote(vote);
 			}
 		}
 	} else if (is_leader(user)) {
