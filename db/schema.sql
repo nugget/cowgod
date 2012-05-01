@@ -24,6 +24,7 @@ CREATE TABLE songs (
 	coverart varchar,
 	md5 varchar,
 	labelid integer,
+	trip_odometer boolean NOT NULL DEFAULT FALSE,
 	PRIMARY KEY(song_id)
 );
 GRANT SELECT,INSERT ON songs TO bots;
@@ -124,12 +125,15 @@ CREATE OR REPLACE FUNCTION nick(varchar) RETURNS varchar AS $$
 	END;
 $$ LANGUAGE plpgsql;
 
-DROP VIEW snaglog_expanded, songlog_expanded;
+DROP VIEW snaglog_expanded, songlog_expanded, joins_expanded;
 
 CREATE VIEW songlog_expanded AS
-	SELECT l.*, nick(l.dj_id) as nickname, s.artist, s.song, age(date_trunc('day',current_timestamp),date_trunc('day',l.ts))::varchar||' ago' as age_text FROM songlog l LEFT JOIN songs s ON s.song_id = l.song_id;
+	SELECT l.*, nick(l.dj_id) as nickname, s.artist, s.song, s.trip_odometer, age(date_trunc('day',current_timestamp),date_trunc('day',l.ts))::varchar||' ago' as age_text FROM songlog l LEFT JOIN songs s ON s.song_id = l.song_id;
 
 CREATE VIEW snaglog_expanded AS
 	SELECT s.ts,s.user_id,nick(s.user_id) as nickname,l.dj_id, nick(l.dj_id) as dj_nickname,l.song_id,l.artist,l.song, age(date_trunc('day',current_timestamp),date_trunc('day',s.ts))::varchar||' ago' as age_text FROM snaglog s LEFT JOIN songlog_expanded l ON s.play_id = l.id;
 
-GRANT SELECT ON snaglog_expanded, songlog_expanded TO bots;
+CREATE VIEW joins_expanded AS
+	SELECT *, age(date_trunc('hour',current_timestamp),date_trunc('day',ts))::varchar||' ago' as age_text FROM users_joins;
+
+GRANT SELECT ON snaglog_expanded, songlog_expanded, joins_expanded TO bots;

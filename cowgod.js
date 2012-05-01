@@ -18,11 +18,12 @@ if (settings.dbname) {
 }
 
 var config = new Object();
-config['autobop']	= 'off';
-config['mute']		= 'off';
-config['follow']	= 'on';
-config['database']	= 'on';
-config['say_snags']	= 'on';
+config['autobop']		= 'off';
+config['mute']			= 'off';
+config['follow']		= 'on';
+config['database']		= 'on';
+config['say_snags']		= 'on';
+config['say_odometer']	= 'on';
 
 var global = new Object();
 global['myvote']	= 'none';
@@ -296,6 +297,52 @@ function db_registered(data) {
 	]);
 }
 
+function db_sayodometer(data) {
+	if (!settings.db || config['database'] != 'on' || config['say_odometer'] != 'on') {
+		return;
+	}
+
+	//util.log(util.inspect(data));
+
+	botdb.query('SELECT song_id, count(*) FROM songlog WHERE dj_id = $1 GROUP BY song_id ORDER BY count DESC LIMIT 1', [
+		data.room.metadata.current_song.djid
+	], function (err,result) {
+		var moo = util.inspect(err);
+		if (moo != 'null') {
+			logger('db error');
+			util.log(util.inspect(data));
+			util.log(util.inspect(err));
+		}
+	    if (result.rows.length == 1) {
+			if (result.rows[0].song_id == data.room.metadata.current_song._id) { 
+				util.log(util.inspect(result.rows[0].age_text));
+				var saybuf = 'This is '+data.room.metadata.current_song.djname+'\'s favorite song! '+result.rows[0].count+' plays.';
+				logger(saybuf);
+				if (result.rows[0].count > 3) {
+					lag_say(saybuf);
+				}
+			}
+		}
+	});
+
+	botdb.query('SELECT * FROM songlog_expanded WHERE song_id = $1 AND trip_odometer IS TRUE AND ts < current_timestamp at time zone \'utc\' - \'1 minute\'::interval ORDER BY ts DESC LIMIT 1', [
+		data.room.metadata.current_song._id
+	], function (err,result) {
+		var moo = util.inspect(err);
+		if (moo != 'null') {
+			logger('db error');
+			util.log(util.inspect(data));
+			util.log(util.inspect(err));
+		}
+	    if (result.rows.length == 1) {
+			util.log(util.inspect(result.rows[0].age_text));
+			var saybuf = result.rows[0].nickname+' last played this song '+result.rows[0].age_text+'!';
+			// logger(saybuf);
+			lag_say(saybuf);
+		}
+	});
+}
+
 function db_saysnag(data) {
 	if (!settings.db || config['database'] != 'on' || config['say_snags'] != 'on') {
 		return;
@@ -328,6 +375,12 @@ function db_saysnag(data) {
 			lag_say(saybuf);
 		}
 	});
+}
+
+function db_seen(nick) {
+	if (!settings.db || config['database'] != 'on') {
+		return;
+	}
 }
 
 function pick_random(count) {
@@ -707,6 +760,7 @@ bot.on('newsong', function (data) {
 	}
 
 	db_saysnag(data);
+	db_sayodometer(data);
 });
 
 bot.on('endsong', function (data) { 
