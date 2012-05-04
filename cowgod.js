@@ -91,6 +91,15 @@ function logger_tsv(larray) {
 	}
 }
 
+function error_caught(err) {
+	if (err == null) {
+		return false;
+		logger('error_caught function sees no problem');
+	}
+	logger('database '+err+' (code '+err.code+' at pos '+err.position+')');
+	return true;
+}
+
 function dump_queue() {
 	logger('- dumping queue to file');
 	bot.playlistAll(function(data) { 
@@ -145,12 +154,7 @@ function db_newsong(data) {
 		data.room.metadata.current_dj,
 		data.room.metadata.djs
 	], function(err) {
-		var moo = util.inspect(err);
-		if (moo != 'null') {
-			logger('db error');
-			util.log(util.inspect(data));
-			util.log(util.inspect(err));
-		}
+		if (error_caught(err)) { return; }
 	});
 }
 
@@ -260,17 +264,12 @@ function db_registered(data) {
 
 	//util.log(util.inspect(data));
 
-	botdb.query('INSERT INTO users (user_id,nickname) SELECT $1,$2 WHERE 1 NOT IN (SELECT 1 FROM users WHERE user_id = $3)', [
+	botdb.query('INERT INTO users (user_id,nickname) SELECT $1,$2 WHERE 1 NOT IN (SELECT 1 FROM users WHERE user_id = $3)', [
 		data.user[0].userid,
 		data.user[0].name,
 		data.user[0].userid
-	], function (err) {
-		var moo = util.inspect(err);
-		if (moo != 'null') {
-			logger('db error');
-			util.log(util.inspect(data));
-			util.log(util.inspect(err));
-		}
+	], function (err, result) {
+		if (error_caught(err)) { return; }
 	});
 
 	botdb.query('INSERT INTO users_joins (user_id,room_id,nickname,device,acl,fans,points,avatarid) SELECT $1,$2,$3,$4,$5,$6,$7,$8', [
