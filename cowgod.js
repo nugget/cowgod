@@ -91,12 +91,15 @@ function logger_tsv(larray) {
 	}
 }
 
-function error_caught(err) {
+function error_caught(err,context = '') {
 	if (err == null) {
 		return false;
 		logger('error_caught function sees no problem');
 	}
-	logger('database '+err+' (code '+err.code+' at pos '+err.position+')');
+	if (context != '') {
+		context = ' '+context;
+	}
+	logger('database '+err+' (code '+err.code+' at pos '+err.position+context+)');
 	return true;
 }
 
@@ -153,7 +156,7 @@ function db_newsong(data) {
 		data.roomid,
 		data.room.metadata.current_dj,
 		data.room.metadata.djs
-	], function(err) {
+	], function(err,result) {
 		if (error_caught(err)) { return; }
 	});
 }
@@ -167,13 +170,8 @@ function db_endsong(data) {
 		data.room.metadata.listeners,
 		data.room.metadata.current_song._id,
 		data.room.roomid
-	], function(err) {
-		var moo = util.inspect(err);
-		if (moo != 'null') {
-			logger('db error');
-			util.log(util.inspect(data));
-			util.log(util.inspect(err));
-		}
+	], function(err,result) {
+		if (error_caught(err)) { return; }
 	});
 	db_songdb(data.room.metadata.current_song);
 }
@@ -199,13 +197,8 @@ function db_songdb(song) {
 		song.metadata.md5,
 		song.metadata.labelid,
 		song._id
-	], function(err) {
-		var moo = util.inspect(err);
-		if (moo != 'null') {
-			logger('db error');
-			util.log(util.inspect(song));
-			util.log(util.inspect(err));
-		}
+	], function(err,result) {
+		if (error_caught(err)) { return; }
 	});
 }
 
@@ -219,7 +212,9 @@ function db_snag(data) {
 	botdb.query('INSERT INTO snaglog (play_id, user_id) SELECT id, $1 FROM songlog WHERE room_id = $2 ORDER BY ts DESC LIMIT 1', [
 		data.userid,
 		global['roomid']
-	]);
+	], function(err,result) {
+		if (error_caught(err)) { return; }
+	});
 }
 
 function db_vote(data) {
@@ -241,7 +236,9 @@ function db_vote(data) {
 		user,
 		vote,
 		global['roomid']
-	]);
+	], function(err,result) {
+		if (error_caught(err)) { return; }
+	});
 }
 
 function join_response(data) {
@@ -268,7 +265,7 @@ function db_registered(data) {
 		data.user[0].userid,
 		data.user[0].name,
 		data.user[0].userid
-	], function (err, result) {
+	], function(err,result) {
 		if (error_caught(err)) { return; }
 	});
 
@@ -281,19 +278,16 @@ function db_registered(data) {
 		data.user[0].fans,
 		data.user[0].points,
 		data.user[0].avatarid
-	], function (err) {
-		var moo = util.inspect(err);
-		if (moo != 'null') {
-			logger('db error');
-			util.log(util.inspect(data));
-			util.log(util.inspect(err));
-		}
+	], function(err,result) {
+		if (error_caught(err)) { return; }
 	});
 
 	botdb.query('UPDATE users SET nickname = $1 WHERE user_id = $2', [
 		data.user[0].name,
 		data.user[0].userid
-	]);
+	], function(err,result) {
+		if (error_caught(err)) { return; }
+	});
 }
 
 function db_sayodometer(data) {
@@ -306,12 +300,8 @@ function db_sayodometer(data) {
 	botdb.query('SELECT song_id, count(*) FROM songlog WHERE dj_id = $1 GROUP BY song_id ORDER BY count DESC LIMIT 1', [
 		data.room.metadata.current_song.djid
 	], function (err,result) {
-		var moo = util.inspect(err);
-		if (moo != 'null') {
-			logger('db error');
-			util.log(util.inspect(data));
-			util.log(util.inspect(err));
-		}
+		if (error_caught(err)) { return; }
+
 	    if (result.rows.length == 1) {
 			if (result.rows[0].song_id == data.room.metadata.current_song._id) { 
 				util.log(util.inspect(result.rows[0].age_text));
@@ -327,12 +317,8 @@ function db_sayodometer(data) {
 	botdb.query('SELECT * FROM songlog_expanded WHERE song_id = $1 AND trip_odometer IS TRUE AND ts < current_timestamp at time zone \'utc\' - \'1 minute\'::interval ORDER BY ts DESC LIMIT 1', [
 		data.room.metadata.current_song._id
 	], function (err,result) {
-		var moo = util.inspect(err);
-		if (moo != 'null') {
-			logger('db error');
-			util.log(util.inspect(data));
-			util.log(util.inspect(err));
-		}
+		if (error_caught(err)) { return; }
+
 	    if (result.rows.length == 1) {
 			util.log(util.inspect(result.rows[0].age_text));
 			var saybuf = result.rows[0].nickname+' last played this song '+result.rows[0].age_text+'!';
@@ -358,12 +344,7 @@ function db_saysnag(data) {
 		data.room.metadata.current_song._id,
 		data.room.metadata.current_song.djid
 	], function (err,result) {
-		var moo = util.inspect(err);
-		if (moo != 'null') {
-			logger('db error');
-			util.log(util.inspect(data));
-			util.log(util.inspect(err));
-		}
+		if (error_caught(err)) { return; }
 
 	    if (result.rows.length != 1) {
 			// logger('No record of this song having been snagged');
