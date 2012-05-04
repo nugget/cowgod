@@ -8,6 +8,7 @@ Getting Started
 
 * copy settings.js.default to settings.js and edit to taste
 * run "npm install ttapi"
+* run "npm install pg" (if you want to use a PostgreSQL database)
 * mkdir log
 * run "node cowgod.js"
 
