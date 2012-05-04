@@ -43,6 +43,8 @@ users['Becca']		= '4eeabf24590ca2576200265b';
 users['Buff']		= '4e123f71a3f75114d000f378';
 users['Bubba_Hotep']= '4e15cf89a3f751698c020b2f';
 
+var usernames = new Object();
+
 config['owner']	= users['nugget'];
 
 var admins = new Array();
@@ -466,6 +468,11 @@ function id_to_name (user_id) {
 	if (user_id == settings.userid) {
 		return 'The Bot';
 	}
+	for (var k in usernames) {
+		if (k == user_id) {
+			return usernames[k];
+		}
+	}
 	for (var k in users) {
 		if (users.hasOwnProperty(k)) {
 			if (users[k] == user_id) {
@@ -686,13 +693,19 @@ bot.on('roomChanged', function (data) {
 	logger('! Room changed to '+data.room.name+' ('+data.room.roomid+')');
 	logger_tsv([ 'event','newroom','roomname',data.room.name ]);
 
-	// util.log(util.inspect(data));
+	util.log(util.inspect(data));
 
 	if (data.room.metadata.current_song == null) {
 		logger('- Nothing is currently playing');
 	} else {
 		global['cursong'] = data.room.metadata.current_song._id;
 		logger('! Now Playing '+data.room.metadata.current_song.metadata.song);
+	}
+
+	for (i=0; i< data.users.length; i++) {
+		// util.log(util.inspect(data.users[i]));
+		usernames[data.users[i].userid] = data.users[i].name;
+		logger('I see '+data.users[i].name);
 	}
 
 	bot.modifyLaptop(settings.laptop);
@@ -707,8 +720,8 @@ bot.on('roomChanged', function (data) {
 bot.on('registered', function (data) {
 	logger('* '+data.user[0].name+' joined the room on a '+data.user[0].laptop+' ('+data.user[0].points+' points) uid '+data.user[0].userid);
 	logger_tsv([ 'event','joined','userid',data.user[0].userid,'username',data.user[0].name,'device',data.user[0].laptop ]);
+	usernames[data.user[0].userid] = data.user[0].name;
 	db_registered(data);
-
 	join_response(data);
 });
 
