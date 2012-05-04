@@ -18,12 +18,12 @@ if (settings.dbname) {
 }
 
 var config = new Object();
-config['autobop']		= 'off';
-config['mute']			= 'off';
-config['follow']		= 'on';
-config['database']		= 'on';
-config['say_snags']		= 'on';
-config['say_odometer']	= 'on';
+config['autobop']		= settings.autobop;
+config['mute']			= settings.mute;
+config['follow']		= settings.follow;
+config['database']		= settings.db;
+config['say_snags']		= settings.say_snags;
+config['say_odometer']	= settings.say_odometer;
 
 var global = new Object();
 global['myvote']	= 'none';
