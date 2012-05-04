@@ -14,12 +14,12 @@ settings.log_tsv		= 'log/log.tsv';
 settings.say_snags		= 'off';
 settings.say_odometer	= 'off';
 
-settings.dbname = 'databasename';
-settings.dbhost = 'localhost';
-settings.dbport = '5432';
-settings.dbuser = 'username';
-settings.dbpass = 'password';
-settings.dbreadonly = false;
+// settings.dbname = 'databasename';
+// settings.dbhost = 'localhost';
+// settings.dbport = '5432';
+// settings.dbuser = 'username';
+// settings.dbpass = 'password';
+// settings.dbreadonly = false;
 
 settings.debug = false;
 
