@@ -104,25 +104,6 @@ function after(callback) {
 	}
 }
 
-function error_caught(err,context) {
-	if (err == null) {
-		return false;
-		logger('error_caught function sees no problem');
-	}
-	if (context != null) {
-		context = ' '+context;
-	} else {
-		context = '';
-	}
-	logger('');
-	console.log(util.inspect(arguments.callee));
-	logger('');
-	console.log(arguments.callee.caller.toString());
-	logger('');
-	logger('database '+err+' (code '+err.code+' at pos '+err.position+context+')');
-	return true;
-}
-
 function dump_queue() {
 	logger('- dumping queue to file');
 	bot.playlistAll(function(data) { 
@@ -176,9 +157,7 @@ function db_newsong(data) {
 		data.roomid,
 		data.room.metadata.current_dj,
 		data.room.metadata.djs
-	], function(err,result) {
-		if (error_caught(err)) { return; }
-	});
+	], after(function(result) {} ));
 }
 
 function db_endsong(data) {
@@ -190,9 +169,7 @@ function db_endsong(data) {
 		data.room.metadata.listeners,
 		data.room.metadata.current_song._id,
 		data.room.roomid
-	], function(err,result) {
-		if (error_caught(err)) { return; }
-	});
+	], after(function(result) {} ));
 	db_songdb(data.room.metadata.current_song);
 }
 
@@ -217,9 +194,7 @@ function db_songdb(song) {
 		song.metadata.md5,
 		song.metadata.labelid,
 		song._id
-	], function(err,result) {
-		if (error_caught(err)) { return; }
-	});
+	], after(function(result) {} ));
 }
 
 function db_snag(data) {
@@ -232,9 +207,7 @@ function db_snag(data) {
 	botdb.query('INSERT INTO snaglog (play_id, user_id) SELECT id, $1 FROM songlog WHERE room_id = $2 ORDER BY ts DESC LIMIT 1', [
 		data.userid,
 		global['roomid']
-	], function(err,result) {
-		if (error_caught(err)) { return; }
-	});
+	], after(function(result) {} ));
 }
 
 function db_vote(data) {
@@ -256,9 +229,7 @@ function db_vote(data) {
 		user,
 		vote,
 		global['roomid']
-	], function(err,result) {
-		if (error_caught(err)) { return; }
-	});
+	], after(function(result) {} ));
 }
 
 function join_response(data) {
@@ -296,16 +267,12 @@ function db_registered(data) {
 		data.user[0].fans,
 		data.user[0].points,
 		data.user[0].avatarid
-	], function(err,result) {
-		if (error_caught(err)) { return; }
-	});
+	], after(function(result) {} ));
 
 	botdb.query('UPDATE users SET nickname = $1 WHERE user_id = $2', [
 		data.user[0].name,
 		data.user[0].userid
-	], function(err,result) {
-		if (error_caught(err)) { return; }
-	});
+	], after(function(result) {} ));
 }
 
 function db_loadleaders() {
@@ -371,9 +338,7 @@ function db_sayodometer(data) {
 
 	botdb.query('SELECT song_id, count(*) FROM songlog WHERE dj_id = $1 GROUP BY song_id ORDER BY count DESC LIMIT 1', [
 		data.room.metadata.current_song.djid
-	], function (err,result) {
-		if (error_caught(err)) { return; }
-
+	], after(function(result) {
 	    if (result.rows.length == 1) {
 			if (result.rows[0].song_id == data.room.metadata.current_song._id) { 
 				util.log(util.inspect(result.rows[0].age_text));
@@ -384,20 +349,18 @@ function db_sayodometer(data) {
 				}
 			}
 		}
-	});
+	}));
 
 	botdb.query('SELECT * FROM songlog_expanded WHERE song_id = $1 AND trip_odometer IS TRUE AND ts < current_timestamp at time zone \'utc\' - \'1 minute\'::interval ORDER BY ts DESC LIMIT 1', [
 		data.room.metadata.current_song._id
-	], function (err,result) {
-		if (error_caught(err)) { return; }
-
+	], after(function(result) {
 	    if (result.rows.length == 1) {
 			util.log(util.inspect(result.rows[0].age_text));
 			var saybuf = result.rows[0].nickname+' last played this song '+result.rows[0].age_text+'!';
 			// logger(saybuf);
 			lag_say(saybuf);
 		}
-	});
+	}));
 }
 
 function db_saysnag(data) {
@@ -415,9 +378,7 @@ function db_saysnag(data) {
 	botdb.query('SELECT * FROM snaglog_expanded WHERE song_id = $1 AND user_id = $2', [
 		data.room.metadata.current_song._id,
 		data.room.metadata.current_song.djid
-	], function (err,result) {
-		if (error_caught(err)) { return; }
-
+	], after(function(result) {
 	    if (result.rows.length != 1) {
 			// logger('No record of this song having been snagged');
 		} else {
@@ -426,7 +387,7 @@ function db_saysnag(data) {
 			// logger(saybuf);
 			lag_say(saybuf);
 		}
-	});
+	}));
 }
 
 function db_seen(nick) {
