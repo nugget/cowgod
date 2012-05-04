@@ -94,6 +94,17 @@ function logger_tsv(larray) {
 	}
 }
 
+function db_read() {
+	return settings.db;
+}
+
+function db_write() {
+	if (!settings.db || settings.dbreadonly) {
+		return false;
+	}
+	return true;
+}
+
 function after(callback) {
 	return function(err, queryResult) {
 		if(err) {
@@ -142,9 +153,7 @@ function dump_queue() {
 }
 
 function db_newsong(data) {
-	if (!settings.db || config['database'] != 'on') {
-		return;
-	}
+	if (!db_write()) { return; }
 
 	logger('logging a new song to the database');
 	//util.log(util.inspect(data));
@@ -160,9 +169,8 @@ function db_newsong(data) {
 }
 
 function db_endsong(data) {
-	if (!settings.db || config['database'] != 'on') {
-		return;
-	}
+	if (!db_write()) { return; }
+
 	botdb.query('UPDATE songlog SET stats_djcount = $1, stats_listeners = $2 WHERE song_id = $3 AND room_id = $4 AND stats_djcount IS NULL', [
 		data.room.metadata.djcount,
 		data.room.metadata.listeners,
@@ -173,9 +181,7 @@ function db_endsong(data) {
 }
 
 function db_songdb(song) {
-	if (!settings.db || config['database'] != 'on') {
-		return;
-	}
+	if (!db_write()) { return; }
 
 	song.metadata.album = song.metadata.album.replace(/\u0000/g,'');
 	song.metadata.artist = song.metadata.artist.replace(/\u0000/g,'');
@@ -197,9 +203,7 @@ function db_songdb(song) {
 }
 
 function db_snag(data) {
-	if (!settings.db || config['database'] != 'on') {
-		return;
-	}
+	if (!db_write()) { return; }
 
 	logger('logging snag to db for'+global['roomid']);
 
@@ -210,9 +214,7 @@ function db_snag(data) {
 }
 
 function db_vote(data) {
-	if (!settings.db || config['database'] != 'on') {
-		return;
-	}
+	if (!db_write()) { return; }
 
 	var user = data.room.metadata.votelog[0][0];
 	var vote = data.room.metadata.votelog[0][1];
@@ -243,9 +245,7 @@ function join_response(data) {
 }
 
 function db_registered(data) {
-	if (!settings.db || config['database'] != 'on') {
-		return;
-	}
+	if (!db_write()) { return; }
 
 	logger('logging join to db');
 
@@ -275,9 +275,7 @@ function db_registered(data) {
 }
 
 function db_loadleaders() {
-	if (!settings.db || config['database'] != 'on' || config['say_odometer'] != 'on') {
-		return;
-	}
+	if (!db_read()) { return; }
 
 	leaders.length = 0;
 	botdb.query('SELECT user_id FROM users WHERE (owner IS NOT TRUE AND admin IS NOT TRUE) AND trendsetter IS TRUE ORDER BY nickname',after(function(result) {
@@ -290,9 +288,7 @@ function db_loadleaders() {
 }
 
 function db_loadadmins() {
-	if (!settings.db || config['database'] != 'on' || config['say_odometer'] != 'on') {
-		return;
-	}
+	if (!db_read()) { return; }
 
 	admins.length = 0;
 	botdb.query('SELECT user_id FROM users WHERE owner IS TRUE OR admin IS TRUE ORDER BY nickname',after(function(result) {
@@ -305,31 +301,26 @@ function db_loadadmins() {
 }
 
 function add_leader(user_id) {
-	if (!settings.db || config['database'] != 'on' || config['say_odometer'] != 'on') {
-		return;
+	if (db_write()) {
+		botdb.query('UPDATE users SET trendsetter = TRUE WHERE trendsetter IS NOT TRUE AND user_id = $1', [
+			user_id
+		], after(function(result) {} ));
 	}
-
-	botdb.query('UPDATE users SET trendsetter = TRUE WHERE trendsetter IS NOT TRUE AND user_id = $1', [
-		user_id
-	], after(function(result) {} ));
-
 	db_loadleaders();
 }
 
 function drop_leader(user_id) {
-	if (!settings.db || config['database'] != 'on' || config['say_odometer'] != 'on') {
-		return;
+	if (db_write()) {
+		botdb.query('UPDATE users SET trendsetter = FALSE WHERE trendsetter IS NOT FALSE AND user_id = $1', [
+			user_id
+		], after(function(result) {} ));
 	}
-
-	botdb.query('UPDATE users SET trendsetter = FALSE WHERE trendsetter IS NOT FALSE AND user_id = $1', [
-		user_id
-	], after(function(result) {} ));
-
 	db_loadleaders();
 }
 
 function db_sayodometer(data) {
-	if (!settings.db || config['database'] != 'on' || config['say_odometer'] != 'on') {
+	if (!db_read()) { return; }
+	if (config['say_odometer'] != 'on') {
 		return;
 	}
 
@@ -363,7 +354,8 @@ function db_sayodometer(data) {
 }
 
 function db_saysnag(data) {
-	if (!settings.db || config['database'] != 'on' || config['say_snags'] != 'on') {
+	if (!db_read()) { return; }
+	if (config['say_snags'] != 'on') {
 		return;
 	}
 
@@ -390,7 +382,8 @@ function db_saysnag(data) {
 }
 
 function db_seen(nick) {
-	if (!settings.db || config['database'] != 'on') {
+	if (!db_read()) { return; }
+	if (config['say_seen'] != 'on') {
 		return;
 	}
 }
