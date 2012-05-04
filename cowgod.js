@@ -60,6 +60,9 @@ leaders.push(users['Bubba_Hotep']);
 //Bagel added this to track pending queue dump
 var pendingQueueDump;
 
+db_loadadmins();
+db_loadleaders();
+
 if (settings.log_chat) {
 	var log_chat = fs.createWriteStream(settings.log_chat, {'flags': 'a'});
 }
@@ -91,15 +94,32 @@ function logger_tsv(larray) {
 	}
 }
 
-function error_caught(err,context = '') {
+function after(callback) {
+	return function(err, queryResult) {
+		if(err) {
+			logger('database '+err+' (code '+err.code+' at pos '+err.position+')');
+			return;
+		}
+		callback(queryResult)
+	}
+}
+
+function error_caught(err,context) {
 	if (err == null) {
 		return false;
 		logger('error_caught function sees no problem');
 	}
-	if (context != '') {
+	if (context != null) {
 		context = ' '+context;
+	} else {
+		context = '';
 	}
-	logger('database '+err+' (code '+err.code+' at pos '+err.position+context+)');
+	logger('');
+	console.log(util.inspect(arguments.callee));
+	logger('');
+	console.log(arguments.callee.caller.toString());
+	logger('');
+	logger('database '+err+' (code '+err.code+' at pos '+err.position+context+')');
 	return true;
 }
 
@@ -261,13 +281,11 @@ function db_registered(data) {
 
 	//util.log(util.inspect(data));
 
-	botdb.query('INERT INTO users (user_id,nickname) SELECT $1,$2 WHERE 1 NOT IN (SELECT 1 FROM users WHERE user_id = $3)', [
+	botdb.query('INSERT INTO users (user_id,nickname) SELECT $1,$2 WHERE 1 NOT IN (SELECT 1 FROM users WHERE user_id = $3)', [
 		data.user[0].userid,
 		data.user[0].name,
 		data.user[0].userid
-	], function(err,result) {
-		if (error_caught(err)) { return; }
-	});
+	], after(function(result) {} ));
 
 	botdb.query('INSERT INTO users_joins (user_id,room_id,nickname,device,acl,fans,points,avatarid) SELECT $1,$2,$3,$4,$5,$6,$7,$8', [
 		data.user[0].userid,
@@ -288,6 +306,60 @@ function db_registered(data) {
 	], function(err,result) {
 		if (error_caught(err)) { return; }
 	});
+}
+
+function db_loadleaders() {
+	if (!settings.db || config['database'] != 'on' || config['say_odometer'] != 'on') {
+		return;
+	}
+
+	leaders.length = 0;
+	botdb.query('SELECT user_id FROM users WHERE (owner IS NOT TRUE AND admin IS NOT TRUE) AND trendsetter IS TRUE ORDER BY nickname',after(function(result) {
+		result.rows.forEach(function(user) {
+			leaders.push(user.user_id);
+		});
+		logger('- Loaded '+leaders.length+' leaders from database');
+	}));
+
+}
+
+function db_loadadmins() {
+	if (!settings.db || config['database'] != 'on' || config['say_odometer'] != 'on') {
+		return;
+	}
+
+	admins.length = 0;
+	botdb.query('SELECT user_id FROM users WHERE owner IS TRUE OR admin IS TRUE ORDER BY nickname',after(function(result) {
+		result.rows.forEach(function(user) {
+			admins.push(user.user_id);
+		});
+		logger('- Loaded '+admins.length+' admins from database');
+	}));
+
+}
+
+function add_leader(user_id) {
+	if (!settings.db || config['database'] != 'on' || config['say_odometer'] != 'on') {
+		return;
+	}
+
+	botdb.query('UPDATE users SET trendsetter = TRUE WHERE trendsetter IS NOT TRUE AND user_id = $1', [
+		user_id
+	], after(function(result) {} ));
+
+	db_loadleaders();
+}
+
+function drop_leader(user_id) {
+	if (!settings.db || config['database'] != 'on' || config['say_odometer'] != 'on') {
+		return;
+	}
+
+	botdb.query('UPDATE users SET trendsetter = FALSE WHERE trendsetter IS NOT FALSE AND user_id = $1', [
+		user_id
+	], after(function(result) {} ));
+
+	db_loadleaders();
 }
 
 function db_sayodometer(data) {
@@ -555,8 +627,16 @@ function do_command (data) {
 			pick_random(args);
 			break;
 		case 'bump':
-	    logger('= '+id_to_name(data.senderid)+' bumped track '+args+' to the top');
-	    		bump_song(args);
+		    logger('= '+id_to_name(data.senderid)+' bumped track '+args+' to the top');
+    		bump_song(args);
+			break;
+		case 'addleader':
+		    logger('= '+id_to_name(data.senderid)+' added '+args+' as a leader');
+			add_leader(args);
+			break;
+		case 'dropleader':
+		    logger('= '+id_to_name(data.senderid)+' dropped '+args+' as a leader');
+			drop_leader(args);
 			break;
 		case 'debug':
 			if (args != 'on') {
