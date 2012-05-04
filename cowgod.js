@@ -143,7 +143,6 @@ function dump_queue() {
 
 function db_newsong(data) {
 	if (!settings.db || config['database'] != 'on') {
-		logger('no database configured');
 		return;
 	}
 
