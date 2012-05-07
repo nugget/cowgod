@@ -714,7 +714,7 @@ bot.on('roomChanged', function (data) {
 	for (i=0; i< data.users.length; i++) {
 		// util.log(util.inspect(data.users[i]));
 		usernames[data.users[i].userid] = data.users[i].name;
-		logger('I see '+data.users[i].name);
+		// logger('I see '+data.users[i].name);
 	}
 
 	bot.modifyLaptop(settings.laptop);
@@ -738,7 +738,7 @@ bot.on('snagged', function (data) {
 	logger_tsv([ 'event','snag','userid',data.userid,'songid',global['cursong'],'djid',	global['curdjid'],'songname',global['cursongname'],'djname',global['curdjname']	]);
 	db_snag(data);
 
-	if (data.userid == settings.userid) {
+	if (data.userid == settings.userid || data.userid == '4f50ea86a3f7517d6c006f16') {
 		// logger('- ignoring self-snag');
 		// this is me!  ignore it
 		return;
