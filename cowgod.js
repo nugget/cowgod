@@ -73,13 +73,22 @@ if (settings.log_tsv) {
 }
 
 function logger(buf) {
+	var d=new Date();
+	var hh=d.getHours();
+	var mm=d.getMinutes();
+	if(mm < 10) {
+		mm = '0'+mm;
+	}
+	if(hh < 10) {
+		hh = '0'+hh;
+	}
+
 	if (typeof log_chat === 'undefined') {
 	} else {
-		var d=new Date();
 		log_chat.write('['+d+'] ');
 		log_chat.write(buf+'\n');
 	}
-	console.log(buf)
+	console.log('['+hh+':'+mm+'] '+buf);
 }
 
 function logger_tsv(larray) {
@@ -333,7 +342,7 @@ function db_sayodometer(data) {
 	], after(function(result) {
 	    if (result.rows.length == 1) {
 			if (result.rows[0].song_id == data.room.metadata.current_song._id) { 
-				util.log(util.inspect(result.rows[0].age_text));
+				// util.log(util.inspect(result.rows[0].age_text));
 				var saybuf = 'This is '+data.room.metadata.current_song.djname+'\'s favorite song! '+result.rows[0].count+' plays.';
 				logger(saybuf);
 				if (result.rows[0].count > 3) {
@@ -347,7 +356,7 @@ function db_sayodometer(data) {
 		data.room.metadata.current_song._id
 	], after(function(result) {
 	    if (result.rows.length == 1) {
-			util.log(util.inspect(result.rows[0].age_text));
+			// util.log(util.inspect(result.rows[0].age_text));
 			var saybuf = result.rows[0].nickname+' last played this song '+result.rows[0].age_text+'!';
 			// logger(saybuf);
 			lag_say(saybuf);
@@ -375,7 +384,7 @@ function db_saysnag(data) {
 	    if (result.rows.length != 1) {
 			// logger('No record of this song having been snagged');
 		} else {
-			util.log(util.inspect(result.rows[0].age_text));
+			// util.log(util.inspect(result.rows[0].age_text));
 			var saybuf = result.rows[0].nickname+' snagged this song from '+result.rows[0].dj_nickname+' '+result.rows[0].age_text+'!';
 			// logger(saybuf);
 			lag_say(saybuf);
@@ -693,7 +702,7 @@ bot.on('roomChanged', function (data) {
 	logger('! Room changed to '+data.room.name+' ('+data.room.roomid+')');
 	logger_tsv([ 'event','newroom','roomname',data.room.name ]);
 
-	util.log(util.inspect(data));
+	// util.log(util.inspect(data));
 
 	if (data.room.metadata.current_song == null) {
 		logger('- Nothing is currently playing');
