@@ -344,7 +344,7 @@ function db_sayodometer(data) {
 			if (result.rows[0].song_id == data.room.metadata.current_song._id) { 
 				// util.log(util.inspect(result.rows[0].age_text));
 				var saybuf = 'This is '+data.room.metadata.current_song.djname+'\'s favorite song! '+result.rows[0].count+' plays.';
-				logger(saybuf);
+				//logger(saybuf);
 				if (result.rows[0].count > 3) {
 					lag_say(saybuf);
 				}
