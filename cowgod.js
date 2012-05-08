@@ -385,7 +385,11 @@ function db_saysnag(data) {
 			// logger('No record of this song having been snagged');
 		} else {
 			// util.log(util.inspect(result.rows[0].age_text));
-			var saybuf = result.rows[0].nickname+' snagged this song from '+result.rows[0].dj_nickname+' '+result.rows[0].age_text+'!';
+			if (result.rows[0].age_text == '00:00:00 ago') {
+				var saybuf = result.rows[0].nickname+' snagged this song from '+result.rows[0].dj_nickname+' today!';
+			} else {
+				var saybuf = result.rows[0].nickname+' snagged this song from '+result.rows[0].dj_nickname+' '+result.rows[0].age_text+'!';
+			}
 			// logger(saybuf);
 			lag_say(saybuf);
 		}
