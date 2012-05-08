@@ -386,7 +386,7 @@ function db_saysnag(data) {
 		} else {
 			// util.log(util.inspect(result.rows[0].age_text));
 			if (result.rows[0].age_text == '00:00:00 ago') {
-				var saybuf = result.rows[0].nickname+' snagged this song from '+result.rows[0].dj_nickname+' today!';
+				var saybuf = result.rows[0].nickname+' just snagged this song from '+result.rows[0].dj_nickname+' earlier today!';
 			} else {
 				var saybuf = result.rows[0].nickname+' snagged this song from '+result.rows[0].dj_nickname+' '+result.rows[0].age_text+'!';
 			}
