@@ -611,6 +611,10 @@ function do_command (data) {
 		    logger('= '+id_to_name(data.senderid)+' dropped '+args+' as a leader');
 			drop_leader(args);
 			break;
+		case 'reload':
+			db_loadadmins();
+			db_loadleaders();
+			break;
 		case 'debug':
 			if (args != 'on') {
 				logger('= '+id_to_name(data.senderid)+' set debug off');
