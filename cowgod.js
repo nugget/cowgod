@@ -560,6 +560,7 @@ function do_command (data) {
 			bot.setAvatar(args);
 			break;
 		case 'say':
+            logger('= '+id_to_name(data.senderid)+' ventriloquist:');
 			say(args);
 			break;
 		case 'autobop':
