@@ -370,9 +370,11 @@ function db_djstats(target,data) {
 		return;
 	}
 
-	var sql = 'SELECT count(*) as plays, count(DISTINCT song_id) as songs,(\'1970-01-01 00:00:00\' - timestamp without time zone \'epoch\' + sum(length) * \'1 second\'::interval)::varchar as duration FROM songlog_expanded LEFT JOIN songs USING (song_id) WHERE dj_id = $1 GROUP BY dj_id';
+	var sql = 'SELECT count(*) as plays, count(DISTINCT song_id) as songs, ';
+	sql = sql+' (\'1970-01-01 00:00:00\' - timestamp without time zone \'epoch\' + sum(length) * \'1 second\'::interval)::varchar as duration, ';
+	sql = sql+' avg(length) as avg_seconds ';
+	sql = sql+' FROM songlog_expanded LEFT JOIN songs USING (song_id) WHERE dj_id = $1 GROUP BY dj_id';
 	logger(sql);
-	logger(global['curdjid']);
 
 	botdb.query(sql, [
 		global['curdjid']
@@ -389,10 +391,15 @@ function db_djstats(target,data) {
 			if (buf.plays == 1) {
 				statline = statline+' is playing their first song in here.  Welcome!';
 			} else {
-				statline = statline+' has spun '+buf.plays+' times with '+buf.songs+' songs';
 				var unique = Math.round(buf.songs / buf.plays * 1000) / 10;
+
+				var amm = Math.floor(buf.avg_seconds / 60);
+				var ass = Math.round(buf.avg_seconds - (amm * 60));
+
+				statline = statline+' has spun '+buf.plays+' times with '+buf.songs+' songs';
 				statline = statline+' ('+unique+'% unique)';
-				statline = statline+' for a total play time of '+buf.duration;
+				statline = statline+' for a total play time of '+buf.duration+'.';
+				statline = statline+' Average song '+amm+' min '+ass+' sec long.';
 			}
 		} else {
 			statline = 'I\'m confused!';
