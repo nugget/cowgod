@@ -6,7 +6,7 @@ var settings = require('./settings.js');
 settings.db = false;
 
 if (settings.dbname) {
-	logger('connecting to posgresql database '+settings.dbname);
+	logger('connecting to postgresql database '+settings.dbname);
 	var Client = require('pg').Client;
 
 	var connstring = 'postgres://'+settings.dbuser+':'+settings.dbpass+'@'+settings.dbhost+':'+settings.dbport+'/'+settings.dbname;
@@ -335,7 +335,28 @@ function db_sayodometer(data) {
 		return;
 	}
 
-	//util.log(util.inspect(data));
+	util.log(util.inspect(data));
+
+	botdb.query('SELECT artist,count(*) as plays,(SELECT count(*) FROM songlog_expanded WHERE dj_id = $1) as total_plays FROM songlog_expanded WHERE dj_id = $1 GROUP BY artist ORDER BY plays DESC LIMIT 1', [
+		data.room.metadata.current_song.djid
+	], after(function(result) {
+		// util.log(util.inspect(result));
+
+	    if (result.rows.length == 1) {
+			var buf = result.rows[0];
+
+			var a_fav = buf.artist;
+			var a_cur = data.room.metadata.current_song.metadata.artist;
+
+			if (a_fav.toLowerCase() == a_cur.toLowerCase()) {
+				var percentage = Math.round( buf.plays / buf.total_plays * 1000) / 10;
+				var saybuf = 'This is '+data.room.metadata.current_song.djname+'\'s favorite artist! '+buf.plays+' plays ('+percentage+'%)';
+				if (buf.plays > 5) {
+					lag_say(saybuf);
+				}
+			}
+		}
+	}));
 
 	botdb.query('SELECT song_id, count(*) FROM songlog WHERE dj_id = $1 GROUP BY song_id ORDER BY count DESC LIMIT 1', [
 		data.room.metadata.current_song.djid
@@ -374,7 +395,7 @@ function db_djstats(target,data) {
 	sql = sql+' (\'1970-01-01 00:00:00\' - timestamp without time zone \'epoch\' + sum(length) * \'1 second\'::interval)::varchar as duration, ';
 	sql = sql+' avg(length) as avg_seconds ';
 	sql = sql+' FROM songlog_expanded LEFT JOIN songs USING (song_id) WHERE dj_id = $1 GROUP BY dj_id';
-	logger(sql);
+	// logger(sql);
 
 	botdb.query(sql, [
 		global['curdjid']
