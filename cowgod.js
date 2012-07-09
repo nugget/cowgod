@@ -380,7 +380,7 @@ function db_songstats(target,data) {
 	    if (result.rows.length == 1) {
 			var buf = result.rows[0];
 
-			util.log(util.inspect(buf));
+			// util.log(util.inspect(buf));
 
 			if (buf.plays == 1) {
 				statline = buf.song=' has only been played once before by '+buf.nickname+' '+buf.age_text;
@@ -399,7 +399,7 @@ function db_songstats(target,data) {
 		if(target == 'public') {
 			say(statline);
 		} else {
-			bot.pm(statline,data.senderid);
+			pm(statline,data.senderid);
 		}
 
 	}));
@@ -495,7 +495,7 @@ function toggle_config (item) {
 }
 
 function say_config (item,user_id) {
-	bot.pm(item+' setting is now '+config[item],user_id);
+	pm(item+' setting is now '+config[item],user_id);
 }
 
 function say(text) {
@@ -509,6 +509,16 @@ function say(text) {
 function lag_say (text) {
 	waitms = parseInt(Math.random() * 8000)+500;
 	setTimeout(function(){ say(text); }, waitms);
+}
+
+function pm (text,receiver) {
+	logger('PM to '+id_to_name(receiver)+': '+text);
+	bot.pm(text,receiver);
+}
+
+function lag_pm (text,receiver) {
+	waitms = parseInt(Math.random() * 8000)+500;
+	setTimeout(function(){ pm(text,receiver); }, waitms);
 }
 
 function lag_heart (text) {
@@ -587,7 +597,7 @@ function do_command (data) {
 			moo			 = args.text.indexOf(' ');
 			var receiver = args.text.substr(1,moo-1);
 			var msg      = args.text.substr(moo+1);
-			bot.pm(msg,receiver);
+			pm(msg,receiver);
 			break;
 		case 'awesome':
 			do_vote('up');
@@ -717,11 +727,11 @@ function follow_user(userid) {
 			logger('* Following '+id_to_name(userid)+' to room_id '+target_id);
 			bot.roomDeregister( function(data) {
 				bot.roomRegister(target_id);
-				bot.pm('I am here now!',userid);
+				pm('I am here now!',userid);
 			});
 		} else {
 			logger('* I am already in that room');
-			bot.pm('I am already in that room, silly',userid);
+			pm('I am already in that room, silly',userid);
 		}
 	});
 }
@@ -913,7 +923,7 @@ bot.on('pmmed', function (data) {
 	if (data.text.match(/^\//)) {
 		do_command(data);
 	} else {
-		bot.pm(id_to_name(data.senderid)+' PMmed '+data.text,config['owner']);
+		pm(id_to_name(data.senderid)+' PMmed '+data.text,config['owner']);
 		logger(id_to_name(data.senderid)+' PMmed '+data.text);
 	}
 });
