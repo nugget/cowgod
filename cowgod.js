@@ -677,11 +677,12 @@ function do_command (data) {
 				bot.debug = true;
 			}
 			break;
+		case 'songstats':
+            logger('! '+id_to_name(data.senderid)+' asked for song stats');
+			db_songstats(args,data);
+			break;
 		case 'default':
             logger('! '+id_to_name(data.senderid)+' tried unknown command '+command+'('+args+')');
-			break;
-		case 'songstats':
-			db_songstats(args,data);
 			break;
 	}
 }
