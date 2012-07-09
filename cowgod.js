@@ -364,6 +364,48 @@ function db_sayodometer(data) {
 	}));
 }
 
+function db_songstats(target,data) {
+	if (!db_read()) { return; }
+	if (config['say_odometer'] != 'on') {
+		return;
+	}
+
+	// util.log(util.inspect(data));
+
+	botdb.query('select *, (SELECT count(*) FROM songlog WHERE song_id = $1) AS plays, (SELECT count(DISTINCT dj_id) FROM songlog WHERE song_id = $1) AS djs FROM songlog_expanded WHERE song_id = $1 AND stats_djcount IS NOT NULL ORDER BY id DESC LIMIT 1', [
+		global['cursong']
+	], after(function(result) {
+		var statline;
+
+	    if (result.rows.length == 1) {
+			var buf = result.rows[0];
+
+			util.log(util.inspect(buf));
+
+			if (buf.plays == 1) {
+				statline = buf.song=' has only been played once before by '+buf.nickname+' '+buf.age_text;
+			} else {
+				if (buf.djs == 1) {
+					statline = buf.song+' has only been played by '+buf.nickname+'. '+buf.plays+' times, most recently '+buf.age_text;
+				} else {
+					statline = buf.song+' has been played '+buf.plays+' times by '+buf.djs+' DJs.';
+					statline = statline+' Most recently by '+buf.nickname+' '+buf.age_text;
+				}
+			}
+		} else {
+			statline = 'I\'ve never heard this song before today!';
+		}
+
+		if(target == 'public') {
+			say(statline);
+		} else {
+			bot.pm(statline,data.senderid);
+		}
+
+	}));
+
+}
+
 function db_saysnag(data) {
 	if (!db_read()) { return; }
 	if (config['say_snags'] != 'on') {
@@ -627,6 +669,9 @@ function do_command (data) {
 			break;
 		case 'default':
             logger('! '+id_to_name(data.senderid)+' tried unknown command '+command+'('+args+')');
+			break;
+		case 'songstats':
+			db_songstats(args,data);
 			break;
 	}
 }
