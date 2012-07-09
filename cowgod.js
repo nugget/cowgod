@@ -364,6 +364,48 @@ function db_sayodometer(data) {
 	}));
 }
 
+function db_djstats(target,data) {
+	if (!db_read()) { return; }
+	if (config['say_odometer'] != 'on') {
+		return;
+	}
+
+	var sql = 'SELECT count(*) as plays, count(DISTINCT song_id) as songs,(\'1970-01-01 00:00:00\' - timestamp without time zone \'epoch\' + sum(length) * \'1 second\'::interval)::varchar as duration FROM songlog_expanded LEFT JOIN songs USING (song_id) WHERE dj_id = $1 GROUP BY dj_id';
+	logger(sql);
+	logger(global['curdjid']);
+
+	botdb.query(sql, [
+		global['curdjid']
+	], after(function(result) {
+		// util.log(util.inspect(result));
+
+		var statline = id_to_name(global['curdjid']);
+
+	    if (result.rows.length == 1) {
+			var buf = result.rows[0];
+
+			util.log(util.inspect(buf));
+
+			if (buf.plays == 1) {
+				statline = statline+' is playing their first song in here.  Welcome!';
+			} else {
+				statline = statline+' has spun '+buf.plays+' times with '+buf.songs+' songs';
+				var unique = Math.round(buf.songs / buf.plays * 1000) / 10;
+				statline = statline+' ('+unique+'% unique)';
+				statline = statline+' for a total play time of '+buf.duration;
+			}
+		} else {
+			statline = 'I\'m confused!';
+		}
+
+		if(target == 'public') {
+			say(statline);
+		} else {
+			pm(statline,data.senderid);
+		}
+	}));
+}
+
 function db_songstats(target,data) {
 	if (!db_read()) { return; }
 	if (config['say_odometer'] != 'on') {
@@ -677,6 +719,10 @@ function do_command (data) {
 				bot.debug = true;
 			}
 			break;
+		case 'djstats':
+            logger('! '+id_to_name(data.senderid)+' asked for dj stats');
+			db_djstats(args,data);
+			break;
 		case 'songstats':
             logger('! '+id_to_name(data.senderid)+' asked for song stats');
 			db_songstats(args,data);
@@ -772,7 +818,10 @@ bot.on('roomChanged', function (data) {
 	if (data.room.metadata.current_song == null) {
 		logger('- Nothing is currently playing');
 	} else {
-		global['cursong'] = data.room.metadata.current_song._id;
+		global['cursong']      = data.room.metadata.current_song._id;
+		global['cursongname']  = data.room.metadata.current_song.metadata.song;
+		global['curdjid']      = data.room.metadata.current_song.djid;
+		global['curdjname']    = data.room.metadata.current_song.djname;
 		logger('! Now Playing '+data.room.metadata.current_song.metadata.song);
 	}
 
