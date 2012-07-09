@@ -335,7 +335,7 @@ function db_sayodometer(data) {
 		return;
 	}
 
-	util.log(util.inspect(data));
+	//util.log(util.inspect(data));
 
 	botdb.query('SELECT artist,count(*) as plays,(SELECT count(*) FROM songlog_expanded WHERE dj_id = $1) as total_plays FROM songlog_expanded WHERE dj_id = $1 GROUP BY artist ORDER BY plays DESC LIMIT 1', [
 		data.room.metadata.current_song.djid
