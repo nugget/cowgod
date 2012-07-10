@@ -44,6 +44,19 @@ CREATE TABLE users (
 GRANT SELECT,INSERT,UPDATE ON users TO bots;
 CREATE TRIGGER onupdate BEFORE UPDATE ON users FOR EACH ROW EXECUTE PROCEDURE onupdate_changed();
 
+CREATE TABLE blacklist (
+	user_id varchar NOT NULL,
+	added timestamp(0) without time zone NOT NULL DEFAULT (current_timestamp at time zone 'utc'),
+	changed timestamp(0) without time zone NOT NULL DEFAULT (current_timestamp at time zone 'utc'),
+	added_by varchar,
+	enabled boolean NOT NULL DEFAULT TRUE,
+	public_msg varchar,
+	private_msg varchar,
+	PRIMARY KEY(user_id)
+);
+GRANT SELECT,INSERT,UPDATE ON blacklist TO bots;
+CREATE TRIGGER onupdate BEFORE UPDATE ON blacklist FOR EACH ROW EXECUTE PROCEDURE onupdate_changed();
+
 CREATE TABLE users_joins (
 	id SERIAL NOT NULL,
 	ts timestamp(0) without time zone NOT NULL DEFAULT (current_timestamp at time zone 'utc'),

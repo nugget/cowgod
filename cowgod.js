@@ -255,6 +255,26 @@ function join_response(data) {
 	}
 }
 
+function enforce_blacklist(data) {
+	if (settings.userid != '4f50ea86a3f7517d6c006f16') {
+		// This stuff only works for cowgod.
+		return;
+	}
+
+	botdb.query('SELECT * FROM blacklist WHERE user_id = $1 AND enabled IS TRUE', [
+		data.user[0].userid
+	], after(function(result) {
+	    if (result.rows.length == 1) {
+			logger('! Got a blacklist hit on this join: '+data.user[0].userid);
+
+			var user = result.rows[0];
+
+			bot.bootUser(user.userid,user.private_msg);
+			lag_say(user.public_msg);
+		}
+	}));
+}
+
 function db_registered(data) {
 	if (!db_write()) { return; }
 
@@ -874,6 +894,7 @@ bot.on('registered', function (data) {
 	usernames[data.user[0].userid] = data.user[0].name;
 	db_registered(data);
 	join_response(data);
+	enforce_blacklist(data);
 });
 
 bot.on('snagged', function (data) {
