@@ -39,6 +39,7 @@ CREATE TABLE users (
 	owner boolean NOT NULL DEFAULT FALSE,
 	admin boolean NOT NULL DEFAULT FALSE,
 	trendsetter boolean NOT NULL DEFAULT FALSE,
+	ignore boolean NOT NULL DEFAULT FALSE,
 	PRIMARY KEY(user_id)
 );
 GRANT SELECT,INSERT,UPDATE ON users TO bots;

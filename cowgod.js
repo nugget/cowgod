@@ -120,48 +120,48 @@ function after(callback) {
 	return function(err, queryResult) {
 		if(err) {
 			logger('database '+err+' (code '+err.code+' at pos '+err.position+')');
-			return;
-		}
-		callback(queryResult)
-	}
-}
+					return;
+					}
+					callback(queryResult)
+					}
+					}
 
-function dump_queue() {
-	logger('- dumping queue to file');
-	bot.playlistAll(function(data) { 
-		global['queuelen'] = data.list.length;
+					function dump_queue() {
+					logger('- dumping queue to file');
+					bot.playlistAll(function(data) { 
+						global['queuelen'] = data.list.length;
 
-		var qf = fs.createWriteStream('public_html/queue.tsv', {'flags': 'w'});
-		
-		//var d=new Date();
-		//qf.write('['+d+']\n\n');
+						var qf = fs.createWriteStream('public_html/queue.tsv', {'flags': 'w'});
 
-		var i = 0;
+						//var d=new Date();
+						//qf.write('['+d+']\n\n');
 
-		data.list.forEach(function(song) {
-			db_songdb(song);
+						var i = 0;
 
-			qf.write('index\t'+i);
-			qf.write('\t_id\t'+song._id);
-			qf.write('\tsong\t'+song.metadata.song);
-			qf.write('\tartist\t'+song.metadata.artist);
-			qf.write('\talbum\t'+song.metadata.album);
-			qf.write('\tlength\t'+song.metadata.length);
-			qf.write('\tmnid\t'+song.metadata.mnid);
-			qf.write('\tgenre\t'+song.metadata.genre);
-			qf.write('\tcoverart\t'+song.metadata.coverart);
-			qf.write('\n');
-			i = i + 1;
-		});
+						data.list.forEach(function(song) {
+							db_songdb(song);
 
-		if (data.success == false) {
-			qf.write('Failed: '+data.err);
-		} else {
-			qf.write('Success');
-		}
-		qf.end();
-	});
-}
+							qf.write('index\t'+i);
+							qf.write('\t_id\t'+song._id);
+							qf.write('\tsong\t'+song.metadata.song);
+							qf.write('\tartist\t'+song.metadata.artist);
+							qf.write('\talbum\t'+song.metadata.album);
+							qf.write('\tlength\t'+song.metadata.length);
+							qf.write('\tmnid\t'+song.metadata.mnid);
+							qf.write('\tgenre\t'+song.metadata.genre);
+							qf.write('\tcoverart\t'+song.metadata.coverart);
+							qf.write('\n');
+							i = i + 1;
+							});
+
+						if (data.success == false) {
+							qf.write('Failed: '+data.err);
+						} else {
+							qf.write('Success');
+						}
+						qf.end();
+					});
+					}
 
 function db_newsong(data) {
 	if (!db_write()) { return; }
@@ -172,22 +172,22 @@ function db_newsong(data) {
 	db_songdb(data.room.metadata.current_song);
 
 	botdb.query('INSERT INTO songlog (song_id,room_id,dj_id,stats_djs) SELECT $1,$2,$3,$4', [
-		data.room.metadata.current_song._id,
-		data.roomid,
-		data.room.metadata.current_dj,
-		data.room.metadata.djs
-	], after(function(result) {} ));
+			data.room.metadata.current_song._id,
+			data.roomid,
+			data.room.metadata.current_dj,
+			data.room.metadata.djs
+			], after(function(result) {} ));
 }
 
 function db_endsong(data) {
 	if (!db_write()) { return; }
 
 	botdb.query('UPDATE songlog SET stats_djcount = $1, stats_listeners = $2 WHERE song_id = $3 AND room_id = $4 AND stats_djcount IS NULL', [
-		data.room.metadata.djcount,
-		data.room.metadata.listeners,
-		data.room.metadata.current_song._id,
-		data.room.roomid
-	], after(function(result) {} ));
+			data.room.metadata.djcount,
+			data.room.metadata.listeners,
+			data.room.metadata.current_song._id,
+			data.room.roomid
+			], after(function(result) {} ));
 	db_songdb(data.room.metadata.current_song);
 }
 
@@ -199,18 +199,18 @@ function db_songdb(song) {
 	song.metadata.song = song.metadata.song.replace(/\u0000/g,'');
 
 	botdb.query('INSERT INTO songs (song_id,artist,song,album,genre,length,mnid,coverart,md5,labelid)  SELECT $1,$2,$3,$4,$5,$6,$7,$8,$9,$10 WHERE 1 NOT IN (SELECT 1 FROM songs WHERE song_id = $11)', [
-		song._id,
-		song.metadata.artist,
-		song.metadata.song,
-		song.metadata.album,
-		song.metadata.genre,
-		song.metadata.length,
-		song.metadata.mnid,
-		song.metadata.coverart,
-		song.metadata.md5,
-		song.metadata.labelid,
-		song._id
-	], after(function(result) {} ));
+			song._id,
+			song.metadata.artist,
+			song.metadata.song,
+			song.metadata.album,
+			song.metadata.genre,
+			song.metadata.length,
+			song.metadata.mnid,
+			song.metadata.coverart,
+			song.metadata.md5,
+			song.metadata.labelid,
+			song._id
+			], after(function(result) {} ));
 }
 
 function db_snag(data) {
@@ -219,9 +219,9 @@ function db_snag(data) {
 	logger('logging snag to db for'+global['roomid']);
 
 	botdb.query('INSERT INTO snaglog (play_id, user_id) SELECT id, $1 FROM songlog WHERE room_id = $2 ORDER BY ts DESC LIMIT 1', [
-		data.userid,
-		global['roomid']
-	], after(function(result) {} ));
+			data.userid,
+			global['roomid']
+			], after(function(result) {} ));
 }
 
 function db_vote(data) {
@@ -238,10 +238,10 @@ function db_vote(data) {
 	logger('logging vote to db for room:'+global['roomid']+' user:'+user+' vote:'+vote);
 
 	botdb.query('INSERT INTO votelog (play_id, user_id, vote) SELECT id, $1, $2 FROM songlog WHERE room_id = $3 ORDER BY ts DESC LIMIT 1', [
-		user,
-		vote,
-		global['roomid']
-	], after(function(result) {} ));
+			user,
+			vote,
+			global['roomid']
+			], after(function(result) {} ));
 }
 
 function join_response(data) {
@@ -262,17 +262,17 @@ function enforce_blacklist(data) {
 	}
 
 	botdb.query('SELECT * FROM blacklist WHERE user_id = $1 AND enabled IS TRUE', [
-		data.user[0].userid
-	], after(function(result) {
-	    if (result.rows.length == 1) {
-			logger('! Got a blacklist hit on this join: '+data.user[0].userid);
+			data.user[0].userid
+			], after(function(result) {
+				if (result.rows.length == 1) {
+				logger('! Got a blacklist hit on this join: '+data.user[0].userid);
 
-			var user = result.rows[0];
+				var user = result.rows[0];
 
-			bot.bootUser(user.userid,user.private_msg);
-			lag_say(user.public_msg);
-		}
-	}));
+				bot.bootUser(user.userid,user.private_msg);
+				lag_say(user.public_msg);
+				}
+				}));
 }
 
 function db_registered(data) {
@@ -283,26 +283,26 @@ function db_registered(data) {
 	//util.log(util.inspect(data));
 
 	botdb.query('INSERT INTO users (user_id,nickname) SELECT $1,$2 WHERE 1 NOT IN (SELECT 1 FROM users WHERE user_id = $3)', [
-		data.user[0].userid,
-		data.user[0].name,
-		data.user[0].userid
-	], after(function(result) {} ));
+			data.user[0].userid,
+			data.user[0].name,
+			data.user[0].userid
+			], after(function(result) {} ));
 
 	botdb.query('INSERT INTO users_joins (user_id,room_id,nickname,device,acl,fans,points,avatarid) SELECT $1,$2,$3,$4,$5,$6,$7,$8', [
-		data.user[0].userid,
-		global['roomid'],
-		data.user[0].name,
-		data.user[0].laptop,
-		data.user[0].acl,
-		data.user[0].fans,
-		data.user[0].points,
-		data.user[0].avatarid
-	], after(function(result) {} ));
+			data.user[0].userid,
+			global['roomid'],
+			data.user[0].name,
+			data.user[0].laptop,
+			data.user[0].acl,
+			data.user[0].fans,
+			data.user[0].points,
+			data.user[0].avatarid
+			], after(function(result) {} ));
 
 	botdb.query('UPDATE users SET nickname = $1 WHERE user_id = $2', [
-		data.user[0].name,
-		data.user[0].userid
-	], after(function(result) {} ));
+			data.user[0].name,
+			data.user[0].userid
+			], after(function(result) {} ));
 }
 
 function db_loadleaders() {
@@ -310,11 +310,11 @@ function db_loadleaders() {
 
 	leaders.length = 0;
 	botdb.query('SELECT user_id FROM users WHERE (owner IS NOT TRUE AND admin IS NOT TRUE) AND trendsetter IS TRUE ORDER BY nickname',after(function(result) {
-		result.rows.forEach(function(user) {
-			leaders.push(user.user_id);
-		});
-		logger('- Loaded '+leaders.length+' leaders from database');
-	}));
+				result.rows.forEach(function(user) {
+					leaders.push(user.user_id);
+					});
+				logger('- Loaded '+leaders.length+' leaders from database');
+				}));
 
 }
 
@@ -323,19 +323,19 @@ function db_loadadmins() {
 
 	admins.length = 0;
 	botdb.query('SELECT user_id FROM users WHERE owner IS TRUE OR admin IS TRUE ORDER BY nickname',after(function(result) {
-		result.rows.forEach(function(user) {
-			admins.push(user.user_id);
-		});
-		logger('- Loaded '+admins.length+' admins from database');
-	}));
+				result.rows.forEach(function(user) {
+					admins.push(user.user_id);
+					});
+				logger('- Loaded '+admins.length+' admins from database');
+				}));
 
 }
 
 function add_leader(user_id) {
 	if (db_write()) {
 		botdb.query('UPDATE users SET trendsetter = TRUE WHERE trendsetter IS NOT TRUE AND user_id = $1', [
-			user_id
-		], after(function(result) {} ));
+				user_id
+				], after(function(result) {} ));
 	}
 	db_loadleaders();
 }
@@ -343,8 +343,8 @@ function add_leader(user_id) {
 function drop_leader(user_id) {
 	if (db_write()) {
 		botdb.query('UPDATE users SET trendsetter = FALSE WHERE trendsetter IS NOT FALSE AND user_id = $1', [
-			user_id
-		], after(function(result) {} ));
+				user_id
+				], after(function(result) {} ));
 	}
 	db_loadleaders();
 }
@@ -358,51 +358,51 @@ function db_sayodometer(data) {
 	//util.log(util.inspect(data));
 
 	botdb.query('SELECT artist,count(*) as plays,(SELECT count(*) FROM songlog_expanded WHERE dj_id = $1) as total_plays FROM songlog_expanded WHERE dj_id = $1 GROUP BY artist ORDER BY plays DESC LIMIT 1', [
-		data.room.metadata.current_song.djid
-	], after(function(result) {
-		// util.log(util.inspect(result));
+			data.room.metadata.current_song.djid
+			], after(function(result) {
+				// util.log(util.inspect(result));
 
-	    if (result.rows.length == 1) {
-			var buf = result.rows[0];
+				if (result.rows.length == 1) {
+				var buf = result.rows[0];
 
-			var a_fav = buf.artist;
-			var a_cur = data.room.metadata.current_song.metadata.artist;
+				var a_fav = buf.artist;
+				var a_cur = data.room.metadata.current_song.metadata.artist;
 
-			if (a_fav.toLowerCase() == a_cur.toLowerCase()) {
+				if (a_fav.toLowerCase() == a_cur.toLowerCase()) {
 				var percentage = Math.round( buf.plays / buf.total_plays * 1000) / 10;
 				var saybuf = 'This is '+data.room.metadata.current_song.djname+'\'s favorite artist! '+buf.plays+' plays ('+percentage+'%)';
 				if (buf.plays > 5) {
-					lag_say(saybuf);
+				lag_say(saybuf);
 				}
-			}
-		}
-	}));
+				}
+				}
+				}));
 
 	botdb.query('SELECT song_id, count(*) FROM songlog WHERE dj_id = $1 GROUP BY song_id ORDER BY count DESC LIMIT 1', [
-		data.room.metadata.current_song.djid
-	], after(function(result) {
-	    if (result.rows.length == 1) {
-			if (result.rows[0].song_id == data.room.metadata.current_song._id) { 
+			data.room.metadata.current_song.djid
+			], after(function(result) {
+				if (result.rows.length == 1) {
+				if (result.rows[0].song_id == data.room.metadata.current_song._id) { 
 				// util.log(util.inspect(result.rows[0].age_text));
 				var saybuf = 'This is '+data.room.metadata.current_song.djname+'\'s favorite song! '+result.rows[0].count+' plays.';
 				//logger(saybuf);
 				if (result.rows[0].count > 3) {
-					lag_say(saybuf);
+				lag_say(saybuf);
 				}
-			}
-		}
-	}));
+				}
+				}
+				}));
 
 	botdb.query('SELECT * FROM songlog_expanded WHERE song_id = $1 AND trip_odometer IS TRUE AND ts < current_timestamp at time zone \'utc\' - \'1 minute\'::interval ORDER BY ts DESC LIMIT 1', [
-		data.room.metadata.current_song._id
-	], after(function(result) {
-	    if (result.rows.length == 1) {
-			// util.log(util.inspect(result.rows[0].age_text));
-			var saybuf = result.rows[0].nickname+' last played this song '+result.rows[0].age_text+'!';
-			// logger(saybuf);
-			lag_say(saybuf);
-		}
-	}));
+			data.room.metadata.current_song._id
+			], after(function(result) {
+				if (result.rows.length == 1) {
+				// util.log(util.inspect(result.rows[0].age_text));
+				var saybuf = result.rows[0].nickname+' last played this song '+result.rows[0].age_text+'!';
+				// logger(saybuf);
+				lag_say(saybuf);
+				}
+				}));
 }
 
 function db_djstats(target,data) {
@@ -418,20 +418,20 @@ function db_djstats(target,data) {
 	// logger(sql);
 
 	botdb.query(sql, [
-		global['curdjid']
-	], after(function(result) {
-		// util.log(util.inspect(result));
+			global['curdjid']
+			], after(function(result) {
+				// util.log(util.inspect(result));
 
-		var statline = id_to_name(global['curdjid']);
+				var statline = id_to_name(global['curdjid']);
 
-	    if (result.rows.length == 1) {
-			var buf = result.rows[0];
+				if (result.rows.length == 1) {
+				var buf = result.rows[0];
 
-			util.log(util.inspect(buf));
+				util.log(util.inspect(buf));
 
-			if (buf.plays == 1) {
+				if (buf.plays == 1) {
 				statline = statline+' is playing their first song in here.  Welcome!';
-			} else {
+				} else {
 				var unique = Math.round(buf.songs / buf.plays * 1000) / 10;
 
 				var amm = Math.floor(buf.avg_seconds / 60);
@@ -441,17 +441,17 @@ function db_djstats(target,data) {
 				statline = statline+' ('+unique+'% unique)';
 				statline = statline+' for a total play time of '+buf.duration+'.';
 				statline = statline+' Average song '+amm+' min '+ass+' sec long.';
-			}
-		} else {
-			statline = 'I\'m confused!';
-		}
+				}
+				} else {
+					statline = 'I\'m confused!';
+				}
 
-		if(target == 'public') {
-			say(statline);
-		} else {
-			pm(statline,data.senderid);
-		}
-	}));
+				if(target == 'public') {
+					say(statline);
+				} else {
+					pm(statline,data.senderid);
+				}
+			}));
 }
 
 function db_songstats(target,data) {
@@ -463,36 +463,36 @@ function db_songstats(target,data) {
 	// util.log(util.inspect(data));
 
 	botdb.query('select *, (SELECT count(*) FROM songlog WHERE song_id = $1) AS plays, (SELECT count(DISTINCT dj_id) FROM songlog WHERE song_id = $1) AS djs FROM songlog_expanded WHERE song_id = $1 AND stats_djcount IS NOT NULL ORDER BY id DESC LIMIT 1', [
-		global['cursong']
-	], after(function(result) {
-		var statline;
+			global['cursong']
+			], after(function(result) {
+				var statline;
 
-	    if (result.rows.length == 1) {
-			var buf = result.rows[0];
+				if (result.rows.length == 1) {
+				var buf = result.rows[0];
 
-			// util.log(util.inspect(buf));
+				// util.log(util.inspect(buf));
 
-			if (buf.plays == 1) {
+				if (buf.plays == 1) {
 				statline = buf.song=' has only been played once before by '+buf.nickname+' '+buf.age_text;
-			} else {
-				if (buf.djs == 1) {
-					statline = buf.song+' has only been played by '+buf.nickname+'. '+buf.plays+' times, most recently '+buf.age_text;
 				} else {
-					statline = buf.song+' has been played '+buf.plays+' times by '+buf.djs+' DJs.';
-					statline = statline+' Most recently by '+buf.nickname+' '+buf.age_text;
+				if (buf.djs == 1) {
+				statline = buf.song+' has only been played by '+buf.nickname+'. '+buf.plays+' times, most recently '+buf.age_text;
+				} else {
+				statline = buf.song+' has been played '+buf.plays+' times by '+buf.djs+' DJs.';
+				statline = statline+' Most recently by '+buf.nickname+' '+buf.age_text;
 				}
-			}
-		} else {
-			statline = 'I\'ve never heard this song before today!';
-		}
+				}
+				} else {
+				statline = 'I\'ve never heard this song before today!';
+				}
 
-		if(target == 'public') {
-			say(statline);
-		} else {
-			pm(statline,data.senderid);
-		}
+				if(target == 'public') {
+					say(statline);
+				} else {
+					pm(statline,data.senderid);
+				}
 
-	}));
+			}));
 
 }
 
@@ -510,22 +510,22 @@ function db_saysnag(data) {
 	global['curdjname']     = data.room.metadata.current_song.djname;
 
 	botdb.query('SELECT * FROM snaglog_expanded WHERE song_id = $1 AND user_id = $2', [
-		data.room.metadata.current_song._id,
-		data.room.metadata.current_song.djid
-	], after(function(result) {
-	    if (result.rows.length != 1) {
-			// logger('No record of this song having been snagged');
-		} else {
-			// util.log(util.inspect(result.rows[0].age_text));
-			if (result.rows[0].age_text == '00:00:00 ago') {
+			data.room.metadata.current_song._id,
+			data.room.metadata.current_song.djid
+			], after(function(result) {
+				if (result.rows.length != 1) {
+				// logger('No record of this song having been snagged');
+				} else {
+				// util.log(util.inspect(result.rows[0].age_text));
+				if (result.rows[0].age_text == '00:00:00 ago') {
 				var saybuf = result.rows[0].nickname+' just snagged this song from '+result.rows[0].dj_nickname+' earlier today!';
-			} else {
+				} else {
 				var saybuf = result.rows[0].nickname+' snagged this song from '+result.rows[0].dj_nickname+' '+result.rows[0].age_text+'!';
-			}
-			// logger(saybuf);
-			lag_say(saybuf);
-		}
-	}));
+				}
+				// logger(saybuf);
+				lag_say(saybuf);
+				}
+				}));
 }
 
 function db_seen(nick) {
@@ -550,7 +550,7 @@ function pick_random(count) {
 
 function bump_song(indexFrom) {
 	indexFrom = parseInt(indexFrom);
-	
+
 	bot.playlistReorder(indexFrom, 0);
 	schedule_queue_dump();
 }
@@ -614,9 +614,9 @@ function lag_pm (text,receiver) {
 function lag_heart (text) {
 	waitms = parseInt(Math.random() * 8000)+500;
 	setTimeout(function(){ 
-		say(text);
-		bot.snag();
-	}, waitms);
+			say(text);
+			bot.snag();
+			}, waitms);
 }
 
 function id_to_name (user_id) {
@@ -636,8 +636,8 @@ function id_to_name (user_id) {
 		}
 	}
 	bot.getProfile(user_id, function(userdata) {
-		return userdata.name;
-	});
+			return userdata.name;
+			});
 
 	return user_id;
 }
@@ -654,7 +654,19 @@ function do_vote (vote) {
 		if(roominfo.room.metadata.current_dj == settings.userid) {
 			logger('- ignoring self-vote');
 		} else {
-			bot.vote(vote);
+			botdb.query('SELECT * FROM users WHERE user_id = $1', [
+				roominfo.room.metadata.current_dj
+			], after(function(result) {
+				if (result.rows.length == 1) {
+					var user = result.rows[0];
+					//util.log(util.inspect(user));
+					if(user.ignore) { 
+						logger('- ignoring pariah '+user.nickname);
+					} else {
+						bot.vote(vote);
+					}
+				}
+			}));
 		}
 	});
 }
@@ -676,7 +688,7 @@ function do_command (data) {
 
 	switch(command) {
 		case 'jump':
-            logger('= '+id_to_name(data.senderid)+' tried jump command '+command+'('+args+')');
+			logger('= '+id_to_name(data.senderid)+' tried jump command '+command+'('+args+')');
 			if (args == 'down') {
 				bot.remDj(settings.userid);
 			} else {
@@ -691,18 +703,18 @@ function do_command (data) {
 			break;
 		case 'awesome':
 			do_vote('up');
-            logger('= '+id_to_name(data.senderid)+' made me vote awesome');
+			logger('= '+id_to_name(data.senderid)+' made me vote awesome');
 			break;
 		case 'lame':
 			do_vote('down');
-            logger('= '+id_to_name(data.senderid)+' made me vote lame');
+			logger('= '+id_to_name(data.senderid)+' made me vote lame');
 			break;
 		case 'avatar':
 			args = parseInt(args);
 			bot.setAvatar(args);
 			break;
 		case 'say':
-            logger('= '+id_to_name(data.senderid)+' ventriloquist:');
+			logger('= '+id_to_name(data.senderid)+' ventriloquist:');
 			say(args);
 			break;
 		case 'autobop':
@@ -727,31 +739,31 @@ function do_command (data) {
 			add_current_song_to_queue(true);
 			break;
 		case 'skip':
-            logger('= '+id_to_name(data.senderid)+' skipped this song');
+			logger('= '+id_to_name(data.senderid)+' skipped this song');
 			bot.stopSong();
 			break;
 		case 'dumpqueue':
-            logger('= '+id_to_name(data.senderid)+' dumped the queue');
+			logger('= '+id_to_name(data.senderid)+' dumped the queue');
 			dump_queue();
 			break;
 		case 'comehere':
-            logger('= '+id_to_name(data.senderid)+' beckoned me');
+			logger('= '+id_to_name(data.senderid)+' beckoned me');
 			follow_user(data.senderid);
 			break;
 		case 'random':
-            logger('= '+id_to_name(data.senderid)+' wants '+args+' new random tracks');
+			logger('= '+id_to_name(data.senderid)+' wants '+args+' new random tracks');
 			pick_random(args);
 			break;
 		case 'bump':
-		    logger('= '+id_to_name(data.senderid)+' bumped track '+args+' to the top');
-    		bump_song(args);
+			logger('= '+id_to_name(data.senderid)+' bumped track '+args+' to the top');
+			bump_song(args);
 			break;
 		case 'addleader':
-		    logger('= '+id_to_name(data.senderid)+' added '+args+' as a leader');
+			logger('= '+id_to_name(data.senderid)+' added '+args+' as a leader');
 			add_leader(args);
 			break;
 		case 'dropleader':
-		    logger('= '+id_to_name(data.senderid)+' dropped '+args+' as a leader');
+			logger('= '+id_to_name(data.senderid)+' dropped '+args+' as a leader');
 			drop_leader(args);
 			break;
 		case 'reload':
@@ -768,15 +780,15 @@ function do_command (data) {
 			}
 			break;
 		case 'djstats':
-            logger('! '+id_to_name(data.senderid)+' asked for dj stats');
+			logger('! '+id_to_name(data.senderid)+' asked for dj stats');
 			db_djstats(args,data);
 			break;
 		case 'songstats':
-            logger('! '+id_to_name(data.senderid)+' asked for song stats');
+			logger('! '+id_to_name(data.senderid)+' asked for song stats');
 			db_songstats(args,data);
 			break;
 		case 'default':
-            logger('! '+id_to_name(data.senderid)+' tried unknown command '+command+'('+args+')');
+			logger('! '+id_to_name(data.senderid)+' tried unknown command '+command+'('+args+')');
 			break;
 	}
 }
@@ -788,47 +800,47 @@ function add_current_song_to_queue(visible) {
 	}
 
 	bot.playlistAll(function(data) { 
-		global['queuelen'] = data.list.length;
-		global['addok'] = 1;
+			global['queuelen'] = data.list.length;
+			global['addok'] = 1;
 
-		data.list.forEach(function(song) {
-			// logger('- comparo '+song._id+' and '+global['cursong']);
-			if (song._id == global['cursong']) {
+			data.list.forEach(function(song) {
+				// logger('- comparo '+song._id+' and '+global['cursong']);
+				if (song._id == global['cursong']) {
 				logger('! '+song.metadata.song+' by '+song.metadata.artist+' is already in my queue -- skipping');
 				global['addok'] = 0;
 				return;
-			}
-		});
-		// logger('post-scan global ok is '+global['addok']);
+				}
+				});
+			// logger('post-scan global ok is '+global['addok']);
 
-		if (global['addok'] == 1) {
+			if (global['addok'] == 1) {
 			bot.playlistAdd('default',global['cursong'],global['queuelen'],function(resp) {
 				logger('* Song '+global['cursong']+' added to index '+global['queuelen']);
 				if (visible == true) {
-					logger('- making hearts');
-					bot.snag();
+				logger('- making hearts');
+				bot.snag();
 				}
-			});
-		}
+				});
+			}
 	});
 }
 
 function follow_user(userid) {
 	bot.stalk(userid, true, function(userdata) {
-		// util.log(util.inspect(userdata));
-		var target_id = userdata.roomId;
+			// util.log(util.inspect(userdata));
+			var target_id = userdata.roomId;
 
-		if (target_id != global['roomid']) {
+			if (target_id != global['roomid']) {
 			logger('* Following '+id_to_name(userid)+' to room_id '+target_id);
 			bot.roomDeregister( function(data) {
 				bot.roomRegister(target_id);
 				pm('I am here now!',userid);
-			});
-		} else {
+				});
+			} else {
 			logger('* I am already in that room');
 			pm('I am already in that room, silly',userid);
-		}
-	});
+			}
+			});
 }
 
 function clear_entire_queue() {
