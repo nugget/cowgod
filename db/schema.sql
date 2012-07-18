@@ -142,12 +142,19 @@ $$ LANGUAGE plpgsql;
 DROP VIEW snaglog_expanded, songlog_expanded, joins_expanded;
 
 CREATE VIEW songlog_expanded AS
-	SELECT l.*, nick(l.dj_id) as nickname, s.artist, s.song, s.trip_odometer, age(date_trunc('day',current_timestamp),date_trunc('day',l.ts))::varchar||' ago' as age_text FROM songlog l LEFT JOIN songs s ON s.song_id = l.song_id;
+	SELECT l.*, nick(l.dj_id) as nickname, s.artist, s.song, s.trip_odometer, age(date_trunc('day',current_timestamp),date_trunc('day',l.ts))::varchar||' ago' as age_text,
+	       extract(epoch from current_timestamp at time zone 'utc' - l.ts)::integer as secs_ago
+	FROM songlog l LEFT JOIN songs s ON s.song_id = l.song_id;
 
 CREATE VIEW snaglog_expanded AS
-	SELECT s.ts,s.user_id,nick(s.user_id) as nickname,l.dj_id, nick(l.dj_id) as dj_nickname,l.song_id,l.artist,l.song, age(date_trunc('day',current_timestamp),date_trunc('day',s.ts))::varchar||' ago' as age_text FROM snaglog s LEFT JOIN songlog_expanded l ON s.play_id = l.id;
+	SELECT s.ts,s.user_id,nick(s.user_id) as nickname,l.dj_id, nick(l.dj_id) as dj_nickname,l.song_id,l.artist,l.song, age(date_trunc('day',current_timestamp),date_trunc('day',s.ts))::varchar||' ago' as age_text,
+	       extract(epoch from current_timestamp at time zone 'utc' - s.ts)::integer as secs_ago
+	FROM snaglog s LEFT JOIN songlog_expanded l ON s.play_id = l.id;
 
 CREATE VIEW joins_expanded AS
-	SELECT *, age(date_trunc('hour',current_timestamp),date_trunc('day',ts))::varchar||' ago' as age_text FROM users_joins;
+	SELECT *, age(date_trunc('hour',current_timestamp),date_trunc('day',ts))::varchar||' ago' as age_text,
+	       extract(epoch from current_timestamp at time zone 'utc' - ts)::integer as secs_ago
+	FROM users_joins;
 
 GRANT SELECT ON snaglog_expanded, songlog_expanded, joins_expanded TO bots;
+

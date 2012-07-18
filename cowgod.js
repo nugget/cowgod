@@ -357,6 +357,20 @@ function db_sayodometer(data) {
 
 	//util.log(util.inspect(data));
 
+	botdb.query('select *, (SELECT count(*) FROM songlog_expanded WHERE song ILIKE $1 AND artist ILIKE $2) AS plays, (SELECT count(DISTINCT dj_id) FROM songlog_expanded WHERE song ILIKE $1 AND artist ILIKE $2) AS djs FROM songlog_expanded WHERE song ILIKE $1 AND artist ILIKE $2 AND stats_djcount IS NOT NULL ORDER BY id DESC LIMIT 1', [
+			global['cursongname'],
+			global['curartistname']
+			], after(function(result) {
+				var minutes = Math.round( result.secs_ago / 60 );
+				var hours   = Math.round( result.secs_ago / 3600 );
+
+				if (result.secs_ago < 3600) {
+					lag_say('Wow, I haven\'t heard this song in, like, '+minutes+' minutes!');
+				} else if (result.secs_ago < 36000) {
+					lag_say('Wow, I haven\'t heard this song in, like, '+hours+' hours!');
+				}
+	}));
+
 	botdb.query('SELECT artist,count(*) as plays,(SELECT count(*) FROM songlog_expanded WHERE dj_id = $1) as total_plays FROM songlog_expanded WHERE dj_id = $1 GROUP BY artist ORDER BY plays DESC LIMIT 1', [
 			data.room.metadata.current_song.djid
 			], after(function(result) {
@@ -462,24 +476,35 @@ function db_songstats(target,data) {
 
 	// util.log(util.inspect(data));
 
-	botdb.query('select *, (SELECT count(*) FROM songlog WHERE song_id = $1) AS plays, (SELECT count(DISTINCT dj_id) FROM songlog WHERE song_id = $1) AS djs FROM songlog_expanded WHERE song_id = $1 AND stats_djcount IS NOT NULL ORDER BY id DESC LIMIT 1', [
-			global['cursong']
+	botdb.query('select *, (SELECT count(*) FROM songlog_expanded WHERE song ILIKE $1 AND artist ILIKE $2) AS plays, (SELECT count(DISTINCT dj_id) FROM songlog_expanded WHERE song ILIKE $1 AND artist ILIKE $2) AS djs FROM songlog_expanded WHERE song ILIKE $1 AND artist ILIKE $2 AND stats_djcount IS NOT NULL ORDER BY id DESC LIMIT 1', [
+			global['cursongname'],
+			global['curartistname']
 			], after(function(result) {
 				var statline;
 
 				if (result.rows.length == 1) {
 				var buf = result.rows[0];
 
+				var when = buf.age_text;
+
+				if (buf.sec_ago < 3600) {
+					when = 'in the past hour!';
+				} else if (buf.secs_ago < 86400) {
+					when = 'earlier today!';
+				} else {
+					when = buf.age_text;
+				}
+
 				// util.log(util.inspect(buf));
 
 				if (buf.plays == 1) {
-				statline = buf.song=' has only been played once before by '+buf.nickname+' '+buf.age_text;
+				statline = buf.song=' has only been played once before by '+buf.nickname+' '+when;
 				} else {
 				if (buf.djs == 1) {
-				statline = buf.song+' has only been played by '+buf.nickname+'. '+buf.plays+' times, most recently '+buf.age_text;
+				statline = buf.song+' has only been played by '+buf.nickname+'. '+buf.plays+' times, most recently '+when;
 				} else {
 				statline = buf.song+' has been played '+buf.plays+' times by '+buf.djs+' DJs.';
-				statline = statline+' Most recently by '+buf.nickname+' '+buf.age_text;
+				statline = statline+' Most recently by '+buf.nickname+' '+when;
 				}
 				}
 				} else {
@@ -506,6 +531,7 @@ function db_saysnag(data) {
 	//
 	global['cursong']      = data.room.metadata.current_song._id;
 	global['cursongname']  = data.room.metadata.current_song.metadata.song;
+	global['curartistname']  = data.room.metadata.current_song.metadata.artist;
 	global['curdjid']      = data.room.metadata.current_song.djid;
 	global['curdjname']     = data.room.metadata.current_song.djname;
 
@@ -880,6 +906,7 @@ bot.on('roomChanged', function (data) {
 	} else {
 		global['cursong']      = data.room.metadata.current_song._id;
 		global['cursongname']  = data.room.metadata.current_song.metadata.song;
+		global['curartistname']  = data.room.metadata.current_song.metadata.artist;
 		global['curdjid']      = data.room.metadata.current_song.djid;
 		global['curdjname']    = data.room.metadata.current_song.djname;
 		logger('! Now Playing '+data.room.metadata.current_song.metadata.song);
