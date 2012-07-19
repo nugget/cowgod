@@ -105,6 +105,16 @@ function logger_tsv(larray) {
 	}
 }
 
+function parse_username(text) {
+	var moo     = text.indexOf('@');
+
+	if (moo == -1) {
+		return;
+	} else {
+		return text.substr(moo+1);
+	}
+}
+
 function db_read() {
 	return settings.db;
 }
@@ -177,6 +187,28 @@ function db_newsong(data) {
 			data.room.metadata.current_dj,
 			data.room.metadata.djs
 			], after(function(result) {} ));
+}
+
+function ban_user(userid,adminid) {
+	if (!db_write()) { return; }
+
+	if(is_admin(userid)) {
+		say('Are you crazy?  I won\'t do that!')
+		return;
+	}
+
+	if(is_leader(userid)) {
+		say('I like '+id_to_name(userid)+' too much to do that.');
+		return;
+	}
+
+	logger('Banning user_id '+userid);
+
+	bot.bootUser(userid,'See ya');
+
+	botdb.query('INSERT INTO blacklist (user_id,added_by,public_msg,private_msg) VALUES ($1,$2,$3,$4)', [
+		userid, adminid, id_to_name(adminid)+' banned that guy.', 'You are not welcome in here'
+	], after(function(result) {} ));
 }
 
 function db_endsong(data) {
@@ -268,8 +300,10 @@ function enforce_blacklist(data) {
 				logger('! Got a blacklist hit on this join: '+data.user[0].userid);
 
 				var user = result.rows[0];
+				util.log(util.inspect(user));
 
-				bot.bootUser(user.userid,user.private_msg);
+				bot.bootUser(user.user_id,user.private_msg);
+
 				lag_say(user.public_msg);
 				}
 				}));
@@ -368,6 +402,8 @@ function db_sayodometer(data) {
 					lag_say('Wow, I haven\'t heard this song in, like, '+minutes+' minutes!');
 				} else if (result.secs_ago < 36000) {
 					lag_say('Wow, I haven\'t heard this song in, like, '+hours+' hours!');
+				} else {
+					logger('Last heard this song '+hours+' ago ('+result.secs_ago+')');
 				}
 	}));
 
@@ -666,6 +702,15 @@ function id_to_name (user_id) {
 			});
 
 	return user_id;
+}
+
+function name_to_id (username) {
+	for (var k in usernames) {
+		if (usernames[k] == username) {
+			return k;
+		}
+	}
+	return;
 }
 
 function lag_vote (vote) {
@@ -1078,6 +1123,17 @@ bot.on('speak', function (data) {
 			do_vote(global['myvote']);
 		}
 	}
+
+	if (data.text.toLowerCase().indexOf('/shame @') != -1) {
+		var username = parse_username(data.text);
+
+		if (is_admin(data.userid)) {
+			ban_user(name_to_id(username),data.userid);
+		} else {
+			say('Sorry, I just can\'t do that.');
+		}
+	}
+
 
 	if (data.text.toLowerCase() == '/songstats') {
 		db_songstats('public',data);
