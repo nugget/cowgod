@@ -1129,7 +1129,7 @@ bot.on('speak', function (data) {
 		}
 	}
 
-	# All commands below are chatty, so ignore unless odometer is enabled
+	// All commands below are chatty, so ignore unless odometer is enabled
 	if (config['say_odometer'] != 'on') {
 		return;
 	}
@@ -1142,7 +1142,7 @@ bot.on('speak', function (data) {
 		db_djstats('public',data);
 	}
 
-	# All commands below are write ops, so skip if we can't
+	// All commands below are write ops, so skip if we can't
 	if (!db_write()) { return; }
 
 	if (data.text.toLowerCase().indexOf('/shame @') != -1) {
