@@ -1078,4 +1078,13 @@ bot.on('speak', function (data) {
 			do_vote(global['myvote']);
 		}
 	}
+
+	if (data.text.toLowerCase() == '/songstats') {
+		db_songstats('public',data);
+	}
+
+	if (data.text.toLowerCase() == '/djstats') {
+		db_djstats('public',data);
+	}
+
 });
