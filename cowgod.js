@@ -1124,6 +1124,22 @@ bot.on('speak', function (data) {
 		}
 	}
 
+	# All commands below are chatty, so ignore unless odometer is enabled
+	if (config['say_odometer'] != 'on') {
+		return;
+	}
+
+	if (data.text.toLowerCase() == '/songstats') {
+		db_songstats('public',data);
+	}
+
+	if (data.text.toLowerCase() == '/djstats') {
+		db_djstats('public',data);
+	}
+
+	# All commands below are write ops, so skip if we can't
+	if (!db_write()) { return; }
+
 	if (data.text.toLowerCase().indexOf('/shame @') != -1) {
 		var username = parse_username(data.text);
 
@@ -1134,13 +1150,5 @@ bot.on('speak', function (data) {
 		}
 	}
 
-
-	if (data.text.toLowerCase() == '/songstats') {
-		db_songstats('public',data);
-	}
-
-	if (data.text.toLowerCase() == '/djstats') {
-		db_djstats('public',data);
-	}
 
 });
