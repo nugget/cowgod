@@ -1067,5 +1067,15 @@ bot.on('pmmed', function (data) {
 });
 
 bot.on('speak', function (data) {
+	//util.log(util.inspect(data));
+
 	logger('<'+data.name+'> '+data.text);
+
+	if (data.text.toLowerCase().indexOf('make it stop') != -1) {
+		if (is_leader(data.userid)) {
+			logger('user wants us to lame');
+			global['myvote'] = 'down';
+			do_vote(global['myvote']);
+		}
+	}
 });
