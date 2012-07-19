@@ -202,6 +202,11 @@ function ban_user(userid,adminid) {
 		return;
 	}
 
+	if(userid == settings.userid) {
+		say('Look, everyone, we got ourselves a comedian here...');
+		return;
+	}
+
 	logger('Banning user_id '+userid);
 
 	bot.bootUser(userid,'See ya');
