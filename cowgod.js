@@ -407,7 +407,7 @@ function db_sayodometer(data) {
 
 				var buf = result.rows[0];
 
-			    if (typeof buf.secs_ago === 'undefined') {
+			    if (typeof buf === 'undefined') {
 					logger('Never heard this song before.');
 				} else {
 					var seconds = buf.secs_ago;
