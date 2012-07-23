@@ -396,19 +396,31 @@ function db_sayodometer(data) {
 
 	//util.log(util.inspect(data));
 
-	botdb.query('select *, (SELECT count(*) FROM songlog_expanded WHERE song ILIKE $1 AND artist ILIKE $2) AS plays, (SELECT count(DISTINCT dj_id) FROM songlog_expanded WHERE song ILIKE $1 AND artist ILIKE $2) AS djs FROM songlog_expanded WHERE song ILIKE $1 AND artist ILIKE $2 AND stats_djcount IS NOT NULL ORDER BY id DESC LIMIT 1', [
+	//logger('cursongname   = \''+global['cursongname']+'\'');
+	//logger('curartistname = \''+global['curartistname']+'\'');
+
+	botdb.query('SELECT secs_ago FROM songlog_expanded WHERE song ILIKE $1 AND artist ILIKE $2 AND stats_djcount IS NOT NULL ORDER BY id DESC LIMIT 1', [
 			global['cursongname'],
 			global['curartistname']
 			], after(function(result) {
-				var minutes = Math.round( result.secs_ago / 60 );
-				var hours   = Math.round( result.secs_ago / 3600 );
+				util.log(util.inspect(result));
 
-				if (result.secs_ago < 3600) {
-					lag_say('Wow, I haven\'t heard this song in, like, '+minutes+' minutes!');
-				} else if (result.secs_ago < 36000) {
-					lag_say('Wow, I haven\'t heard this song in, like, '+hours+' hours!');
+				var buf = result.rows[0];
+
+			    if (typeof buf.secs_ago === 'undefined') {
+					logger('Never heard this song before.');
 				} else {
-					logger('Last heard this song '+hours+' ago ('+result.secs_ago+')');
+					var seconds = buf.secs_ago;
+					var minutes = Math.round( seconds / 60 );
+					var hours   = Math.round( seconds / 3600 );
+
+					if (seconds < 3600) {
+						lag_say('Wow, I haven\'t heard this song in, like, '+minutes+' minutes!');
+					} else if (seconds < 36000) {
+						lag_say('Wow, I haven\'t heard this song in, like, '+hours+' hours!');
+					} else {
+						logger('Last heard this song '+hours+' hours ago ('+seconds+')');
+					}
 				}
 	}));
 
