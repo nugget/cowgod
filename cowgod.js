@@ -479,10 +479,12 @@ function db_djstats(target,data) {
 	}
 
 	var sql = 'SELECT count(l.*) as plays, count(DISTINCT l.song_id) as songs, ';
-	sql = sql+' (\'1970-01-01 00:00:00\' - timestamp without time zone \'epoch\' + sum(length) * \'1 second\'::interval)::varchar as duration, ';
+	// sql = sql+' (\'1970-01-01 00:00:00\' - timestamp without time zone \'epoch\' + sum(length) * \'1 second\'::interval)::varchar as duration, ';
+	sql = sql+' sum(length) as duration, ';
 	sql = sql+' avg(length) as avg_seconds, ';
-	sql = sql+' avg(l.stats_listeners) as avg_listeners, max(l.stats_listeners) as max_listeners, sum(s.length) as secs, count(v.*) as upvotes ';
-	sql = sql+' FROM songlog_expanded l LEFT JOIN songs s USING (song_id) LEFT JOIN votelog v ON l.id = v.play_id WHERE dj_id = $1';
+	sql = sql+' avg(l.stats_listeners) as avg_listeners, max(l.stats_listeners) as max_listeners, sum(length) as secs, ';
+	sql = sql+' (SELECT count(v.*) FROM votelog v LEFT JOIN songlog s ON s.id = v.play_id WHERE s.dj_id = $1) as upvotes ';
+	sql = sql+' FROM songlog_expanded l WHERE dj_id = $1';
 
 	logger(sql);
 
@@ -505,12 +507,15 @@ function db_djstats(target,data) {
 
 				var amm = Math.floor(buf.avg_seconds / 60);
 				var ass = Math.round(buf.avg_seconds - (amm * 60));
-				var ppm = Math.round(buf.upvotes / (buf.secs / 60) * 100) / 100;
+				var hours = Math.floor(buf.duration / 60 / 60);
+				var apm = Math.round(buf.upvotes / (buf.secs / 60) * 1000) / 1000;
 
-				statline = statline+' has spun '+buf.songs+' songs in '+buf.plays+' plays';
-				statline = statline+' ('+unique+'% unique)';
-				statline = statline+' earning an average of '+ppm+' ppm in the pit.';
-				statline = statline+' Total play time: '+buf.duration+'.';
+				statline = statline+' has spun '+buf.songs+' songs in '+buf.plays+' plays in the Pit';
+				statline = statline+' ('+unique+'% unique).';
+				if (hours > 0) {
+					statline = statline+' That\'s '+hours+' hours of music';
+					statline = statline+' with  '+apm+' apm.';
+				}
 				statline = statline+' Largest crowd: '+buf.max_listeners+' people.';
 				statline = statline+' Average song: '+amm+' min '+ass+' sec long.';
 				}
