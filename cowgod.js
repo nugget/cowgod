@@ -1063,6 +1063,9 @@ bot.on('newsong', function (data) {
 	if (config['autobop'] == 'on') {
 		global['myvote'] = 'up';
 		lag_vote('up');
+	} else if (global['curdjid'] == config['owner']) {
+		global['myvote'] = 'up';
+		lag_vote('up');
 	} else {
 		global['myvote'] = 'none';
 		// logger('= Clearing my vote for the new song');
