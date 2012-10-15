@@ -1063,7 +1063,7 @@ bot.on('newsong', function (data) {
 	if (config['autobop'] == 'on') {
 		global['myvote'] = 'up';
 		lag_vote('up');
-	} else if (global['curdjid'] == config['owner']) {
+	} else if (is_admin(data.room.metadata.current_song.djid)) {
 		global['myvote'] = 'up';
 		lag_vote('up');
 	} else {
