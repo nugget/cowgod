@@ -1,8 +1,19 @@
+#!/usr/bin/env node
+
 var fs = require('fs');
 var util = require('util');
+var argv = require('optimist').argv;
+
+if (typeof argv.nick === 'undefined') {
+	var myname = 'cowgod';
+	var settings = require('./settings.js');
+} else {
+	var myname = argv.nick;
+	var settings = require('./settings_'+myname+'.js');
+}       
+logger('! My Name Is '+myname);
 
 var Bot  = require('ttapi');
-var settings = require('./settings.js');
 settings.db = false;
 
 if (settings.dbname) {
