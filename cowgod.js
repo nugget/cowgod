@@ -549,49 +549,61 @@ function db_songstats(target,data) {
 	}
 
 	// util.log(util.inspect(data));
+	
+	var whereclause = 'song ILIKE $1 AND artist ILIKE $2';
 
-	botdb.query('select *, (SELECT count(*) FROM songlog_expanded WHERE song ILIKE $1 AND artist ILIKE $2) AS plays, (SELECT count(DISTINCT dj_id) FROM songlog_expanded WHERE song ILIKE $1 AND artist ILIKE $2) AS djs FROM songlog_expanded WHERE song ILIKE $1 AND artist ILIKE $2 AND stats_djcount IS NOT NULL ORDER BY id DESC LIMIT 1', [
+	botdb.query('select *, (SELECT count(*) FROM songlog_expanded WHERE '+whereclause+') AS plays, (SELECT count(DISTINCT dj_id) FROM songlog_expanded WHERE '+whereclause+') AS djs FROM songlog_expanded WHERE '+whereclause+' AND stats_djcount IS NOT NULL ORDER BY id DESC LIMIT 1', [
 			global['cursongname'],
 			global['curartistname']
 			], after(function(result) {
 				var statline;
 
 				if (result.rows.length == 1) {
-				var buf = result.rows[0];
+					var buf = result.rows[0];
 
-				var when = buf.age_text;
+					var when = buf.age_text;
 
-				if (buf.sec_ago < 3600) {
-					when = 'in the past hour!';
-				} else if (buf.secs_ago < 86400) {
-					when = 'earlier today!';
+					if (buf.sec_ago < 3600) {
+						when = 'in the past hour!';
+					} else if (buf.secs_ago < 86400) {
+						when = 'earlier today!';
+					} else {
+						when = buf.age_text;
+					}
+
+					// util.log(util.inspect(buf));
+
+					if (buf.plays == 1) {
+						statline = buf.song=' has only been played once before by '+buf.nickname+' '+when;
+						if (target == 'public') { say(statline); } else { pm(statline,data.senderid); }
+					} else {
+						if (buf.djs == 1) {
+							statline = buf.song+' has only been played by '+buf.nickname+', '+buf.plays+' times, most recently '+when;
+							if (target == 'public') { say(statline); } else { pm(statline,data.senderid); }
+						} else {
+							statline = buf.song+' has been played '+buf.plays+' times by '+buf.djs+' DJs.';
+							// statline = statline+' Most recently by '+buf.nickname+' '+when;
+	
+							botdb.query('SELECT * FROM songlog_expanded WHERE '+whereclause+' ORDER BY ts LIMIT 1', [
+								global['cursongname'],
+								global['curartistname']
+							], after(function(result) {
+								if (result.rows.length == 1) {
+									var buftwo = result.rows[0];
+									// util.log(util.inspect(buftwo));
+									statline = statline+' It was first played by '+buftwo.nickname+' '+buftwo.age_text;
+									statline = statline+' and most recently by '+buf.nickname+' '+buf.age_text;
+									if (target == 'public') { say(statline); } else { pm(statline,data.senderid); }
+								}
+							}));
+						}
+					}
 				} else {
-					when = buf.age_text;
+					statline = 'I\'ve never heard this song before today!';
+					if (target == 'public') { say(statline); } else { pm(statline,data.senderid); }
 				}
-
-				// util.log(util.inspect(buf));
-
-				if (buf.plays == 1) {
-				statline = buf.song=' has only been played once before by '+buf.nickname+' '+when;
-				} else {
-				if (buf.djs == 1) {
-				statline = buf.song+' has only been played by '+buf.nickname+'. '+buf.plays+' times, most recently '+when;
-				} else {
-				statline = buf.song+' has been played '+buf.plays+' times by '+buf.djs+' DJs.';
-				statline = statline+' Most recently by '+buf.nickname+' '+when;
-				}
-				}
-				} else {
-				statline = 'I\'ve never heard this song before today!';
-				}
-
-				if(target == 'public') {
-					say(statline);
-				} else {
-					pm(statline,data.senderid);
-				}
-
 			}));
+
 
 }
 
