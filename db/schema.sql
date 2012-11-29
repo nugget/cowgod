@@ -142,7 +142,7 @@ $$ LANGUAGE plpgsql;
 DROP VIEW snaglog_expanded, songlog_expanded, joins_expanded;
 
 CREATE VIEW songlog_expanded AS
-	SELECT l.*, nick(l.dj_id) as nickname, s.artist, s.song, s.trip_odometer, age(date_trunc('day',current_timestamp),date_trunc('day',l.ts))::varchar||' ago' as age_text,
+	SELECT l.*, nick(l.dj_id) as nickname, s.artist, s.song, s.length, s.trip_odometer, age(date_trunc('day',current_timestamp),date_trunc('day',l.ts))::varchar||' ago' as age_text,
 	       extract(epoch from current_timestamp at time zone 'utc' - l.ts)::integer as secs_ago
 	FROM songlog l LEFT JOIN songs s ON s.song_id = l.song_id;
 
