@@ -3,6 +3,8 @@
 var fs = require('fs');
 var util = require('util');
 var argv = require('optimist').argv;
+var sys = require('sys');
+var exec = require('child_process').exec;
 
 if (typeof argv.nick === 'undefined') {
 	var myname = 'cowgod';
@@ -198,6 +200,17 @@ function db_newsong(data) {
 			data.room.metadata.current_dj,
 			data.room.metadata.djs
 			], after(function(result) {} ));
+}
+
+function say_fortune() {
+	child = exec('/usr/games/fortune', function (error,stdout,stderr) {
+		var outbuf = stdout;
+		outbuf = outbuf.trim();
+		outbuf = outbuf.replace(/ +/g,' ');
+		logger('= fortune: '+outbuf);
+		pm(outbuf,'4e00e4e8a3f75104e10b7359');
+		// say(outbuf);
+	});
 }
 
 function ban_user(userid,adminid) {
@@ -821,6 +834,9 @@ function do_command (data) {
 			var receiver = args.text.substr(1,moo-1);
 			var msg      = args.text.substr(moo+1);
 			pm(msg,receiver);
+			break;
+		case 'fortune':
+			say_fortune();
 			break;
 		case 'awesome':
 			do_vote('up');
