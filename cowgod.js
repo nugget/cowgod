@@ -203,13 +203,19 @@ function db_newsong(data) {
 }
 
 function say_fortune() {
+	if (config['say_odometer'] != 'on') { return; }
+
 	child = exec('/usr/games/fortune', function (error,stdout,stderr) {
 		var outbuf = stdout;
 		outbuf = outbuf.trim();
 		outbuf = outbuf.replace(/ +/g,' ');
-		logger('= fortune: '+outbuf);
-		pm(outbuf,'4e00e4e8a3f75104e10b7359');
-		// say(outbuf);
+		// pm(outbuf,'4e00e4e8a3f75104e10b7359');
+		if (outbuf.length < 200) {
+			logger('= fortune is '+outbuf.length+' bytes');
+			lag_say(outbuf);
+		} else {
+			logger('= fortune was too long to say ('+outbuf.length+') '+outbuf);
+		}
 	});
 }
 
@@ -425,9 +431,7 @@ function drop_leader(user_id) {
 
 function db_sayodometer(data) {
 	if (!db_read()) { return; }
-	if (config['say_odometer'] != 'on') {
-		return;
-	}
+	if (config['say_odometer'] != 'on') { return; }
 
 	//util.log(util.inspect(data));
 
@@ -847,6 +851,7 @@ function do_command (data) {
 			pm(msg,receiver);
 			break;
 		case 'fortune':
+			logger('= '+id_to_name(data.senderid)+' made me give a fortune');
 			say_fortune();
 			break;
 		case 'awesome':
@@ -1215,6 +1220,11 @@ bot.on('speak', function (data) {
 
 	if (data.text.toLowerCase() == '/djstats') {
 		db_djstats('public',data);
+	}
+
+	if (data.text.toLowerCase().indexOf('@cowgod') != -1) {
+		logger('= '+id_to_name(data.senderid)+' said my name');
+		say_fortune();
 	}
 
 	// All commands below are write ops, so skip if we can't
