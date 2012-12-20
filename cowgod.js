@@ -255,9 +255,20 @@ function db_endsong(data) {
 function db_songdb(song) {
 	if (!db_write()) { return; }
 
+	// util.log(util.inspect(song));
+
 	song.metadata.album = song.metadata.album.replace(/\u0000/g,'');
 	song.metadata.artist = song.metadata.artist.replace(/\u0000/g,'');
 	song.metadata.song = song.metadata.song.replace(/\u0000/g,'');
+
+	if (song.metadata.song == '') {
+		logger('Nothing playing, no need to log');
+		return;
+	}
+
+	if (song.metadata.labelid == '') {
+		song.metadata.labelid = 0;
+	}
 
 	botdb.query('INSERT INTO songs (song_id,artist,song,album,genre,length,mnid,coverart,md5,labelid)  SELECT $1,$2,$3,$4,$5,$6,$7,$8,$9,$10 WHERE 1 NOT IN (SELECT 1 FROM songs WHERE song_id = $11)', [
 			song._id,
