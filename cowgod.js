@@ -202,19 +202,19 @@ function db_newsong(data) {
 			], after(function(result) {} ));
 }
 
-function say_fortune() {
+function say_command(command) {
 	if (config['say_odometer'] != 'on') { return; }
 
-	child = exec('/usr/games/fortune', function (error,stdout,stderr) {
+	child = exec(command, function (error,stdout,stderr) {
 		var outbuf = stdout;
 		outbuf = outbuf.trim();
 		outbuf = outbuf.replace(/ +/g,' ');
 		// pm(outbuf,'4e00e4e8a3f75104e10b7359');
 		if (outbuf.length < 200) {
-			logger('= fortune is '+outbuf.length+' bytes');
+			logger('= cmdout is '+outbuf.length+' bytes');
 			lag_say(outbuf);
 		} else {
-			logger('= fortune was too long to say ('+outbuf.length+') '+outbuf);
+			logger('= cmdout was too long to say ('+outbuf.length+') '+outbuf);
 		}
 	});
 }
@@ -852,7 +852,11 @@ function do_command (data) {
 			break;
 		case 'fortune':
 			logger('= '+id_to_name(data.senderid)+' made me give a fortune');
-			say_fortune();
+			say_command('/usr/games/fortune');
+			break;
+		case 'phb':
+			logger('= '+id_to_name(data.senderid)+' made me give a phb');
+			say_command('/usr/local/bin/speak');
 			break;
 		case 'awesome':
 			do_vote('up');
@@ -1224,7 +1228,7 @@ bot.on('speak', function (data) {
 
 	if (data.text.toLowerCase().indexOf('@cowgod') != -1) {
 		logger('= '+id_to_name(data.senderid)+' said my name');
-		say_fortune();
+		say_command('/usr/games/fortune');
 	}
 
 	// All commands below are write ops, so skip if we can't
