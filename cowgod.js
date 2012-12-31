@@ -6,6 +6,7 @@ var argv = require('optimist').argv;
 var sys = require('sys');
 var exec = require('child_process').exec;
 
+
 if (typeof argv.nick === 'undefined') {
 	var myname = 'cowgod';
 	var settings = require('./settings.js');
@@ -38,45 +39,26 @@ config['database']		= settings.db;
 config['say_snags']		= settings.say_snags;
 config['say_odometer']	= settings.say_odometer;
 
+db_loadsettings();
+
+var users = new Object();
+var usernames = new Object();
+
 var global = new Object();
 global['myvote']	= 'none';
 global['cursong']	= 'none';
 global['roomid']	= settings.roomid;
 
-var users = new Object();
-users['nugget']		= '4e00e4e8a3f75104e10b7359';
-users['SnS']		= '4e1c8c8b4fe7d031420bdf59';
-users['Bagel']		= '4e1c6fb1a3f75163090bc3ae';
-users['Jello']		= '4e15df8a4fe7d0665e02a9ef';
-users['Storm(e)']	= '4e3e10a94fe7d05787083cf1';
-users['Olive']		= '4e0a03aaa3f7517d0f0e639d';
-users['PitDemon']	= '4f50ed44590ca261fa004904';
-users['Dario']		= '4e00e584a3f75104e30b9fec';
-users['Becca']		= '4eeabf24590ca2576200265b';
-users['Buff']		= '4e123f71a3f75114d000f378';
-users['Bubba_Hotep']= '4e15cf89a3f751698c020b2f';
-
-var usernames = new Object();
-
-config['owner']	= users['nugget'];
-
 var admins = new Array();
-admins.push(users['nugget']);
-admins.push(users['SnS']);
-admins.push(users['Bagel']);
-
 var leaders = new Array();
-leaders.push(users['Jello']);
-leaders.push(users['Becca']);
-leaders.push(users['Dario']);
-leaders.push(users['Buff']);
-leaders.push(users['Bubba_Hotep']);
 
 //Bagel added this to track pending queue dump
 var pendingQueueDump;
 
 db_loadadmins();
 db_loadleaders();
+
+// util.log(util.inspect(config));
 
 if (settings.log_chat) {
 	var log_chat = fs.createWriteStream(settings.log_chat, {'flags': 'a'});
@@ -396,6 +378,22 @@ function db_loadleaders() {
 				logger('- Loaded '+leaders.length+' leaders from database');
 				}));
 
+}
+
+function db_loadsettings() {
+	if (!db_read()) { return; }
+
+	loadcount = 0;
+	botdb.query('SELECT * FROM settings WHERE deleted IS NULL AND enabled IS TRUE AND (bot_id IS NULL OR bot_id = $1) ORDER BY bot_id DESC', [
+			  settings.userid
+			], after(function(result) {
+				result.rows.forEach(function(setval) {
+					config[setval.key] = setval.value;
+					logger('- '+setval.key+' set to '+config[setval.key]);
+					loadcount = loadcount + 1;
+					});
+				logger('- Loaded '+loadcount+' settings rom database');
+				}));
 }
 
 function db_loadadmins() {
@@ -724,6 +722,13 @@ function toggle_config (item) {
 	}
 }
 
+function opt (item) {
+	if (typeof config[item] === 'undefined') {
+		return 'off';
+	}
+	return config[item];
+}
+
 function say_config (item,user_id) {
 	pm(item+' setting is now '+config[item],user_id);
 }
@@ -924,6 +929,7 @@ function do_command (data) {
 			drop_leader(args);
 			break;
 		case 'reload':
+			db_loadsettings();
 			db_loadadmins();
 			db_loadleaders();
 			break;

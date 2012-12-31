@@ -11,6 +11,20 @@ CREATE OR REPLACE FUNCTION onupdate_changed() RETURNS trigger AS $$
 	END;
 $$ LANGUAGE plpgsql;
 
+CREATE TABLE settings (
+	id serial NOT NULL,
+	added timestamp(0) without time zone NOT NULL DEFAULT (current_timestamp at time zone 'utc'),
+	changed timestamp(0) without time zone NOT NULL DEFAULT (current_timestamp at time zone 'utc'),
+	deleted timestamp(0) without time zone,
+	enabled boolean NOT NULL DEFAULT TRUE,
+	bot_id varchar,
+	key varchar NOT NULL,
+	value varchar NOT NULL,
+	PRIMARY KEY(id)
+);
+CREATE TRIGGER onupdate BEFORE UPDATE ON settings FOR EACH ROW EXECUTE PROCEDURE onupdate_changed();
+GRANT SELECT ON settings TO bots;
+
 CREATE TABLE songs (
 	song_id varchar NOT NULL,
 	added timestamp(0) without time zone NOT NULL DEFAULT (current_timestamp at time zone 'utc'),
@@ -124,6 +138,16 @@ CREATE TRIGGER onupdate BEFORE UPDATE ON users FOR EACH ROW EXECUTE PROCEDURE on
 GRANT SELECT,INSERT ON votelog TO bots;
 GRANT ALL ON votelog_id_seq TO bots;
 
+CREATE TABLE chat_log (
+	id serial NOT NULL,
+	ts timestamp(0) without time zone NOT NULL DEFAULT (current_timestamp at time zone 'utc'),
+	channel_id varchar NOT NULL DEFAULT '4ec45d23a3f75102da00259c',
+	user_id varchar NOT NULL,
+	text varchar,
+	PRIMARY KEY(id)
+);
+GRANT SELECT,INSERT ON chat_log TO bots;
+GRANT ALL ON chat_log_id_seq TO bots;
 
 CREATE OR REPLACE FUNCTION nick(varchar) RETURNS varchar AS $$
 	DECLARE
