@@ -714,6 +714,10 @@ function is_leader(userid) {
 	return 0
 }
 
+function explain_rules(djname) {
+	say('Welcome to the Pit, @'+djname+'!  We usually play follow the leader here with theme rounds based on whatever 1st chair plays. Have fun!');
+}
+
 function toggle_config (item) {
 	if (config[item] != 'off') {
 		config[item] = 'off';
@@ -1185,6 +1189,23 @@ bot.on('update_votes', function (data) {
 bot.on('add_dj', function (data) {
 	logger('* New DJ '+data.user[0].name);
 	logger_tsv([ 'event','newdj','userid',data.user[0].userid ]);
+
+	// logger('+ dj_scold is '+opt('dj_scold'));
+	if (opt('dj_scold') == 'on') {
+		botdb.query('SELECT count(*) FROM songlog WHERE dj_id = $1', [
+			data.user[0].userid
+		], after(function(result) {
+			// util.log(util.inspect(result));
+			
+			if (result.rows.length == 1) {
+				var playcount = result.rows[0];
+				// util.log(util.inspect(playcount));
+				if(playcount.count == 0) { 
+					explain_rules(data.user[0].name);
+				}
+			}
+		}));
+	}
 
 	return;
 
