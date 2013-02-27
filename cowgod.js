@@ -243,11 +243,16 @@ function db_endsong(data) {
 function db_songdb(song) {
 	if (!db_write()) { return; }
 
-	// util.log(util.inspect(song));
+	util.log(util.inspect(song));
 
-	song.metadata.album = song.metadata.album.replace(/\u0000/g,'');
-	song.metadata.artist = song.metadata.artist.replace(/\u0000/g,'');
-	song.metadata.song = song.metadata.song.replace(/\u0000/g,'');
+	if (song.metadata.album)
+		song.metadata.album = song.metadata.album.replace(/\u0000/g,'');
+
+	if (song.metadata.artist)
+		song.metadata.artist = song.metadata.artist.replace(/\u0000/g,'');
+
+	if (song.metadata.song)
+		song.metadata.song = song.metadata.song.replace(/\u0000/g,'');
 
 	if (song.metadata.song == '') {
 		logger('Nothing playing, no need to log');
@@ -797,6 +802,16 @@ function name_to_id (username) {
 			return k;
 		}
 	}
+	botdb.query('SELECT * FROM users WHERE nickname = $1', [
+		username
+	], after(function(result) {
+		if (result.rows.length == 1) {
+			var user = result.rows[0];
+			util.log(util.inspect(user));
+			return user._id;
+		}
+	}));
+
 	return;
 }
 
@@ -1036,6 +1051,8 @@ bot.debug = settings.debug;
 // bot.setAvatar(settings.avatar);
 
 bot.on('roomChanged', function (data) { 
+	util.log(util.inspect(data));
+	
 	global['roomid'] = data.room.roomid;
 	logger('! Room changed to '+data.room.name+' ('+data.room.roomid+')');
 	logger_tsv([ 'event','newroom','roomname',data.room.name ]);
@@ -1262,11 +1279,15 @@ bot.on('speak', function (data) {
 	if (!db_write()) { return; }
 
 	if (data.text.toLowerCase().indexOf('/shame @') != -1) {
+		logger('= shame');
 		var username = parse_username(data.text);
+		logger('= shame '+username);
 
 		if (is_admin(data.userid)) {
+			logger('= shame yes '+name_to_id(username));
 			ban_user(name_to_id(username),data.userid);
 		} else {
+			logger('= shame no');
 			say('Sorry, I just can\'t do that.');
 		}
 	}
