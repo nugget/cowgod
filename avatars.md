@@ -1,4 +1,12 @@
+   9 beige bear
+  10 voodoo bear
+  11 green bear
+  12 brown bear
+  13 cyan bear
   15 orange bear
+  17 light blue bear
+  22 demon
+  23 gorilla
   66 face mask red dragon				 3000	halloween
   67 jason hockey mask					 3000	halloween
   68 boy mummy							    0	halloween
