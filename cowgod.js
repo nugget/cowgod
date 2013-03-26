@@ -168,6 +168,8 @@ function after(callback) {
 					});
 					}
 
+
+
 function db_newsong(data) {
 	if (!db_write()) { return; }
 
@@ -182,6 +184,24 @@ function db_newsong(data) {
 			data.room.metadata.current_dj,
 			data.room.metadata.djs
 			], after(function(result) {} ));
+}
+
+function newsong_theme_management(data) {
+	var djid = data.room.metadata.current_song.djid;
+	var djs = data.room.metadata.djs;
+	if (opt('follow_seed_enabled') == 'on') {
+		if(djs[djs.length-1] == djid) {
+			logger('= this is the last last dj, I need to add my wisdom');
+			say_command('/usr/games/fortune -s -a');
+		} else {
+			logger('= follow_seed is enabled, but this is not the last dj');
+		}
+	} else {
+		logger('- follow_seed_enabled is not on');
+		if(djs[0] == djid) {
+			logger('= first dj, lets learn the theme');
+		}
+	}
 }
 
 function say_command(command) {
@@ -243,7 +263,7 @@ function db_endsong(data) {
 function db_songdb(song) {
 	if (!db_write()) { return; }
 
-	util.log(util.inspect(song));
+	// util.log(util.inspect(song));
 
 	if (song.metadata.album)
 		song.metadata.album = song.metadata.album.replace(/\u0000/g,'');
@@ -445,7 +465,7 @@ function db_sayodometer(data) {
 			global['cursongname'],
 			global['curartistname']
 			], after(function(result) {
-				util.log(util.inspect(result));
+				// util.log(util.inspect(result));
 
 				var buf = result.rows[0];
 
@@ -540,7 +560,7 @@ function db_djstats(target,data) {
 				if (result.rows.length == 1) {
 				var buf = result.rows[0];
 
-				util.log(util.inspect(buf));
+				//util.log(util.inspect(buf));
 
 				if (buf.plays == 1) {
 				statline = statline+' is playing their first song in here.  Welcome!';
@@ -724,11 +744,12 @@ function explain_rules(djname) {
 }
 
 function toggle_config (item) {
-	if (config[item] != 'off') {
-		config[item] = 'off';
-	} else {
+	if (config[item] != 'on') {
 		config[item] = 'on';
+	} else {
+		config[item] = 'off';
 	}
+	logger('- config['+item+'] is now '+config[item]);
 }
 
 function opt (item) {
@@ -807,7 +828,7 @@ function name_to_id (username) {
 	], after(function(result) {
 		if (result.rows.length == 1) {
 			var user = result.rows[0];
-			util.log(util.inspect(user));
+			// util.log(util.inspect(user));
 			return user._id;
 		}
 	}));
@@ -876,7 +897,7 @@ function do_command (data) {
 			break;
 		case 'fortune':
 			logger('= '+id_to_name(data.senderid)+' made me give a fortune');
-			say_command('/usr/games/fortune');
+			say_command('/usr/games/fortune -s -a');
 			break;
 		case 'phb':
 			logger('= '+id_to_name(data.senderid)+' made me give a phb');
@@ -914,6 +935,9 @@ function do_command (data) {
 			}
 			say_config(command,data.senderid);
 			logger('= '+id_to_name(data.senderid)+' set '+command+' to '+config[command]);
+			break;
+		case 'set':
+			toggle_config(args);
 			break;
 		case 'snag':
 			logger('- '+id_to_name(data.senderid)+' wants me to add this song to my queue');
@@ -1140,6 +1164,7 @@ bot.on('newsong', function (data) {
 			   ]);
 
 	db_newsong(data);
+	newsong_theme_management(data);
 
 	global['cursong']      = data.room.metadata.current_song._id;
 	global['cursongname']  = data.room.metadata.current_song.metadata.song;
@@ -1257,6 +1282,26 @@ bot.on('speak', function (data) {
 		}
 	}
 
+	if (opt('follow_seed_allowed') == 'on') {
+		if (data.text.toLowerCase().indexOf('lets play the follow game') != -1) {
+			if (is_leader(data.userid)) {
+				if (opt('follow_seed_enabled') != 'on') {
+					logger('user wants us to play follow game');
+					toggle_config('follow_seed_enabled');
+					say('Yay!  I love the follow game');
+				}
+			}
+		} else if (data.text.toLowerCase().indexOf('sick of this game') != -1) {
+			if (is_leader(data.userid)) {
+				if (opt('follow_seed_enabled') == 'on') {
+					logger('user wants us to stop the follow game');
+					toggle_config('follow_seed_enabled');
+					say('That was fun, thanks everyone.');
+				}
+			}
+		}
+	}
+
 	// All commands below are chatty, so ignore unless odometer is enabled
 	if (config['say_odometer'] != 'on') {
 		return;
@@ -1272,7 +1317,7 @@ bot.on('speak', function (data) {
 
 	if (data.text.toLowerCase().indexOf('@cowgod') != -1) {
 		logger('= '+id_to_name(data.senderid)+' said my name');
-		say_command('/usr/games/fortune');
+		say_command('/usr/games/fortune -s -a');
 	}
 
 	// All commands below are write ops, so skip if we can't
