@@ -335,7 +335,7 @@ function join_response(data) {
 		return;
 	}
 
-	if (data.user[0].userid == users['Becca']) {
+	if (data.user[0].userid == '4eeabf24590ca2576200265b') {
 		lag_heart('Yay! I <3 Becca!');
 	}
 }
