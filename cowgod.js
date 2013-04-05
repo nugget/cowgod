@@ -51,12 +51,16 @@ global['roomid']	= settings.roomid;
 
 var admins = new Array();
 var leaders = new Array();
+var owners = new Array();
+var bots = new Array();
 
 //Bagel added this to track pending queue dump
 var pendingQueueDump;
 
 db_loadadmins();
 db_loadleaders();
+db_loadowners();
+db_loadbots();
 
 // util.log(util.inspect(config));
 
@@ -392,6 +396,30 @@ function db_registered(data) {
 			], after(function(result) {} ));
 }
 
+function db_loadowners() {
+	if (!db_read()) { return; }
+
+	leaders.length = 0;
+	botdb.query('SELECT user_id FROM users WHERE owner IS TRUE ORDER BY nickname',after(function(result) {
+				result.rows.forEach(function(user) {
+					owners.push(user.user_id);
+					});
+				logger('- Loaded '+owners.length+' owners from database');
+				}));
+}
+
+function db_loadbots() {
+	if (!db_read()) { return; }
+
+	leaders.length = 0;
+	botdb.query('SELECT user_id FROM users WHERE bot IS TRUE ORDER BY nickname',after(function(result) {
+				result.rows.forEach(function(user) {
+					bots.push(user.user_id);
+					});
+				logger('- Loaded '+bots.length+' bots from database');
+				}));
+}
+
 function db_loadleaders() {
 	if (!db_read()) { return; }
 
@@ -402,7 +430,6 @@ function db_loadleaders() {
 					});
 				logger('- Loaded '+leaders.length+' leaders from database');
 				}));
-
 }
 
 function db_loadsettings() {
@@ -729,6 +756,14 @@ function is_admin(userid) {
 	return (admins.indexOf(userid) != -1);
 }
 
+function is_owner(userid) {
+	return (owners.indexOf(userid) != -1);
+}
+
+function is_bot(userid) {
+	return (bots.indexOf(userid) != -1);
+}
+
 function is_leader(userid) {
 	if (admins.indexOf(userid) != -1) {
 		return 1
@@ -975,6 +1010,7 @@ function do_command (data) {
 			db_loadsettings();
 			db_loadadmins();
 			db_loadleaders();
+			db_loadowners();
 			break;
 		case 'debug':
 			if (args != 'on') {
@@ -1075,7 +1111,7 @@ bot.debug = settings.debug;
 // bot.setAvatar(settings.avatar);
 
 bot.on('roomChanged', function (data) { 
-	util.log(util.inspect(data));
+	// util.log(util.inspect(data));
 	
 	global['roomid'] = data.room.roomid;
 	logger('! Room changed to '+data.room.name+' ('+data.room.roomid+')');
@@ -1258,6 +1294,21 @@ bot.on('add_dj', function (data) {
 	} else if (is_admin(data.user[0].userid)) {
 		say('I love '+data.user[0].name+'! (no homo)');
 	}
+});
+
+bot.on('rem_moderator', function (data) {
+	// util.log(util.inspect(data));
+	logger('* '+id_to_name(data.userid)+' lost their moderator status');
+	if (is_owner(data.userid) || is_bot(data.userid)) {
+		logger('* '+id_to_name(data.userid)+' needs saving!');
+		bot.addModerator(data.userid);
+	}
+
+});
+
+bot.on('new_moderator', function (data) {
+	// util.log(util.inspect(data));
+	logger('* '+id_to_name(data.userid)+' is now a moderator');
 });
 
 bot.on('pmmed', function (data) {
