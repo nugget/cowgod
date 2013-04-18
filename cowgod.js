@@ -513,7 +513,7 @@ function db_sayodometer(data) {
 				}
 	}));
 
-	botdb.query('SELECT artist,count(*) as plays,(SELECT count(*) FROM songlog_expanded WHERE dj_id = $1) as total_plays FROM songlog_expanded WHERE dj_id = $1 GROUP BY artist ORDER BY plays DESC LIMIT 1', [
+	botdb.query('SELECT lower(artist) as artist,count(*) as plays,(SELECT count(*) FROM songlog_expanded WHERE dj_id = $1) as total_plays FROM songlog_expanded WHERE dj_id = $1 GROUP BY lower(artist) ORDER BY plays DESC LIMIT 1', [
 			data.room.metadata.current_song.djid
 			], after(function(result) {
 				// util.log(util.inspect(result));
