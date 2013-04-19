@@ -248,7 +248,7 @@ function ban_user(userid,adminid) {
 	bot.bootUser(userid,'See ya');
 
 	botdb.query('INSERT INTO blacklist (user_id,added_by,public_msg,private_msg) VALUES ($1,$2,$3,$4)', [
-		userid, adminid, id_to_name(adminid)+' banned that guy.', 'You are not welcome in here'
+		userid, adminid, id_to_name(adminid)+' :boot that guy.', 'You are not welcome in here'
 	], after(function(result) {} ));
 }
 
