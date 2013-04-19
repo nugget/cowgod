@@ -1247,7 +1247,7 @@ bot.on('update_votes', function (data) {
 				// lag_vote(vote);
 			}
 		}
-	} else if (is_leader(user)) {
+	} else if (is_leader(user)||is_bot(user)) {
 		if (global['myvote'] == 'none') {
 			logger('- Voting '+vote+'!  I am such a follower');
 			global['myvote'] = vote;
