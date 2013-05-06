@@ -209,8 +209,6 @@ function newsong_theme_management(data) {
 }
 
 function say_command(command) {
-	if (config['say_odometer'] != 'on') { return; }
-
 	child = exec(command, function (error,stdout,stderr) {
 		var outbuf = stdout;
 		outbuf = outbuf.trim();
