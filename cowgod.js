@@ -1353,6 +1353,20 @@ bot.on('speak', function (data) {
 		}
 	}
 
+	if (settings.userid == '4f50ea86a3f7517d6c006f16') {
+		if (data.text.toLowerCase().indexOf('@cowgod') != -1) {
+			logger('= '+id_to_name(data.senderid)+' said my name');
+			say_command('/usr/games/fortune -s -a');
+		}
+	}
+
+	if (settings.userid == '4f91a1a1aaa5cd581d000280') {
+		if (data.text.toLowerCase().indexOf('@flightaware') != -1) {
+			logger('= '+id_to_name(data.senderid)+' said my name');
+			say_command('/usr/local/bin/speak');
+		}
+	}
+
 	// All commands below are chatty, so ignore unless odometer is enabled
 	if (config['say_odometer'] != 'on') {
 		return;
@@ -1364,11 +1378,6 @@ bot.on('speak', function (data) {
 
 	if (data.text.toLowerCase() == '/djstats') {
 		db_djstats('public',data);
-	}
-
-	if (data.text.toLowerCase().indexOf('@cowgod') != -1) {
-		logger('= '+id_to_name(data.senderid)+' said my name');
-		say_command('/usr/games/fortune -s -a');
 	}
 
 	// All commands below are write ops, so skip if we can't
