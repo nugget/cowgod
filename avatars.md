@@ -1,3 +1,8 @@
+cowgod 9
+pitdemon 22
+flightaware 17
+vob 34
+
    9 beige bear
   10 voodoo bear
   11 green bear
@@ -7,6 +12,7 @@
   17 light blue bear
   22 demon
   23 gorilla
+  34 black dude
   66 face mask red dragon				 3000	halloween
   67 jason hockey mask					 3000	halloween
   68 boy mummy							    0	halloween
