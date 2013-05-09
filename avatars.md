@@ -16,7 +16,8 @@ vob 34
   66 face mask red dragon				 3000	halloween
   67 jason hockey mask					 3000	halloween
   68 boy mummy							    0	halloween
- 116 pink bunny suit (ralphie)			  100   christmas
+ 116 pink bunny suit (ralphie)			  100   christmasq
+ 121 pink kitty							  300
  330 frankenstein's monster				20000	halloween
  331 headless horseman pumpkin head		10000	halloween
  333 purple hair sad clown				  100	halloween
