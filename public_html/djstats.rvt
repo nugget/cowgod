@@ -1,0 +1,28 @@
+<?
+
+package require cowgod
+package require macnugget
+
+page_init
+page_header -title "DJ Statistics"
+
+::cowgod::dbconnect
+
+webout [el_open table -class "table table-striped table-bordered table-centered"]
+puts "<tr><th>DJ</th><th>Plays</th><th>Seat One</th><th>All Alone</th></tr>"
+
+set sql "select nickname,count(*),sum((dj_id=substring(stats_djs from 3 for 24))::integer) as seat_one,sum(('{\"'||dj_id||'\"}'=stats_djs)::integer) as all_alone from songlog_expanded group by 1 order by 2 desc LIMIT 100;"
+
+pg_select $::cowgod $sql buf {
+	webout "<tr>"
+	webout "<td>$buf(nickname)</td>"
+    webout "<td style=\"text-align: right;\">[comma $buf(count)]</td>"
+    webout "<td style=\"text-align: right;\">[comma $buf(seat_one)]</td>"
+    webout "<td style=\"text-align: right;\">[comma $buf(all_alone)]</td>"
+	webout "</tr>"
+}
+webout "</table>"
+
+::cowgod::dbdisconnect
+
+?>
