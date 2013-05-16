@@ -570,7 +570,9 @@ function db_djstats(target,data) {
 	sql = sql+' sum(length) as duration, ';
 	sql = sql+' avg(length) as avg_seconds, ';
 	sql = sql+' avg(l.stats_listeners) as avg_listeners, max(l.stats_listeners) as max_listeners, sum(length) as secs, ';
-	sql = sql+' (SELECT count(v.*) FROM votelog v LEFT JOIN songlog s ON s.id = v.play_id WHERE s.dj_id = $1) as upvotes ';
+	sql = sql+' (SELECT count(v.*) FROM votelog v LEFT JOIN songlog s ON s.id = v.play_id WHERE s.dj_id = $1) as upvotes, ';
+	sql = sql+' sum((dj_id=substring(stats_djs from 1 for 24))::integer) as seat_one, ';
+	sql = sql+' sum((dj_id=stats_djs)::integer) as all_alone ';
 	sql = sql+' FROM songlog_expanded l WHERE dj_id = $1';
 
 	logger(sql);
@@ -597,8 +599,12 @@ function db_djstats(target,data) {
 				var hours = Math.floor(buf.duration / 60 / 60);
 				var apm = Math.round(buf.upvotes / (buf.secs / 60) * 1000) / 1000;
 
+				// var hogper = Math.round(buf.seat_one / buf.plays * 1000) / 10;
+
 				statline = statline+' has spun '+buf.songs+' songs in '+buf.plays+' plays in the Pit';
-				statline = statline+' ('+unique+'% unique).';
+				statline = statline+' ('+unique+'% unique)';
+
+				statline = statline+' and hogged the first chair for '+buf.seat_one+' songs.';
 				if (hours > 0) {
 					statline = statline+' That\'s '+hours+' hours of music';
 					statline = statline+' with  '+apm+' apm.';
@@ -1209,6 +1215,9 @@ bot.on('newsong', function (data) {
 		global['myvote'] = 'up';
 		lag_vote('up');
 	} else if (is_admin(data.room.metadata.current_song.djid)) {
+		global['myvote'] = 'up';
+		lag_vote('up');
+	} else if (is_bot(data.room.metadata.current_song.djid)) {
 		global['myvote'] = 'up';
 		lag_vote('up');
 	} else {
