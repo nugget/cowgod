@@ -571,8 +571,7 @@ function db_djstats(target,data) {
 	sql = sql+' avg(length) as avg_seconds, ';
 	sql = sql+' avg(l.stats_listeners) as avg_listeners, max(l.stats_listeners) as max_listeners, sum(length) as secs, ';
 	sql = sql+' (SELECT count(v.*) FROM votelog v LEFT JOIN songlog s ON s.id = v.play_id WHERE s.dj_id = $1) as upvotes, ';
-	sql = sql+' sum((dj_id=substring(stats_djs from 1 for 24))::integer) as seat_one, ';
-	sql = sql+' sum((dj_id=stats_djs)::integer) as all_alone ';
+	sql = sql+' sum((dj_id=substring(stats_djs from 3 for 24))::integer) as seat_one ';
 	sql = sql+' FROM songlog_expanded l WHERE dj_id = $1';
 
 	logger(sql);
