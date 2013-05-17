@@ -1,5 +1,37 @@
 <?
 
-puts "Moo."
+package require macnugget
+package require cowgod
+
+::cowgod::dbconnect
+
+set limit 200
+
+set sql "SELECT * FROM songlog_expanded ORDER BY id DESC LIMIT $limit"
+puts "<h1>Last $limit songs played in the Pit</h1>"
+
+puts "<table>"
+set last_date ""
+pg_select $::cowgod::db $sql buf {
+	set date [clock format [clock scan $buf(ts)] -format "%A, %d-%b-%Y"]
+	if {$date ne $last_date} {
+		set last_date $date
+		puts "<tr><th colspan=\"6\" align=\"left\">$date</th></tr>"
+	}
+	set time [clock format [clock scan $buf(ts)] -format "%H:%M"]
+	puts "<tr>"
+	puts "<td align=\"right\">$time</td>"
+	foreach f {artist song} {
+		puts "<td>$buf($f)</td>"
+	}
+	puts "<td>"
+	puts "<a href=\"http://www.ttstats.info/user/$buf(dj_id)\">$buf(nickname)</a>"
+	puts "</td>"
+	puts "</tr>"
+
+}
+puts "</table>"
+
+::cowgod::dbdisconnect
 
 ?>
