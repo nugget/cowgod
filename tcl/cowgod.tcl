@@ -3,7 +3,7 @@ package require Pgtcl
 
 namespace eval ::cowgod {
 	proc dbconnect {} {
-		if {[info exists ::cowgod]} {
+		if {[info exists ::cowgod::db]} {
 			return
 		}
 
@@ -14,18 +14,19 @@ namespace eval ::cowgod {
 			password	"vmsZ7Hg3Ckf4)6p(NoWC"
 		}
 
-		set ::cowgod [pg_connect -connlist [array get dbcred]]
+		set ::cowgod::db [pg_connect -connlist [array get dbcred]]
 		unset -nocomplain dbcred
 
-		if {![info exists ::cowgod]} {
+		if {![info exists ::cowgod::db]} {
 			puts "database connection error"
 			abort_page
 		}
 	}
 
 	proc dbdisconnect {} {
-		if {[info exists ::cowgod]} {
-			pg_disconnect $::cowgod
+		if {[info exists ::cowgod::db]} {
+			pg_disconnect $::cowgod::db
+			unset -nocomplain ::cowgod::db
 		}
 	}
 }
