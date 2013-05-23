@@ -1,0 +1,81 @@
+<?
+
+package require macnugget
+package require cowgod
+
+page_init
+page_header -title "Turntable.fm Pit of no Shame"
+
+::cowgod::dbconnect
+
+unset -nocomplain response dj
+load_response
+
+set toplimit 10
+
+proc total_time {seconds} {
+	set minutes [expr $seconds / 60]
+	set hours [expr $minutes / 60]
+	return "[comma $hours] hours"
+}
+
+set dj_id $response(dj_id)
+
+set sql "SELECT * FROM users WHERE user_id = [pg_quote $dj_id]"
+pg_select $::cowgod::db $sql buf {
+	array set dj [array get buf]
+}
+
+if {[info exists dj(nickname)]} {
+	webout "<h2>$dj(nickname)</h2>"
+
+
+	set sqlprefix "SELECT count(*), sum(length) as total_secs, min(ts) as first,max(ts) as last,max(stats_listeners) as max_listeners FROM songlog_expanded"
+
+	set sql "$sqlprefix WHERE dj_id = [pg_quote $dj_id]"
+	pg_select $::cowgod::db $sql buf {
+		array set plays [array get buf]
+	}
+
+	set sql "$sqlprefix WHERE stats_djs ilike '%'||[pg_quote $dj_id]||'%'"
+	pg_select $::cowgod::db $sql buf {
+		array set ondeck [array get buf]
+	}
+
+	#parray dj
+	#parray plays
+	#parray ondeck
+
+	webout "<p>First seen in the Pit on [clock format [clock scan $dj(added)] -format "%A %d-%B-%Y"].</p>"
+	webout "<p>Has played [comma $plays(count)] songs totalling [total_time $plays(total_secs)].</p>"
+	webout "<p>Has been on deck for [comma $ondeck(count)] songs totalling [total_time $ondeck(total_secs)]</p>"
+
+	set sql "SELECT lower(artist) as artist,count(*) as plays FROM songlog_expanded WHERE dj_id = [pg_quote $dj_id] GROUP BY lower(artist) ORDER BY plays DESC LIMIT $toplimit"
+	webout "<h3>Top $toplimit Artists</h3>"
+	webout [el_open table -class "table table-striped table-bordered"]
+	webout "<tr><th>Artist</th><th>Plays</th></tr>"
+	pg_select $::cowgod::db $sql buf {
+		webout "<tr>"
+		webout "<td>$buf(artist)</td>"
+		webout "<td style=\"text-align: right;\">[comma $buf(plays)]</td>"
+		webout "</tr>"
+	}
+	webout [el_close table]
+
+	set sql "SELECT lower(song) as song,lower(artist) as artist,count(*) as plays FROM songlog_expanded WHERE dj_id = [pg_quote $dj_id] GROUP BY lower(song),lower(artist) ORDER BY plays DESC LIMIT $toplimit"
+	webout "<h3>Top $toplimit Songs</h3>"
+	webout [el_open table -class "table table-striped table-bordered"]
+	webout "<tr><th>Song</th><th>Artist</th><th>Plays</th></tr>"
+	pg_select $::cowgod::db $sql buf {
+		webout "<tr>"
+		webout "<td>$buf(song)</td>"
+		webout "<td>$buf(artist)</td>"
+		webout "<td style=\"text-align: right;\">[comma $buf(plays)]</td>"
+		webout "</tr>"
+	}
+	webout [el_close table]
+}
+
+::cowgod::dbdisconnect
+
+?>
