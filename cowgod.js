@@ -364,6 +364,16 @@ function enforce_blacklist(data) {
 				}));
 }
 
+function db_speak(data) {
+	if (!db_write()) { return; }
+
+	botdb.query('INSERT INTO chat_log (user_id,room_id,text) SELECT $1,$2,$3', [
+			data.userid,
+			data.roomid,
+			data.text
+			], after(function(result) {} ));
+}
+
 function db_registered(data) {
 	if (!db_write()) { return; }
 
@@ -486,7 +496,8 @@ function db_sayodometer(data) {
 	//logger('cursongname   = \''+global['cursongname']+'\'');
 	//logger('curartistname = \''+global['curartistname']+'\'');
 
-	botdb.query('SELECT secs_ago FROM songlog_expanded WHERE song ILIKE $1 AND artist ILIKE $2 AND stats_djcount IS NOT NULL ORDER BY id DESC LIMIT 1', [
+	botdb.query('SELECT secs_ago FROM songlog_expanded WHERE (song_id = $1 OR (song ILIKE $2 AND artist ILIKE $3)) AND stats_djcount IS NOT NULL ORDER BY id DESC LIMIT 1', [
+			global['cursong'],
 			global['cursongname'],
 			global['curartistname']
 			], after(function(result) {
@@ -1327,9 +1338,10 @@ bot.on('pmmed', function (data) {
 });
 
 bot.on('speak', function (data) {
-	//util.log(util.inspect(data));
+	// util.log(util.inspect(data));
 
 	logger('<'+data.name+'> '+data.text);
+	db_speak(data);
 
 	if (data.text.toLowerCase().indexOf('make it stop') != -1) {
 		if (is_leader(data.userid)) {
