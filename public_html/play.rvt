@@ -1,0 +1,65 @@
+<?
+
+package require macnugget
+package require cowgod
+
+page_init
+page_header -title "Turntable.fm Pit of no Shame"
+
+::cowgod::dbconnect
+
+unset -nocomplain response dj
+load_response
+
+set toplimit 10
+
+proc total_time {seconds} {
+	set minutes [expr $seconds / 60]
+	set hours [expr $minutes / 60]
+	return "[comma $hours] hours"
+}
+
+set id $response(id)
+
+set sql "SELECT * FROM songlog_expanded WHERE id = [pg_quote $id]"
+pg_select $::cowgod::db $sql buf {
+	array set play [array get buf]
+}
+
+if {[info exists play(id)]} {
+	webout "<h2>$play(song) by $play(artist)</h2>"
+
+	webout "<p>Played in the Pit on [clock format [clock scan $play(ts)] -format "%A %d-%B-%Y at %H:%M:%S UTC"] by $play(nickname)</p>"
+
+
+	webout [el_open table -class "table table-striped table-bordered"]
+	webout "<tr colspan=\"$play(stats_djcount)\"><th>DJs on Deck</th></tr>"
+	webout "<tr>"
+	foreach dj_id [split [string map {"\"" "" "{" "" "}" ""} $play(stats_djs)] ","] {
+		pg_select $::cowgod::db "SELECT * FROM users WHERE user_id = [pg_quote $dj_id]" user {
+			webout "<td><a href=\"/cowgod/dj/$dj_id\">$user(nickname)</a></td>"
+		}
+	}
+	webout "</tr>"
+	webout "</table>"
+
+	webout "<p>There were $play(stats_listeners) listeners in the room</p>"
+
+	webout "<ul>"
+	set sql "SELECT * FROM snaglog_expanded WHERE play_id = $play(id)"
+	# webout "<code>$sql</code>"
+	pg_select $::cowgod::db $sql snags {
+		webout "<li>Snagged by $snags(nickname)</li>"
+	}
+	webout "</ul>"
+
+	webout [el_open div -class btn-group]
+	webout "[el_open a -href "/cowgod/play/[expr $play(id) - 1]" -class "btn"]Prev</a>"
+	webout "[el_open a -href "/cowgod/play/[expr $play(id) + 1]" -class "btn"]Next</a>"
+	webout [el_close div]
+
+}
+
+::cowgod::dbdisconnect
+
+?>

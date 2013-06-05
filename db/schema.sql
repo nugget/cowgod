@@ -171,7 +171,7 @@ CREATE VIEW songlog_expanded AS
 	FROM songlog l LEFT JOIN songs s ON s.song_id = l.song_id;
 
 CREATE VIEW snaglog_expanded AS
-	SELECT s.ts,s.user_id,nick(s.user_id) as nickname,l.dj_id, nick(l.dj_id) as dj_nickname,l.song_id,l.artist,l.song, age(date_trunc('day',current_timestamp),date_trunc('day',s.ts))::varchar||' ago' as age_text,
+	SELECT s.ts,s.play_id,s.user_id,nick(s.user_id) as nickname,l.dj_id, nick(l.dj_id) as dj_nickname,l.song_id,l.artist,l.song, age(date_trunc('day',current_timestamp),date_trunc('day',s.ts))::varchar||' ago' as age_text,
 	       extract(epoch from current_timestamp at time zone 'utc' - s.ts)::integer as secs_ago
 	FROM snaglog s LEFT JOIN songlog_expanded l ON s.play_id = l.id;
 
