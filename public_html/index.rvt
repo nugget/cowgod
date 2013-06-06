@@ -24,7 +24,7 @@ pg_select $::cowgod::db $sql buf {
 	}
 	set time [clock format [clock scan $buf(ts)] -format "%H:%M"]
 	puts "<tr>"
-	puts "<td align=\"right\">$time</td>"
+	puts "<td align=\"right\"><a href=\"/cowgod/play/$buf(id)\">$time</a></td>"
 	foreach f {artist song} {
 		puts "<td>$buf($f)</td>"
 	}
