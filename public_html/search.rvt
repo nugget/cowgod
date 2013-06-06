@@ -8,10 +8,13 @@ page_header -title "Turntable.fm Pit of no Shame"
 
 ::cowgod::dbconnect
 
+unset -nocomplain response
+load_response
+
 set limit 200
 
-set sql "SELECT * FROM songlog_expanded ORDER BY id DESC LIMIT $limit"
-puts "<h2>Last $limit songs played in the Pit</h2>"
+set sql "SELECT * FROM songlog_expanded WHERE song ilike '%'||[pg_quote $response(q)]||'%' ORDER BY id DESC LIMIT $limit"
+puts "<h2>Songs matching $response(q)</h2>"
 
 webout [el_open table -class "table table-striped table-bordered table-centered"]
 
@@ -21,17 +24,16 @@ pg_select $::cowgod::db $sql buf {
 	if {$date ne $last_date} {
 		set last_date $date
 		puts "<tr><th colspan=\"6\" align=\"left\">$date</th></tr>"
-		puts "<tr><th>Time</th><th>Artist</th><th>Song</th><th>DJ</th><th>Snags</th></tr>"
 	}
 	set time [clock format [clock scan $buf(ts)] -format "%H:%M"]
 	puts "<tr>"
-	puts "<td align=\"right\"><a href=\"/cowgod/play/$buf(id)\">$time</a></td>"
-	puts "<td>$buf(artist)</td>"
-	puts "<td><a href=\"/cowgod/song/$buf(song_id)\">$buf(song)</a></td>"
+	puts "<td align=\"right\">$time</td>"
+	foreach f {artist song} {
+		puts "<td>$buf($f)</td>"
+	}
 	puts "<td>"
 	puts "<a href=\"http://www.ttstats.info/user/$buf(dj_id)\">$buf(nickname)</a>"
 	puts "</td>"
-	puts "<td align=\"right\">[llength $buf(snaggers)]</td>"
 	puts "</tr>"
 
 }

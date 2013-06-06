@@ -1,0 +1,85 @@
+<?
+
+package require macnugget
+package require cowgod
+
+page_init
+page_header -title "Turntable.fm Pit of no Shame"
+
+::cowgod::dbconnect
+
+unset -nocomplain response dj
+load_response
+
+set id $response(id)
+
+if {[info exists id]} {
+	set sql "SELECT * FROM songs WHERE song_id = [pg_quote $id]"
+	pg_select $::cowgod::db $sql buf {
+		array set song [array get buf]
+	}
+
+	if {[array exists song]} {
+		webout [el_open div -class row]
+
+		if {[info exists song(coverart)] && $song(coverart) ne ""} {
+			webout [el_open div -class span2]
+			webout "<img class=\"img-rounded\" src=\"$song(coverart)\" />"
+			webout [el_close div]
+		}
+		webout [el_open div -class span8]
+		webout "<h3>$song(song)</h3>"
+		webout "<h4>$song(artist)<br/>$song(album)</h4>"
+		webout [el_close div]
+
+		webout [el_close div]
+
+		webout "<hr />"
+
+		unset -nocomplain idlist
+		set sql "SELECT song_id FROM songs WHERE song ilike [pg_quote $song(song)] and artist ilike [pg_quote $song(artist)]"
+		pg_select $::cowgod::db $sql buf {
+			lappend idlist $buf(song_id)
+		}
+
+
+		set sql "SELECT * FROM songlog_expanded WHERE song_id IN ('[join $idlist "','"]') ORDER BY ts DESC LIMIT 10"
+		webout [el_open table -class "table table-striped table-bordered"]
+		webout "<tr><th colspan=\"4\">Play Log</th></tr>"
+		webout "<tr><th>When</th><th>DJ</th><th>DJs</th><th>Listeners</th></tr>"
+		pg_select $::cowgod::db $sql play {
+		    set date [clock format [clock scan $play(ts)] -format "%A, %d-%b-%Y @ %H:%M"]
+			webout "<tr>"
+			webout "<td><a href=\"/cowgod/play/$play(id)\">$date</a>"
+			webout "<td><a href=\"/cowgod/dj/$play(dj_id)\">$play(nickname)</a></td>"
+			webout "<td style=\"text-align: right;\">$play(stats_djcount)</td>"
+			webout "<td style=\"text-align: right;\">$play(stats_listeners)</td>"
+			webout "</tr>"
+		}
+		webout "</table>"
+
+		set sql "SELECT * FROM snaglog_expanded WHERE song_id IN ('[join $idlist "','"]') ORDER BY ts DESC LIMIT 10"
+		set header 0
+		pg_select $::cowgod::db $sql play {
+			if {!$header} {
+				webout [el_open table -class "table table-striped table-bordered"]
+				webout "<tr><th colspan=\"4\">Snag Log</th></tr>"
+				webout "<tr><th>When</th><th>Snagger</th></tr>"
+				set header 1
+			}
+		    set date [clock format [clock scan $play(ts)] -format "%A, %d-%b-%Y @ %H:%M"]
+			webout "<tr>"
+			webout "<td><a href=\"/cowgod/play/$play(play_id)\">$date</a>"
+			webout "<td><a href=\"/cowgod/dj/$play(user_id)\">$play(nickname)</a></td>"
+			webout "</tr>"
+		}
+		if {$header} {
+			webout "</table>"
+		}
+
+	}
+}
+
+::cowgod::dbdisconnect
+
+?>
