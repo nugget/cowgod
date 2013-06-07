@@ -13,7 +13,6 @@ page_header -title "Recent Song Played in the Pit"
 set limit 100
 
 set sql "SELECT * FROM songlog_expanded ORDER BY id DESC LIMIT $limit"
-puts "<p>Join us on turntable.fm's <a href=\"http://turntable.fm/turntablefm_pit_of_no_shame\">Pit of No Shame</a></p>"
 
 webout [el_open table -class "table table-striped table-bordered table-centered"]
 webout "<tr><th colspan=\"5\">Last $limit songs played in the Pit</th></tr>"
