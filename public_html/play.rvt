@@ -27,8 +27,12 @@ pg_select $::cowgod::db $sql buf {
 }
 
 if {![array exists play]} {
-	puts "<p>Unable to locate this play</p>"
+	webout [el_open div -class row]
+	webout [el_open div -class span10]
+	puts "<p>Unable to locate this play in the database.</p>"
+	webout [el_close div]
 
+	webout [el_open div -class span2]
 	webout [el_open div -class btn-group]
 	pg_select $::cowgod::db "SELECT max(id) as id FROM songlog_expanded WHERE id < [pg_quote $id]" buf {
 		if {$buf(id) ne ""} {
@@ -40,6 +44,8 @@ if {![array exists play]} {
 			webout "[el_open a -href [::cowgod::href play $buf(id)] -class "btn"]Next</a>"
 		}
 	}
+	webout [el_close div]
+	webout [el_close div]
 	webout [el_close div]
 
 	::cowgod::dbdisconnect
