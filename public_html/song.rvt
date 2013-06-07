@@ -50,8 +50,8 @@ if {[info exists id]} {
 		pg_select $::cowgod::db $sql play {
 		    set date [clock format [clock scan $play(ts)] -format "%A, %d-%b-%Y @ %H:%M"]
 			webout "<tr>"
-			webout "<td><a href=\"/cowgod/play/$play(id)\">$date</a>"
-			webout "<td><a href=\"/cowgod/dj/$play(dj_id)\">$play(nickname)</a></td>"
+			webout "<td>[el_open a -href [::cowgod::href play $play(id)]]$date[el_close a]</td>"
+			webout "<td>[el_open a -href [::cowgod::href dj $play(dj_id)]]$play(nickname)[el_close a]</td>"
 			webout "<td style=\"text-align: right;\">$play(stats_djcount)</td>"
 			webout "<td style=\"text-align: right;\">$play(stats_listeners)</td>"
 			webout "</tr>"
@@ -69,8 +69,8 @@ if {[info exists id]} {
 			}
 		    set date [clock format [clock scan $play(ts)] -format "%A, %d-%b-%Y @ %H:%M"]
 			webout "<tr>"
-			webout "<td><a href=\"/cowgod/play/$play(play_id)\">$date</a>"
-			webout "<td><a href=\"/cowgod/dj/$play(user_id)\">$play(nickname)</a></td>"
+			webout "<td>[el_open a -href [::cowgod::href play $play(play_id)]]$date[el_close a]</td>"
+			webout "<td>[el_open a -href [::cowgod::href dj $play(user_id)]]$play(nickname)[el_close a]</td>"
 			webout "</tr>"
 		}
 		if {$header} {

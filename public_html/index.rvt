@@ -25,11 +25,11 @@ pg_select $::cowgod::db $sql buf {
 	}
 	set time [clock format [clock scan $buf(ts)] -format "%H:%M"]
 	puts "<tr>"
-	puts "<td align=\"right\"><a href=\"/cowgod/play/$buf(id)\">$time</a></td>"
+	puts "<td align=\"right\"><a href=\"[::cowgod::href play $buf(id)]\">$time</a></td>"
 	puts "<td>$buf(artist)</td>"
-	puts "<td><a href=\"/cowgod/song/$buf(song_id)\">$buf(song)</a></td>"
+	puts "<td><a href=\"[::cowgod::href song $buf(song_id)]\">$buf(song)</a></td>"
 	puts "<td>"
-	puts "<a href=\"http://www.ttstats.info/user/$buf(dj_id)\">$buf(nickname)</a>"
+	puts "<a href=\"[::cowgod::href dj $buf(dj_id)]\">$buf(nickname)</a>"
 	puts "</td>"
 	puts "<td align=\"right\">[llength $buf(snaggers)]</td>"
 	puts "</tr>"

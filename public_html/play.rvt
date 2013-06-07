@@ -56,7 +56,7 @@ if {[info exists play(id)]} {
 			} else {
 				webout [el_open td]
 			}
-			webout "<a href=\"/cowgod/dj/$dj_id\">$user(nickname)</a>"
+			webout "[el_open a -href [::cowgod::href dj $dj_id]]$user(nickname)[el_close a]"
 			webout [el_close td]
 		}
 	}
@@ -76,8 +76,8 @@ if {[info exists play(id)]} {
 	webout "</ul>"
 
 	webout [el_open div -class btn-group]
-	webout "[el_open a -href "/cowgod/play/[expr $play(id) - 1]" -class "btn"]Prev</a>"
-	webout "[el_open a -href "/cowgod/play/[expr $play(id) + 1]" -class "btn"]Next</a>"
+	webout "[el_open a -href [::cowgod::href play [expr $play(id) - 1]] -class "btn"]Prev</a>"
+	webout "[el_open a -href [::cowgod::href play [expr $play(id) + 1]] -class "btn"]Next</a>"
 	webout [el_close div]
 
 }

@@ -25,9 +25,30 @@ set sql "SELECT * FROM users WHERE user_id = [pg_quote $dj_id]"
 pg_select $::cowgod::db $sql buf {
 	array set dj [array get buf]
 }
+set sql "SELECT * FROM songlog_expanded WHERE dj_id = [pg_quote $dj_id] ORDER BY id DESC LIMIT 1"
+pg_select $::cowgod::db $sql buf {
+	array set lastsong [array get buf]
+}
+set sql "SELECT * FROM joins_expanded WHERE user_id = [pg_quote $dj_id] ORDER BY id DESC LIMIT 1"
+pg_select $::cowgod::db $sql buf {
+	array set lastjoin [array get buf]
+}
 
 if {[info exists dj(nickname)]} {
-	webout "<h2>$dj(nickname)</h2>"
+	webout [el_open div -class row]
+
+	webout [el_open div -class span2]
+	webout "<img class=\"img-rounded\" src=\"/cowgod/avatars/fullfront_[format "%03d" $lastjoin(avatarid)].png\" />"
+	webout [el_close div]
+
+	webout [el_open div -class span8]
+	webout "<h3>$dj(nickname)</h3>"
+	webout "<h4>Last seen: $lastjoin(age_text)</h4>"
+	webout [el_close div]
+
+	webout [el_close div]
+
+	webout "<hr />"
 
 
 	set sqlprefix "SELECT count(*), sum(length) as total_secs, min(ts) as first,max(ts) as last,max(stats_listeners) as max_listeners FROM songlog_expanded"
@@ -50,9 +71,12 @@ if {[info exists dj(nickname)]} {
 	webout "<p>Has played [comma $plays(count)] songs totalling [total_time $plays(total_secs)].</p>"
 	webout "<p>Has been on deck for [comma $ondeck(count)] songs totalling [total_time $ondeck(total_secs)]</p>"
 
+	webout [el_open div -class row]
+
+	webout [el_open div -class span6]
 	set sql "SELECT lower(artist) as artist,count(*) as plays FROM songlog_expanded WHERE dj_id = [pg_quote $dj_id] GROUP BY lower(artist) ORDER BY plays DESC LIMIT $toplimit"
 	webout "<h3>Top $toplimit Artists</h3>"
-	webout [el_open table -class "table table-striped table-bordered"]
+	webout [el_open table -class "table table-striped table-bordered table-condensed"]
 	webout "<tr><th>Artist</th><th>Plays</th></tr>"
 	pg_select $::cowgod::db $sql buf {
 		webout "<tr>"
@@ -61,10 +85,12 @@ if {[info exists dj(nickname)]} {
 		webout "</tr>"
 	}
 	webout [el_close table]
+	webout [el_close div]
 
+	webout [el_open div -class span6]
 	set sql "SELECT lower(song) as song,lower(artist) as artist,count(*) as plays FROM songlog_expanded WHERE dj_id = [pg_quote $dj_id] GROUP BY lower(song),lower(artist) ORDER BY plays DESC LIMIT $toplimit"
 	webout "<h3>Top $toplimit Songs</h3>"
-	webout [el_open table -class "table table-striped table-bordered"]
+	webout [el_open table -class "table table-striped table-bordered table-condensed"]
 	webout "<tr><th>Song</th><th>Artist</th><th>Plays</th></tr>"
 	pg_select $::cowgod::db $sql buf {
 		webout "<tr>"
@@ -74,6 +100,9 @@ if {[info exists dj(nickname)]} {
 		webout "</tr>"
 	}
 	webout [el_close table]
+	webout [el_close div]
+
+	webout [el_close div]
 }
 
 ::cowgod::dbdisconnect
