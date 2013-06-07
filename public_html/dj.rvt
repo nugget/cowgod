@@ -108,13 +108,13 @@ if {[info exists dj(nickname)]} {
 	webout [el_close div]
 
 	webout [el_open div -class span6]
-	set sql "SELECT lower(song) as song,lower(artist) as artist,count(*) as plays FROM songlog_expanded WHERE dj_id = [pg_quote $dj_id] GROUP BY lower(song),lower(artist) ORDER BY plays DESC LIMIT $toplimit"
+	set sql "SELECT lower(song) as song,lower(artist) as artist,max(song_id) as song_id,count(*) as plays FROM songlog_expanded WHERE dj_id = [pg_quote $dj_id] GROUP BY 1,2 ORDER BY plays DESC LIMIT $toplimit"
 	webout "<h3>Top $toplimit Songs</h3>"
 	webout [el_open table -class "table table-striped table-bordered table-condensed"]
 	webout "<tr><th>Song</th><th>Artist</th><th>Plays</th></tr>"
 	pg_select $::cowgod::db $sql buf {
 		webout "<tr>"
-		webout "<td>$buf(song)</td>"
+		webout "<td>[el_open a -href [::cowgod::href song $buf(song_id)]]$buf(song)[el_close a]</td>"
 		webout "<td>$buf(artist)</td>"
 		webout "<td style=\"text-align: right;\">[comma $buf(plays)]</td>"
 		webout "</tr>"
