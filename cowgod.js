@@ -251,11 +251,9 @@ function ban_user(userid,adminid) {
 }
 
 function db_endsong(data) {
-
-	util.log(util.inspect(data));
-	// update_dj_live_stats(data);
-	
 	if (!db_write()) { return; }
+
+	update_dj_live_stats(data.room.metadata.current_dj);
 
 	botdb.query('UPDATE songlog SET stats_djcount = $1, stats_listeners = $2 WHERE song_id = $3 AND room_id = $4 AND stats_djcount IS NULL', [
 			data.room.metadata.djcount,
@@ -872,7 +870,12 @@ function id_to_name (user_id) {
 
 function update_dj_live_stats (dj_id) {
 	bot.getProfile(dj_id, function(data) {
-		util.log(util.inspect(data));
+		logger('- Updating live DJ stats for '+dj_id);
+		// util.log(util.inspect(data));
+		botdb.query('UPDATE users SET live_points = $1, live_avatar = $2', [
+			data.points,
+			data.avatarid
+		]);
 	});
 }
 
@@ -1292,8 +1295,7 @@ bot.on('update_votes', function (data) {
 });
 
 bot.on('update_user', function (data) {
-	util.log(util.inspect(data));
-	// update_dj_live_stats();
+	update_dj_live_stats(data.userid);
 });
 
 bot.on('add_dj', function (data) {
