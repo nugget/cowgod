@@ -1,0 +1,21 @@
+<?
+
+package require macnugget
+package require cowgod
+
+page_init
+opt header 0
+page_header -title "Turntable.fm Pit of no Shame"
+
+::cowgod::dbconnect
+::cowgod::buttonbar
+
+foreach fn [glob [file join . avatars "fullfront_*"]] {
+	webout "[el_open a -href "$fn"][el_oc img -src $fn -alt "$fn"][el_close a]"
+}
+
+::cowgod::dbdisconnect
+page_footer
+page_term
+
+?>
