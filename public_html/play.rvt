@@ -92,6 +92,16 @@ if {[info exists play(id)]} {
 	webout "[clock format [clock scan $play(ts)] -format "%H:%M:%S UTC"]<br />"
 	webout [el_close div]
 	webout [el_close div]
+
+	webout [el_open div -class row]
+	webout [el_open div -class span12 -style "text-align: right;"]
+	set sql "SELECT * FROM snaglog_expanded WHERE play_id = $play(id)"
+	pg_select $::cowgod::db $sql snags {
+		webout "[el_open span -class "label label-info"]Snagged by $snags(nickname)[el_close span]"
+	}
+	webout [el_close div]
+	webout [el_close div]
+
 	webout "<hr />"
 
 	webout [el_open table -class "table table-striped table-bordered"]
@@ -113,15 +123,6 @@ if {[info exists play(id)]} {
 	webout "</table>"
 
 	webout "<p>There were $play(stats_listeners) listeners in the room</p>"
-
-	webout "<ul>"
-	set sql "SELECT * FROM snaglog_expanded WHERE play_id = $play(id)"
-	# webout "<code>$sql</code>"
-	pg_select $::cowgod::db $sql snags {
-		webout "<li>Snagged by $snags(nickname)</li>"
-	}
-	webout "</ul>"
-
 
 	if {1} {
 		set sql "SELECT * FROM chatlog_expanded WHERE ts >= [pg_quote $play(ts)] AND ts <= ([pg_quote $play(ts)]::timestamp + [pg_quote "$play(length) seconds"]::interval)::timestamp ORDER BY id"
