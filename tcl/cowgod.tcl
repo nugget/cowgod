@@ -44,6 +44,9 @@ namespace eval ::cowgod {
 
 	proc avatar_href {id {type fullfront}} {
 		set base_url "/cowgod"
+		if {$id eq ""} {
+			set id 1
+		}
 		return "${base_url}/avatars/${type}_[format "%03d" $id].png"
 	}
 
