@@ -43,11 +43,11 @@ if {[info exists id]} {
 		}
 
 	    webout [el_open div -class row]
-	    webout [el_open div -class span6]
+	    webout [el_open div -class span12]
 		set sql "SELECT * FROM songlog_expanded WHERE song_id IN ('[join $idlist "','"]') ORDER BY ts DESC LIMIT 10"
 		webout [el_open table -class "table table-striped table-bordered"]
 		webout "<tr><th colspan=\"4\">Play Log</th></tr>"
-		webout "<tr><th>When</th><th>DJ</th><th>DJs</th><th>Listeners</th></tr>"
+		webout "<tr><th>When</th><th>DJ</th><th>DJs</th><th>Listeners</th><th>Snagged By</th></tr>"
 		pg_select $::cowgod::db $sql play {
 		    set date [clock format [clock scan $play(ts)] -format "%A, %d-%b-%Y @ %H:%M"]
 			webout "<tr>"
@@ -55,30 +55,19 @@ if {[info exists id]} {
 			webout "<td>[el_open a -href [::cowgod::href dj $play(dj_id)]]$play(nickname)[el_close a]</td>"
 			webout "<td style=\"text-align: right;\">$play(stats_djcount)</td>"
 			webout "<td style=\"text-align: right;\">$play(stats_listeners)</td>"
+			if {![info exists play(snaggers)] || $play(snaggers) eq ""} {
+				webout "<td>&nbsp;</td>"
+			} else {
+				webout "<td>"
+				foreach snagger $play(snaggers) {
+					webout "[el_open a -href [::cowgod::href dj $snagger]][::cowgod::dj_name $snagger][el_close a]"
+				}
+				webout "</td>"
+			}
 			webout "</tr>"
 		}
 		webout "</table>"
-		webout [el_close div]
 
-	    webout [el_open div -class span6]
-		set sql "SELECT * FROM snaglog_expanded WHERE song_id IN ('[join $idlist "','"]') ORDER BY ts DESC LIMIT 10"
-		set header 0
-		pg_select $::cowgod::db $sql play {
-			if {!$header} {
-				webout [el_open table -class "table table-striped table-bordered"]
-				webout "<tr><th colspan=\"4\">Snag Log</th></tr>"
-				webout "<tr><th>When</th><th>Snagger</th></tr>"
-				set header 1
-			}
-		    set date [clock format [clock scan $play(ts)] -format "%A, %d-%b-%Y @ %H:%M"]
-			webout "<tr>"
-			webout "<td>[el_open a -href [::cowgod::href play $play(play_id)]]$date[el_close a]</td>"
-			webout "<td>[el_open a -href [::cowgod::href dj $play(user_id)]]$play(nickname)[el_close a]</td>"
-			webout "</tr>"
-		}
-		if {$header} {
-			webout "</table>"
-		}
 		webout [el_close div]
 		webout [el_close div]
 
