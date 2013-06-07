@@ -41,6 +41,13 @@ namespace eval ::cowgod {
 
 		return "#"
 	}
+
+	proc dj_name {id} {
+		pg_select $::cowgod::db "SELECT nickname FROM users WHERE user_id = [pg_quote $id]" buf {
+			return $buf(nickname)
+		}
+		return "Unknown DJ"
+	}
 }
 
 package provide cowgod 1.0
