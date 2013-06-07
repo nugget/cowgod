@@ -8,6 +8,8 @@ page_header -title "Turntable.fm Pit of no Shame"
 
 ::cowgod::dbconnect
 
+::cowgod::buttonbar
+
 unset -nocomplain response
 load_response
 

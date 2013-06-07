@@ -7,37 +7,46 @@ page_init
 page_header -title "Turntable.fm Pit of no Shame"
 
 ::cowgod::dbconnect
+::cowgod::buttonbar
 
 unset -nocomplain response
 load_response
 
-set limit 200
+set limit 20
 
-set sql "SELECT * FROM songlog_expanded WHERE song ilike '%'||[pg_quote $response(q)]||'%' ORDER BY id DESC LIMIT $limit"
-webout "<h2>Songs matching $response(q)</h2>"
+set ilike "ilike '%'||[pg_quote $response(q)]||'%'"
+set search(Songs)	"SELECT lower(song) as item, min(song_id) as item_id, count(*) as plays FROM songlog_expanded WHERE lower(song) $ilike GROUP BY 1 ORDER BY 3 DESC LIMIT $limit"
+set search(Artists)	"SELECT lower(artist) as item, '' as item_id, count(*) as plays FROM songlog_expanded WHERE lower(artist) $ilike GROUP BY 1,2 ORDER BY 3 DESC LIMIT $limit"
+set search(DJs)		"SELECT nickname as item, dj_id as item_id, count(*) as plays FROM songlog_expanded WHERE nickname $ilike GROUP BY 1,2 ORDER BY 3 DESC LIMIT $limit"
 
-webout [el_open table -class "table table-striped table-bordered table-centered"]
+webout [el_open div -class row]
+foreach group [array names search] {
+	webout [el_open div -class span4]
+	set sql $search($group)
 
-set last_date ""
-pg_select $::cowgod::db $sql buf {
-	set date [clock format [clock scan $buf(ts)] -format "%A, %d-%b-%Y"]
-	if {$date ne $last_date} {
-		set last_date $date
-		webout "<tr><th colspan=\"6\" align=\"left\">$date</th></tr>"
-	}
-	set time [clock format [clock scan $buf(ts)] -format "%H:%M"]
-	webout "<tr>"
-	webout "<td align=\"right\">$time</td>"
-	foreach f {artist song} {
-		webout "<td>$buf($f)</td>"
-	}
-	webout "<td>"
-	webout "[el_open a -href [::cowgod::href dj $buf(dj_id)]]$buf(nickname)[el_close a]"
-	webout "</td>"
-	webout "</tr>"
-
+    webout "<h3>Matching $group</h3>"
+    webout [el_open table -class "table table-striped table-bordered table-condensed"]
+	webout "<tr><th>Match</th><th>Count</th></tr>"
+    pg_select $::cowgod::db $sql buf {
+        webout "<tr>"
+		switch $group {
+			Songs {
+				webout "<td>[el_open a -href [::cowgod::href song $buf(item_id)]]$buf(item)[el_close a]</td>"
+			}
+			DJs {
+				webout "<td>[el_open a -href [::cowgod::href dj $buf(item_id)]]$buf(item)[el_close a]</td>"
+			}
+			default {
+				webout "<td>$buf(item)</td>"
+			}
+		}
+        webout "<td style=\"text-align: right;\">[comma $buf(plays)]</td>"
+        webout "</tr>"
+    }
+	webout [el_close table]
+	webout [el_close div]
 }
-webout "</table>"
+webout [el_close div]
 
 ::cowgod::dbdisconnect
 page_footer

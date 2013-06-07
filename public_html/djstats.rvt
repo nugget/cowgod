@@ -7,6 +7,7 @@ page_init
 page_header -title "DJ Statistics"
 
 ::cowgod::dbconnect
+::cowgod::buttonbar
 
 #pg_select $::db "select current_database(), current_user, pg_backend_pid(),session_user,version()" buf {
 #	set buf(global) ::db
