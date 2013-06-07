@@ -22,11 +22,12 @@ if {[info exists id]} {
 	if {[array exists song]} {
 		webout [el_open div -class row]
 
-		if {[info exists song(coverart)] && $song(coverart) ne ""} {
-			webout [el_open div -class span2]
-			webout "<img class=\"img-rounded\" src=\"$song(coverart)\" />"
-			webout [el_close div]
-		}
+	    webout [el_open div -class span2]
+	    if {[info exists song(coverart)] && $song(coverart) ne "" && $song(coverart) ne "undefined"} {
+	        webout "<img class=\"img-rounded\" src=\"$song(coverart)\" />"
+	    }
+	    webout [el_close div]
+
 		webout [el_open div -class span8]
 		webout "<h3>$song(song)</h3>"
 		webout "<h4>$song(artist)<br/>$song(album)</h4>"
