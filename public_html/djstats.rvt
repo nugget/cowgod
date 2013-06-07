@@ -22,18 +22,18 @@ page_header -title "DJ Statistics"
 webout [el_open table -class "table table-striped table-bordered table-centered"]
 puts "<tr><th>DJ</th><th>Plays</th><th colspan=\"2\">Seat One</th><th>All Alone</th><th>First Play</th><th>Last Play</th></tr>"
 
-set sql "select nickname,count(*),sum((dj_id=substring(stats_djs from 3 for 24))::integer) as seat_one,sum(('{\"'||dj_id||'\"}'=stats_djs)::integer) as all_alone,min(ts),max(ts) from songlog_expanded group by 1 order by 2 desc LIMIT 100;"
+set sql "select dj_id,nickname,count(*),sum((dj_id=substring(stats_djs from 3 for 24))::integer) as seat_one,sum(('{\"'||dj_id||'\"}'=stats_djs)::integer) as all_alone,min(ts),max(ts),max(id) as play_id from songlog_expanded group by 1,2 order by 3 desc LIMIT 100;"
 
 pg_select $::cowgod::db $sql buf {
 	set first_per [format "%.01f" [expr ($buf(seat_one).0 / $buf(count).0) * 100 ]]
 	webout "<tr>"
-	webout "<td>$buf(nickname)</td>"
+	webout "<td>[el_open a -href [::cowgod::href dj $buf(dj_id)]]$buf(nickname)[el_close a]</td>"
     webout "<td style=\"text-align: right;\">[comma $buf(count)]</td>"
     webout "<td style=\"text-align: right;\">[comma $buf(seat_one)]</td>"
     webout "<td style=\"text-align: right;\">${first_per}%</td>"
     webout "<td style=\"text-align: right;\">[comma $buf(all_alone)]</td>"
     webout "<td style=\"text-align: right;\">[clock format [clock scan $buf(min)] -format "%d-%b-%Y"]</td>"
-    webout "<td style=\"text-align: right;\">[clock format [clock scan $buf(max)] -format "%d-%b-%Y"]</td>"
+	webout "<td style=\"text-align: right;\">[el_open a -href [::cowgod::href play $buf(play_id)]][clock format [clock scan $buf(max)] -format "%d-%b-%Y"][el_close a]</td>"
 	webout "</tr>"
 }
 webout "</table>"
