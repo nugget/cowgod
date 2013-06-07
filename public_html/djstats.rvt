@@ -39,5 +39,7 @@ pg_select $::cowgod::db $sql buf {
 webout "</table>"
 
 ::cowgod::dbdisconnect
+page_footer
+page_term
 
 ?>

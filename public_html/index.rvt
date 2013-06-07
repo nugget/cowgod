@@ -38,5 +38,7 @@ pg_select $::cowgod::db $sql buf {
 puts "</table>"
 
 ::cowgod::dbdisconnect
+page_footer
+page_term
 
 ?>

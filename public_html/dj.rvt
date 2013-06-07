@@ -129,4 +129,7 @@ if {[info exists dj(nickname)]} {
 
 ::cowgod::dbdisconnect
 
+page_footer
+page_term
+
 ?>

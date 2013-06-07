@@ -107,5 +107,7 @@ if {[info exists play(id)]} {
 }
 
 ::cowgod::dbdisconnect
+page_footer
+page_term
 
 ?>

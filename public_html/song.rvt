@@ -76,5 +76,7 @@ if {[info exists id]} {
 }
 
 ::cowgod::dbdisconnect
+page_footer
+page_term
 
 ?>
