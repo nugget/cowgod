@@ -35,22 +35,6 @@ pg_select $::cowgod::db $sql buf {
 }
 
 if {[info exists dj(nickname)]} {
-	webout [el_open div -class row]
-
-	webout [el_open div -class span2]
-	webout "<img class=\"img-rounded\" src=\"/cowgod/avatars/fullfront_[format "%03d" $lastjoin(avatarid)].png\" />"
-	webout [el_close div]
-
-	webout [el_open div -class span8]
-	webout "<h3>$dj(nickname)</h3>"
-	webout "<h4>Last seen: $lastjoin(age_text)</h4>"
-	webout [el_close div]
-
-	webout [el_close div]
-
-	webout "<hr />"
-
-
 	set sqlprefix "SELECT count(*), sum(length) as total_secs, min(ts) as first,max(ts) as last,max(stats_listeners) as max_listeners FROM songlog_expanded"
 
 	set sql "$sqlprefix WHERE dj_id = [pg_quote $dj_id]"
@@ -67,9 +51,26 @@ if {[info exists dj(nickname)]} {
 	#parray plays
 	#parray ondeck
 
-	webout "<p>First seen in the Pit on [clock format [clock scan $dj(added)] -format "%A %d-%B-%Y"].</p>"
-	webout "<p>Has played [comma $plays(count)] songs totalling [total_time $plays(total_secs)].</p>"
-	webout "<p>Has been on deck for [comma $ondeck(count)] songs totalling [total_time $ondeck(total_secs)]</p>"
+	webout [el_open div -class row]
+
+	webout [el_open div -class span2]
+	webout "<img class=\"img-rounded\" src=\"/cowgod/avatars/fullfront_[format "%03d" $lastjoin(avatarid)].png\" />"
+	webout [el_close div]
+
+	webout [el_open div -class span8]
+	webout "<h3>$dj(nickname)</h3>"
+
+	webout "<p>"
+	webout "First seen in the Pit on [clock format [clock scan $dj(added)] -format "%A %d-%B-%Y"]."
+	webout "<br />"
+	webout "Has played [comma $plays(count)] songs totalling [total_time $plays(total_secs)]."
+	webout "<br />"
+	webout "Has been on deck for [comma $ondeck(count)] songs totalling [total_time $ondeck(total_secs)]"
+	webout "</p>"
+
+	webout [el_close div]
+	webout [el_close div]
+	webout "<hr />"
 
 	webout [el_open div -class row]
 
