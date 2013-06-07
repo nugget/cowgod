@@ -33,6 +33,14 @@ set sql "SELECT * FROM joins_expanded WHERE user_id = [pg_quote $dj_id] ORDER BY
 pg_select $::cowgod::db $sql buf {
 	array set lastjoin [array get buf]
 }
+set sql "SELECT count(*) snags, count(DISTINCT user_id) as djs FROM snaglog_expanded WHERE dj_id = [pg_quote $dj_id]"
+pg_select $::cowgod::db $sql buf {
+	array set snags_from [array get buf]
+}
+set sql "SELECT count(*) snags, count(DISTINCT dj_id) as djs FROM snaglog_expanded WHERE user_id = [pg_quote $dj_id]"
+pg_select $::cowgod::db $sql buf {
+	array set snags [array get buf]
+}
 
 if {[info exists dj(nickname)]} {
 	set sqlprefix "SELECT count(*), sum(length) as total_secs, min(ts) as first,max(ts) as last,max(stats_listeners) as max_listeners FROM songlog_expanded"
@@ -66,6 +74,10 @@ if {[info exists dj(nickname)]} {
 	webout "Has played [comma $plays(count)] songs totalling [total_time $plays(total_secs)]."
 	webout "<br />"
 	webout "Has been on deck for [comma $ondeck(count)] songs totalling [total_time $ondeck(total_secs)]"
+	webout "<br />"
+	webout "Has snagged [comma $snags(snags)] songs from [comma $snags(djs)] different DJs."
+	webout "<br />"
+	webout "Has had [comma $snags_from(snags)] songs snagged by [comma $snags_from(djs)] different DJs."
 	webout "</p>"
 
 	webout [el_close div]
