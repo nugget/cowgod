@@ -26,6 +26,11 @@ pg_select $::cowgod::db $sql buf {
 	array set play [array get buf]
 }
 
+set sql "SELECT count(*) as plays, count(DISTINCT dj_id) as djs FROM songlog_expanded where artist ilike [pg_quote $play(artist)] AND song ilike [pg_quote $play(song)]"
+pg_select $::cowgod::db $sql buf {
+	array set stats [array get buf]
+}
+
 if {[info exists play(id)]} {
 	set sql "SELECT * FROM songs WHERE song_id = [pg_quote $play(song_id)]"
 	pg_select $::cowgod::db $sql buf {
@@ -42,6 +47,7 @@ if {[info exists play(id)]} {
 	webout [el_open div -class span8]
 	webout "<h3>$song(song)</h3>"
 	webout "<h4>$song(artist)<br/>$song(album)</h4>"
+	webout "<p>Played [el_open a -href [::cowgod::href song $play(song_id)]][comma $stats(plays)][el_close a] times by [comma $stats(djs)] DJs in the Pit</p>"
 	webout [el_close div]
 	webout [el_close div]
 	webout "<hr />"
