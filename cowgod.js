@@ -876,7 +876,8 @@ function update_dj_live_stats (dj_id) {
 	bot.getProfile(dj_id, function(data) {
 		logger('- Updating live DJ stats for '+dj_id);
 		// util.log(util.inspect(data));
-		botdb.query('UPDATE users SET live_points = $1, live_avatar = $2', [
+		botdb.query('UPDATE users SET live_points = $2, live_avatar = $3 WHERE user_id = $1', [
+			dj_id,
 			data.points,
 			data.avatarid
 		]);
