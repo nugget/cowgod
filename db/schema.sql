@@ -163,7 +163,7 @@ CREATE OR REPLACE FUNCTION nick(varchar) RETURNS varchar AS $$
 	END;
 $$ LANGUAGE plpgsql;
 
-DROP VIEW snaglog_expanded, songlog_expanded, joins_expanded;
+DROP VIEW snaglog_expanded, songlog_expanded, joins_expanded, chatlog_expanded;
 
 CREATE VIEW songlog_expanded AS
 	SELECT l.*, nick(l.dj_id) as nickname, s.artist, s.song, s.length, s.trip_odometer, age(date_trunc('day',current_timestamp),date_trunc('day',l.ts))::varchar||' ago' as age_text,
@@ -181,5 +181,10 @@ CREATE VIEW joins_expanded AS
 	       extract(epoch from current_timestamp at time zone 'utc' - ts)::integer as secs_ago
 	FROM users_joins;
 
-GRANT SELECT ON snaglog_expanded, songlog_expanded, joins_expanded TO bots;
+CREATE VIEW chatlog_expanded AS
+    SELECT c.*, u.live_avatar, u.nickname
+	FROM chat_log c LEFT JOIN users u USING (user_id);
+
+GRANT SELECT ON snaglog_expanded, songlog_expanded, joins_expanded,chatlog_expanded TO bots;
+
 
