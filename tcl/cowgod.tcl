@@ -29,6 +29,18 @@ namespace eval ::cowgod {
 			unset -nocomplain ::cowgod::db
 		}
 	}
+
+	proc href {type id} {
+		set base_url "/cowgod"
+
+		switch $type {
+			dj - song - play {
+				return "${base_url}/$type/$id"
+			}
+		}
+
+		return "#"
+	}
 }
 
 package provide cowgod 1.0
