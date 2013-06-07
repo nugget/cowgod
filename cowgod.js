@@ -381,6 +381,7 @@ function db_registered(data) {
 
 	logger('logging join to db');
 
+
 	//util.log(util.inspect(data));
 
 	botdb.query('INSERT INTO users (user_id,nickname) SELECT $1,$2 WHERE 1 NOT IN (SELECT 1 FROM users WHERE user_id = $3)', [
@@ -404,6 +405,8 @@ function db_registered(data) {
 			data.user[0].name,
 			data.user[0].userid
 			], after(function(result) {} ));
+
+	update_dj_live_stats(data.user[0].userid);
 }
 
 function db_loadowners() {
@@ -869,6 +872,7 @@ function id_to_name (user_id) {
 }
 
 function update_dj_live_stats (dj_id) {
+	if (!db_write()) { return; }
 	bot.getProfile(dj_id, function(data) {
 		logger('- Updating live DJ stats for '+dj_id);
 		// util.log(util.inspect(data));
