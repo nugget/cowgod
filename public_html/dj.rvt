@@ -68,15 +68,23 @@ if {[info exists dj(nickname)]} {
 	webout "<p>"
 	webout "First seen in the Pit on [clock format [clock scan $dj(added)] -format "%A %d-%B-%Y"]."
 	webout "<br />"
-	webout "Has spun [comma $plays(songs)] songs in [comma $plays(plays)] plays ([format "%.1f" [expr $plays(songs).0 / $plays(plays).0 * 100]]% unique) totalling [total_time $plays(secs)] with [comma $plays(upvotes)] awesomes."
+	if {$plays(plays) > 0} {
+		webout "Spun [comma $plays(songs)] songs in [comma $plays(plays)] plays ([format "%.1f" [expr $plays(songs).0 / $plays(plays).0 * 100]]% unique) totalling [total_time $plays(secs)] with [comma $plays(upvotes)] awesomes."
+		webout "<br />"
+
+		webout "Been on deck for [comma $ondeck(count)] songs totalling [total_time $ondeck(total_secs)]"
+		if {$plays(seat_one) > 0} {
+			webout " ([format "%.1f" [expr $plays(seat_one).0 / $ondeck(count).0 * 100]]% hogging first chair - [comma $plays(seat_one)] songs)."
+		} else {
+			webout " but never been in seat one."
+		}
+		webout "<br />"
+		webout "Had [comma $snags_from(snags)] songs snagged by [comma $snags_from(djs)] different DJs."
+		webout "<br />"
+	}
+	webout "Snagged [comma $snags(snags)] songs from [comma $snags(djs)] different DJs."
 	webout "<br />"
-	webout "Has been on deck for [comma $ondeck(count)] songs totalling [total_time $ondeck(total_secs)] ([format "%.1f" [expr $plays(seat_one).0 / $ondeck(count).0 * 100]]% hogging first chair - [comma $plays(seat_one)] songs)"
-	webout "<br />"
-	webout "Has snagged [comma $snags(snags)] songs from [comma $snags(djs)] different DJs."
-	webout "<br />"
-	webout "Has had [comma $snags_from(snags)] songs snagged by [comma $snags_from(djs)] different DJs."
-	webout "<br />"
-	webout "Has enthralled as many as [comma $plays(max_listeners)] listeners with his musical tastes."
+	webout "Enthralled as many as [comma $plays(max_listeners)] listeners with their lack of shame."
 	webout "</p>"
 
 	webout [el_close div]
