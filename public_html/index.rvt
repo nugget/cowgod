@@ -4,6 +4,7 @@ package require macnugget
 package require cowgod
 
 page_init
+opt header 0
 page_header -title "Turntable.fm Pit of no Shame"
 
 ::cowgod::dbconnect

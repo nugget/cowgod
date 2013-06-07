@@ -4,10 +4,9 @@ package require macnugget
 package require cowgod
 
 page_init
-page_header -title "Turntable.fm Pit of no Shame"
-
+opt header 0
 ::cowgod::dbconnect
-::cowgod::buttonbar
+
 
 unset -nocomplain response dj
 load_response
@@ -21,6 +20,9 @@ if {[info exists id]} {
 	}
 
 	if {[array exists song]} {
+		page_header -title "$song(song) by $song(artist)"
+		::cowgod::buttonbar
+
 		webout [el_open div -class row]
 
 	    webout [el_open div -class span2]

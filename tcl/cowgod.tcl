@@ -58,15 +58,16 @@ namespace eval ::cowgod {
 	}
 
 	proc buttonbar {} {
+		webout "<p></p>"
 		webout [el_open div -class row]
 		webout [el_open div -class span12]
 		webout "[el_open div -class btn-group]"
-		webout "[el_open button -class "btn"]<a href=\"/cowgod/\">[el_oc img -style "height: 1em;" -src [::cowgod::avatar_href 15 headfront]]</a>[el_close button]"
+		webout "[el_open button -class "btn"]<a href=\"/cowgod/\">[el_oc img -style "height: 1em; vertical-align: text-top;" -src [::cowgod::avatar_href 15 headfront]] The Pit</a>[el_close button]"
 		foreach {href title} {djstats "DJ Stats" recent "Recent Plays" bagel "CBDIA"} {
-			webout "[el_open button -class "btn"]<a href=\"$href\">$title</a></button>"
+			webout "[el_open button -class "btn"]<a href=\"/cowgod/$href\">$title</a></button>"
 		}
 		webout "[el_close div]"
-		webout "[el_open form -class "navbar-search pull-right" -action "/cowgod/search"]"
+		webout "[el_open form -class "form-search pull-right" -action "/cowgod/search"]"
 		webout "[el_oc input -name "q" -type text -class "search-query" -placeholder "Search"]"
 		webout "[el_close form]"
 		webout [el_close div]

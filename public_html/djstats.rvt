@@ -4,6 +4,7 @@ package require cowgod
 package require macnugget
 
 page_init
+opt header 0
 page_header -title "DJ Statistics"
 
 ::cowgod::dbconnect

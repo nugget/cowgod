@@ -4,13 +4,19 @@ package require macnugget
 package require cowgod
 
 page_init
-page_header -title "Turntable.fm Pit of no Shame"
-
 ::cowgod::dbconnect
-::cowgod::buttonbar
 
 unset -nocomplain response dj
 load_response
+set dj_id $response(dj_id)
+
+set sql "SELECT * FROM users WHERE user_id = [pg_quote $dj_id]"
+load_array $::cowgod::db $sql dj
+
+opt header 0
+page_header -title "DJ Info for $dj(nickname)"
+
+::cowgod::buttonbar
 
 set toplimit 10
 
@@ -20,40 +26,23 @@ proc total_time {seconds} {
 	return "[comma $hours] hours"
 }
 
-set dj_id $response(dj_id)
-
-proc load_array {sql _ar} {
-	upvar 1 $_ar ar
-	set start_time [clock milliseconds]
-	pg_select $::cowgod::db $sql buf {
-		array set ar [array get buf]
-	}
-	set end_time [clock milliseconds]
-
-	# webout "<p><small>Loaded $_ar in [expr $end_time - $start_time]ms</small></p>"
-}
-
-set sql "SELECT * FROM users WHERE user_id = [pg_quote $dj_id]"
-load_array $sql dj
-
-set sql "SELECT * FROM joins_expanded WHERE user_id = [pg_quote $dj_id] ORDER BY id DESC LIMIT 1"
-load_array $sql lastjoin
-
-set sql "SELECT count(*) snags, count(DISTINCT user_id) as djs FROM snaglog_expanded WHERE dj_id = [pg_quote $dj_id]"
-load_array $sql snags_from
-
-set sql "SELECT count(*) snags FROM snaglog WHERE user_id = [pg_quote $dj_id]"
-load_array $sql snags
-
 if {[info exists dj(nickname)]} {
+	set sql "SELECT * FROM joins_expanded WHERE user_id = [pg_quote $dj_id] ORDER BY id DESC LIMIT 1"
+	load_array $::cowgod::db $sql lastjoin
+
+	set sql "SELECT count(*) snags, count(DISTINCT user_id) as djs FROM snaglog_expanded WHERE dj_id = [pg_quote $dj_id]"
+	load_array $::cowgod::db $sql snags_from
+
+	set sql "SELECT count(*) snags FROM snaglog WHERE user_id = [pg_quote $dj_id]"
+	load_array $::cowgod::db $sql snags
 
 	set sql "SELECT count(l.*) as plays, count(DISTINCT l.song_id) as songs,  sum(length) as duration,  avg(length) as avg_seconds,  avg(l.stats_listeners) as avg_listeners, max(l.stats_listeners) as max_listeners, sum(length) as secs,  (SELECT count(v.*) FROM votelog v LEFT JOIN songlog s ON s.id = v.play_id WHERE s.dj_id = [pg_quote $dj_id]) as upvotes,  sum((dj_id=substring(stats_djs from 3 for 24))::integer) as seat_one  FROM songlog_expanded l WHERE dj_id = [pg_quote $dj_id] "
 
-	load_array $sql plays
+	load_array $::cowgod::db $sql plays
 
 	set sqlprefix "SELECT count(*), sum(length) as total_secs, min(ts) as first,max(ts) as last,max(stats_listeners) as max_listeners FROM songlog_expanded"
 	set sql "$sqlprefix WHERE stats_djs ilike '%'||[pg_quote $dj_id]||'%'"
-	load_array $sql ondeck
+	load_array $::cowgod::db $sql ondeck
 
 	#parray dj
 	#parray plays

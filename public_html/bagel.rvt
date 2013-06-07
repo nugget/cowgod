@@ -4,16 +4,18 @@ package require macnugget
 package require cowgod
 
 page_init
-page_header -title "Turntable.fm Pit of no Shame"
+opt header 0
+page_header -title "The Coveted Bagel \"Diggin' It\" Award"
 
 ::cowgod::dbconnect
-
 ::cowgod::buttonbar
 
 unset -nocomplain response
 load_response
 
-set sql "SELECT *,(SELECT max(id) FROM songlog s WHERE s.ts < c.ts) as play_id FROM chatlog_expanded c WHERE user_id = '4e1c6fb1a3f75163090bc3ae' AND text ~ 'diggin.*(this|it)' ORDER BY ts DESC"
+set bagel_id "4e1c6fb1a3f75163090bc3ae"
+
+set sql "SELECT *,(SELECT max(id) FROM songlog s WHERE s.ts < c.ts) as play_id FROM chatlog_expanded c WHERE user_id = [pg_quote $bagel_id] AND text ~ 'diggin.*(this|it)' ORDER BY ts DESC"
 pg_select $::cowgod::db $sql buf {
 	lappend all [array get buf]
 	set bagel_avatar $buf(live_avatar)
@@ -49,7 +51,7 @@ webout [el_open div -class span8]
 webout "<h3>The Coveted Bagel \"Diggin' It\" Award</h3>"
 
 webout "<p>"
-webout "$bagel_nick has dug [llength $all] plays in the Pit."
+webout "[el_open a -href [::cowgod::href dj $bagel_id]]$bagel_nick[el_close a] has dug [llength $all] plays in the Pit."
 webout "<br />"
 webout "The current holder of the CBDIA is: "
 webout "<strong>$leader(nickname)</strong> with $leader(count) digs"
