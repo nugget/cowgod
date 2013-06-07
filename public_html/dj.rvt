@@ -61,7 +61,7 @@ if {[info exists dj(nickname)]} {
 	webout [el_open div -class row]
 
 	webout [el_open div -class span2]
-	webout "<img class=\"img-rounded\" src=\"/cowgod/avatars/fullfront_[format "%03d" $lastjoin(avatarid)].png\" />"
+	webout "<img class=\"img-rounded\" src=\"[::cowgod::avatar_href $lastjoin(avatarid)]\" />"
 	webout [el_close div]
 
 	webout [el_open div -class span8]
