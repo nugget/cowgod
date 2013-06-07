@@ -25,10 +25,6 @@ set sql "SELECT * FROM users WHERE user_id = [pg_quote $dj_id]"
 pg_select $::cowgod::db $sql buf {
 	array set dj [array get buf]
 }
-set sql "SELECT * FROM songlog_expanded WHERE dj_id = [pg_quote $dj_id] ORDER BY id DESC LIMIT 1"
-pg_select $::cowgod::db $sql buf {
-	array set lastsong [array get buf]
-}
 set sql "SELECT * FROM joins_expanded WHERE user_id = [pg_quote $dj_id] ORDER BY id DESC LIMIT 1"
 pg_select $::cowgod::db $sql buf {
 	array set lastjoin [array get buf]
@@ -43,13 +39,14 @@ pg_select $::cowgod::db $sql buf {
 }
 
 if {[info exists dj(nickname)]} {
-	set sqlprefix "SELECT count(*), sum(length) as total_secs, min(ts) as first,max(ts) as last,max(stats_listeners) as max_listeners FROM songlog_expanded"
 
-	set sql "$sqlprefix WHERE dj_id = [pg_quote $dj_id]"
+	set sql "SELECT count(l.*) as plays, count(DISTINCT l.song_id) as songs,  sum(length) as duration,  avg(length) as avg_seconds,  avg(l.stats_listeners) as avg_listeners, max(l.stats_listeners) as max_listeners, sum(length) as secs,  (SELECT count(v.*) FROM votelog v LEFT JOIN songlog s ON s.id = v.play_id WHERE s.dj_id = [pg_quote $dj_id]) as upvotes,  sum((dj_id=substring(stats_djs from 3 for 24))::integer) as seat_one  FROM songlog_expanded l WHERE dj_id = [pg_quote $dj_id] "
+
 	pg_select $::cowgod::db $sql buf {
 		array set plays [array get buf]
 	}
 
+	set sqlprefix "SELECT count(*), sum(length) as total_secs, min(ts) as first,max(ts) as last,max(stats_listeners) as max_listeners FROM songlog_expanded"
 	set sql "$sqlprefix WHERE stats_djs ilike '%'||[pg_quote $dj_id]||'%'"
 	pg_select $::cowgod::db $sql buf {
 		array set ondeck [array get buf]
@@ -71,13 +68,15 @@ if {[info exists dj(nickname)]} {
 	webout "<p>"
 	webout "First seen in the Pit on [clock format [clock scan $dj(added)] -format "%A %d-%B-%Y"]."
 	webout "<br />"
-	webout "Has played [comma $plays(count)] songs totalling [total_time $plays(total_secs)]."
+	webout "Has spun [comma $plays(songs)] songs in [comma $plays(plays)] plays ([format "%.1f" [expr $plays(songs).0 / $plays(plays).0 * 100]]% unique) totalling [total_time $plays(secs)] with [comma $plays(upvotes)] awesomes."
 	webout "<br />"
-	webout "Has been on deck for [comma $ondeck(count)] songs totalling [total_time $ondeck(total_secs)]"
+	webout "Has been on deck for [comma $ondeck(count)] songs totalling [total_time $ondeck(total_secs)] ([format "%.1f" [expr $plays(seat_one).0 / $ondeck(count).0 * 100]]% hogging first chair - [comma $plays(seat_one)] songs)"
 	webout "<br />"
 	webout "Has snagged [comma $snags(snags)] songs from [comma $snags(djs)] different DJs."
 	webout "<br />"
 	webout "Has had [comma $snags_from(snags)] songs snagged by [comma $snags_from(djs)] different DJs."
+	webout "<br />"
+	webout "Has enthralled as many as [comma $plays(max_listeners)] listeners with his musical tastes."
 	webout "</p>"
 
 	webout [el_close div]
