@@ -79,6 +79,15 @@ if {[info exists dj(nickname)]} {
 	webout "Enthralled as many as [comma $plays(max_listeners)] listeners with their lack of shame."
 	webout "</p>"
 
+	unset -nocomplain aliases
+	pg_select $::cowgod::db "select nickname, max(ts) from joins_expanded where user_id = [pg_quote $dj_id] and nickname <> [pg_quote $dj(nickname)] group by nickname" alias {
+		lappend aliases $alias(nickname)
+	}
+
+	if {[info exists aliases]} {
+		webout "<p><i>Also known as: [join $aliases " &middot; "]</i></p>"
+	}
+
 	webout [el_close div]
 	webout [el_close div]
 	webout "<hr />"
