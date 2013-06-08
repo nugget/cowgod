@@ -64,7 +64,9 @@ if {[info exists dj(nickname)]} {
 		webout "Spun [comma $plays(songs)] songs in [comma $plays(plays)] plays ([format "%.1f" [expr $plays(songs).0 / $plays(plays).0 * 100]]% unique) totalling [total_time $plays(secs)] with [comma $plays(upvotes)] awesomes."
 		webout "<br />"
 
-		webout "Been on deck for [comma $ondeck(count)] songs totalling [total_time $ondeck(total_secs)]"
+		if {$ondeck(count) > 0} {
+			webout "Been on deck for [comma $ondeck(count)] songs totalling [total_time $ondeck(total_secs)]"
+		}
 		if {$plays(seat_one) > 0} {
 			webout " ([format "%.1f" [expr $plays(seat_one).0 / $ondeck(count).0 * 100]]% hogging first chair - [comma $plays(seat_one)] songs)."
 		} else {
