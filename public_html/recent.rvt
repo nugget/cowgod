@@ -25,7 +25,11 @@ pg_select $::cowgod::db $sql buf {
 		puts "<tr><th>Time</th><th>Artist</th><th>Song</th><th>DJ</th><th>Snags</th></tr>"
 	}
 	set time [clock format [clock scan $buf(ts)] -format "%H:%M"]
-	puts "<tr>"
+	if {[string range $buf(stats_djs) 2 25] eq $buf(dj_id)} {
+		puts "<tr class=\"info\">"
+	} else {
+		puts "<tr>"
+	}
 	puts "<td align=\"right\"><a href=\"[::cowgod::href play $buf(id)]\">$time</a></td>"
 	puts "<td>$buf(artist)</td>"
 	puts "<td><a href=\"[::cowgod::href song $buf(song_id)]\">$buf(song)</a></td>"
