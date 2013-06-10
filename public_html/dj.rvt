@@ -92,6 +92,14 @@ if {[info exists dj(nickname)]} {
 
 	webout [el_close div]
 	webout [el_close div]
+
+	set sql "select *,random() from chatlog_expanded where user_id = '4e00e4e8a3f75104e10b7359' order by random desc limit 1"
+	pg_select $::cowgod::db $sql quote {
+		webout "<blockquote>"
+		webout "<p>$quote(text)</p>"
+		webout "<small>$dj(nickname) (<cite>[clock format [clock scan $quote(ts)] -format "%A, %d-%b-%Y"]</cite>)</small>"
+		webout "</blockquote>"
+	}
 	webout "<hr />"
 
 	webout [el_open div -class row]
