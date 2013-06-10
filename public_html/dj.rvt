@@ -93,7 +93,7 @@ if {[info exists dj(nickname)]} {
 	webout [el_close div]
 	webout [el_close div]
 
-	set sql "select *,random() from chatlog_expanded where user_id = '4e00e4e8a3f75104e10b7359' order by random desc limit 1"
+	set sql "select *,random() from chatlog_expanded where user_id = [pg_quote $dj(user_id)] order by random desc limit 1"
 	pg_select $::cowgod::db $sql quote {
 		webout "<blockquote>"
 		webout "<p>&#8220;$quote(text)&#8221</p>"
