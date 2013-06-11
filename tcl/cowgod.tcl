@@ -63,7 +63,7 @@ namespace eval ::cowgod {
 		webout [el_open div -class span12]
 		webout "[el_open div -class btn-group]"
 		webout "[el_open a -href "/cowgod/"][el_open button -class "btn"][el_oc img -style "height: 1em; vertical-align: text-top;" -src [::cowgod::avatar_href 15 headfront]] The Pit[el_close button][el_close a]"
-		foreach {href title} {djstats "DJ Stats" recent "Recent Plays" bagel "CBDIA"} {
+		foreach {href title} {djstats "DJ Stats" recent "Recent Plays" bagel "CBDIA" peak "Peak Users"} {
 			webout "[el_open a -href "/cowgod/$href"][el_open button -class "btn"]$title[el_close button][el_close a]"
 		}
 		webout "[el_close div]"
