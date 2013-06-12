@@ -1,0 +1,29 @@
+<?
+
+package require macnugget
+package require cowgod
+
+page_init
+::macnugget::require_acl cowgod_admin
+
+opt header 0
+page_header -title "Turntable.fm Pit of no Shame"
+
+::cowgod::dbconnect
+::cowgod::buttonbar
+
+puts "<h3>Admin Control Panel</h3>"
+
+if {![info exists ::user(turntable_user_id)] || $::user(turntable_user_id) eq ""} {
+	puts "<h2>Error</h2>"
+	puts "<p>Your account ($::user(username)) is not linked to a Turntable User ID</p>"
+	::cowgod::dbdisconnect
+	page_footer
+	page_term
+}
+
+::cowgod::dbdisconnect
+page_footer
+page_term
+
+?>
