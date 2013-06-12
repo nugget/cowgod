@@ -149,6 +149,20 @@ CREATE TABLE chat_log (
 GRANT SELECT,INSERT ON chat_log TO bots;
 GRANT ALL ON chat_log_id_seq TO bots;
 
+CREATE TABLE autoboot (
+	id serial NOT NULL,
+	added timestamp(0) without time zone NOT NULL DEFAULT (current_timestamp at time zone 'utc'),
+	changed timestamp(0) without time zone NOT NULL DEFAULT (current_timestamp at time zone 'utc'),
+	deleted timestamp(0) without time zone,
+	song_id varchar NOT NULL,
+	user_id varchar NOT NULL,
+	escort boolean NOT NULL DEFAULT TRUE,
+	boot boolean NOT NULL DEFAULT FALSE,
+	snark varchar,
+	PRIMARY KEY(id)
+);
+GRANT SELECT,INSERT,UPDATE ON autoboot TO bots;
+
 CREATE OR REPLACE FUNCTION nick(varchar) RETURNS varchar AS $$
 	DECLARE
 		nick varchar;
