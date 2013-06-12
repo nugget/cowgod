@@ -48,6 +48,12 @@ pg_select $::cowgod::db $sql chat {
 		}
 		webout "$chat(text)<br />"
 	}
+
+	if {[info exists response(user_id)] && $response(user_id) ne ""} {
+		if {[regexp {^/shame} $chat(text)]} {
+			set visible 0
+		}
+	}
 }
 webout "</small></td></tr>"
 webout [el_close table]
