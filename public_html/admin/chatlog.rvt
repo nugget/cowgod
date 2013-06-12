@@ -1,0 +1,57 @@
+<?
+
+package require macnugget
+package require cowgod
+
+page_init
+opt header 0
+
+::cowgod::dbconnect
+
+unset -nocomplain response dj
+load_response
+
+if {[info exists response(date)] && [regexp {^\d\d\d\d\-\d\d\-\d\d$} $response(date)]} {
+	set date $response(date)
+} else {
+	set date [clock format [clock seconds] -format "%Y-%m-%d"]
+}
+
+page_header -title "Chat Log for $date"
+
+::cowgod::buttonbar
+
+
+set sql "SELECT * FROM chatlog_expanded WHERE ts >= [pg_quote $date] AND ts <= ([pg_quote $date]::date + '1 day'::interval)::timestamp ORDER BY id"
+webout [el_open table -class "table table-striped table-condensed"]
+set last_person ""
+set visible 1
+if {[info exists response(user_id)] && $response(user_id) ne ""} {
+	set visible 0
+	webout "<p>[el_open span -class "label label-info"]Starting log at first sighting of [::cowgod::dj_name $response(user_id)][el_close span]</p>"
+}
+pg_select $::cowgod::db $sql chat {
+	if {[info exists response(user_id)] && $response(user_id) eq $chat(user_id)} {
+		set visible 1
+	}
+	if {[string is true -strict $visible]} {
+		if {$chat(user_id) ne $last_person} {
+			if {$last_person ne ""} {
+				webout "</small></td></tr>"
+			}
+			webout "<tr><td>[clock format [clock scan $chat(ts)] -format "%H:%M"]</td><td style=\"text-align: center;\"><img style=\"height: 18px;\"  src=\"[::cowgod::avatar_href $chat(live_avatar) headfront]\" /></td>"
+			webout "<td><small><strong>$chat(nickname)</strong></small></td>"
+			webout "<td><small>"
+			set last_person $chat(user_id)
+		}
+		webout "$chat(text)<br />"
+	}
+}
+webout "</small></td></tr>"
+webout [el_close table]
+
+::cowgod::dbdisconnect
+page_footer
+page_term
+
+?>
