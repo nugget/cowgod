@@ -4,6 +4,8 @@ package require macnugget
 package require cowgod
 
 page_init
+::macnugget::require_acl cowgod_admin
+
 opt header 0
 
 ::cowgod::dbconnect
