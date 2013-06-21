@@ -794,7 +794,7 @@ function is_leader(userid) {
 }
 
 function explain_rules(djname) {
-	say('Welcome to the Pit, @'+djname+'!  We usually play follow the leader here with theme rounds based on whatever 1st chair plays. Have fun!');
+	say('Welcome to the Pit, @'+djname+'!  We usually play follow the leader here with theme rounds based on whatever 1st chair plays. Have fun!  You can see what was recently played at http://macnugget.org/cowgod/recent)');
 }
 
 function toggle_config (item) {
