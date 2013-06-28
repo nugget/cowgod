@@ -208,6 +208,23 @@ function newsong_theme_management(data) {
 	}
 }
 
+function newsong_one_and_done(data) {
+	logger('- newsong_one_and_done');
+	var djid = data.room.metadata.current_song.djid;
+	var djs = data.room.metadata.djs;
+	var bootid = djs[0];
+	if (opt('one_and_done_allowed') == 'on') {
+		logger('- noad 1');
+		if (opt('oneanddone') == 'on') {
+			logger('- noad 2');
+			if(djs[1] == djid) {
+				logger('= new song is DJ number two, I should boot '+bootid);
+				bot.remDj(bootid);
+			}
+		}
+	}
+}
+
 function say_command(command) {
 	child = exec(command, function (error,stdout,stderr) {
 		var outbuf = stdout;
@@ -794,7 +811,7 @@ function is_leader(userid) {
 }
 
 function explain_rules(djname) {
-	say('Welcome to the Pit, @'+djname+'!  We usually play follow the leader here with theme rounds based on whatever 1st chair plays. Have fun!  You can see what was recently played at http://macnugget.org/cowgod/recent)');
+	say('Welcome to the Pit, @'+djname+'!  We usually play follow the leader here with theme rounds based on whatever 1st chair plays. Have fun!  You can see what was recently played at http://macnugget.org/cowgod/recent');
 }
 
 function toggle_config (item) {
@@ -987,6 +1004,7 @@ function do_command (data) {
 			say(args);
 			break;
 		case 'autobop':
+		case 'oneanddone':
 		case 'mute':
 		case 'follow':
 		case 'autoskip':
@@ -1233,6 +1251,7 @@ bot.on('newsong', function (data) {
 
 	db_newsong(data);
 	newsong_theme_management(data);
+	newsong_one_and_done(data);
 
 	global['cursong']      = data.room.metadata.current_song._id;
 	global['cursongname']  = data.room.metadata.current_song.metadata.song;
@@ -1252,6 +1271,7 @@ bot.on('newsong', function (data) {
 		global['myvote'] = 'none';
 		// logger('= Clearing my vote for the new song');
 	}
+
 
 	db_saysnag(data);
 	db_sayodometer(data);
