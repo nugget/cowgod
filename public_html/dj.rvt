@@ -18,7 +18,9 @@ if {[info exists response(field)] && [info exists response(value)]} {
 		set value FALSE
 	}
 	if {[regexp {[a-z]+} $field]} {
-		set sql "UPDATE users SET $field = $value WHERE user_id = [pg_quote $dj_id] AND owner IS NOT TRUE"
+		set sql "UPDATE users SET $field = $value WHERE user_id = [pg_quote $dj_id] AND owner IS NOT TRUE;"
+		sql_exec $::cowgod::db $sql
+		set sql "INSERT INTO auditlog (user_id,action,target_id,value,comments) SELECT [pg_quote $::user(turntable_user_id)],'acledit',[pg_quote $dj_id],[pg_quote "$field $value"],NULL;"
 		sql_exec $::cowgod::db $sql
 	}
 }
@@ -28,6 +30,8 @@ load_array $::cowgod::db $sql dj
 
 opt header 0
 page_header -title "DJ Info for $dj(nickname)"
+
+# catch {parray ::user}
 
 ::cowgod::buttonbar
 
