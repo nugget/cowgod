@@ -10,6 +10,19 @@ unset -nocomplain response dj
 load_response
 set dj_id $response(dj_id)
 
+if {[info exists response(field)] && [info exists response(value)]} {
+	set field $response(field)
+	if {[string is true -strict $response(value)]} {
+		set value TRUE
+	} else {
+		set value FALSE
+	}
+	if {[regexp {[a-z]+} $field]} {
+		set sql "UPDATE users SET $field = $value WHERE user_id = [pg_quote $dj_id] AND owner IS NOT TRUE"
+		sql_exec $::cowgod::db $sql
+	}
+}
+
 set sql "SELECT * FROM users WHERE user_id = [pg_quote $dj_id]"
 load_array $::cowgod::db $sql dj
 
@@ -57,6 +70,28 @@ if {[info exists dj(nickname)]} {
 	webout [el_open div -class span8]
 	webout "<h3>$dj(nickname)</h3>"
 
+	if {[::macnugget::acl_check cowgod_admin]} {
+		unset -nocomplain tagline actions
+		foreach {flag description toggle} {owner Owner 0 admin Admin 1 trendsetter Trendsetter 1 ignore Ignored 1 bot "Bot" 0} {
+			if {[string is true -strict $dj($flag)]} {
+				append tagline "[el_open span -class "label label-info"]$description[el_close span] "
+				if {$toggle} {
+					lappend actions "<li><a tabindex=\"-1\" href=\"?field=$flag;value=false\">Disable $description</a></li>"
+				}
+			} else {
+				if {$toggle} {
+					lappend actions "<li><a tabindex=\"-1\" href=\"?field=$flag;value=true\">Enable $description</a></li>"
+				}
+			}
+		}
+		webout "$tagline"
+		webout {<div class="btn-group"><button class="btn btn-small">Admin</button>}
+		webout {<button class="btn btn-small dropdown-toggle" data-toggle="dropdown"><span class="caret"></span></button>}
+		webout {<ul class="dropdown-menu">}
+		webout [join $actions "\n"]
+		webout {</ul></div>}
+	}
+
 	webout "<p>"
 	webout "First seen in the Pit on [clock format [clock scan $dj(added)] -format "%A %d-%B-%Y"]."
 	webout "<br />"
@@ -100,8 +135,8 @@ if {[info exists dj(nickname)]} {
 		webout "<small>$dj(nickname) (<cite>[clock format [clock scan $quote(ts)] -format "%A, %d-%b-%Y"]</cite>)</small>"
 		webout "</blockquote>"
 	}
-	webout "<hr />"
 
+	webout "<hr />"
 	webout [el_open div -class row]
 
 	webout [el_open div -class span6]

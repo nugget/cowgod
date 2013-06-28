@@ -28,6 +28,7 @@ namespace eval ::cowgod {
 			pg_disconnect $::cowgod::db
 			unset -nocomplain ::cowgod::db
 		}
+		unset -nocomplain ::dj_name_cache
 	}
 
 	proc href {type id} {
@@ -50,11 +51,23 @@ namespace eval ::cowgod {
 		return "${base_url}/avatars/${type}_[format "%03d" $id].png"
 	}
 
-	proc dj_name {id} {
-		pg_select $::cowgod::db "SELECT nickname FROM users WHERE user_id = [pg_quote $id]" buf {
-			return $buf(nickname)
+	proc dj_name {user_id} {
+		set username "Unknown DJ"
+
+		if {[info exists ::dj_name_cache($user_id)]} {
+			set username $::dj_name_cache($user_id)
+		} else {
+			pg_select $::cowgod::db "SELECT nickname FROM users WHERE user_id = [pg_quote $user_id]" buf {
+				set username $buf(nickname)
+				set ::dj_name_cache($user_id) $username
+			}
 		}
-		return "Unknown DJ"
+
+		return $username
+	}
+
+	proc dj_link {user_id} {
+		return "<a href=\"/cowgod/dj/$user_id\">[::cowgod::dj_name $user_id]</a>"
 	}
 
 	proc buttonbar {} {
@@ -66,6 +79,9 @@ namespace eval ::cowgod {
 		foreach {href title} {djstats "DJ Stats" recent "Recent Plays" bagel "CBDIA" peak "Peak Users"} {
 			webout "[el_open a -href "/cowgod/$href"][el_open button -class "btn"]$title[el_close button][el_close a]"
 		}
+		if {[::macnugget::acl_check cowgod_admin]} {
+			webout "[el_open a -href "/cowgod/admin/"][el_open button -class "btn btn-warning"]Admin Tools[el_close button][el_close a]"
+		}
 		webout "[el_close div]"
 		webout "[el_open form -class "form-search pull-right" -action "/cowgod/search"]"
 		webout "[el_oc input -name "q" -type text -class "search-query" -placeholder "Search"]"
@@ -73,6 +89,7 @@ namespace eval ::cowgod {
 		webout [el_close div]
 		webout [el_close div]
 	}
+
 }
 
 package provide cowgod 1.0
