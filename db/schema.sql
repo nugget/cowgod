@@ -163,6 +163,18 @@ CREATE TABLE autoboot (
 );
 GRANT SELECT,INSERT,UPDATE ON autoboot TO bots;
 
+CREATE TABLE auditlog (
+	id serial NOT NULL,
+	added timestamp(0) without time zone NOT NULL DEFAULT (current_timestamp at time zone 'utc'),
+	user_id varchar NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+	action varchar NOT NULL,
+	target_id varchar,
+	value varchar,
+	comments varchar,
+	PRIMARY KEY(id)
+);
+GRANT SELECT,INSERT ON auditlog TO bots;
+
 CREATE OR REPLACE FUNCTION nick(varchar) RETURNS varchar AS $$
 	DECLARE
 		nick varchar;
