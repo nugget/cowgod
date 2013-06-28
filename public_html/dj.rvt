@@ -20,8 +20,7 @@ if {[info exists response(field)] && [info exists response(value)]} {
 	if {[regexp {[a-z]+} $field]} {
 		set sql "UPDATE users SET $field = $value WHERE user_id = [pg_quote $dj_id] AND owner IS NOT TRUE;"
 		sql_exec $::cowgod::db $sql
-		set sql "INSERT INTO auditlog (user_id,action,target_id,value,comments) SELECT [pg_quote $::user(turntable_user_id)],'acledit',[pg_quote $dj_id],[pg_quote "$field $value"],NULL;"
-		sql_exec $::cowgod::db $sql
+		::cowgod::auditlog -user_id $::user(turntable_user_id) -action acledit -target_id $dj_id -value "$field $value" -source "web [remote hostname] ([remote ip_addr])"
 	}
 }
 

@@ -90,6 +90,15 @@ namespace eval ::cowgod {
 		webout [el_close div]
 	}
 
+	proc auditlog {args} {
+		foreach {field value} $args {
+			lappend fieldlist [string range $field 1 end]
+			lappend valuelist [pg_quote $value]
+		}
+		set sql "INSERT INTO auditlog ([join $fieldlist ","]) SELECT [join $valuelist ","];"
+        sql_exec $::cowgod::db $sql
+	}
+
 }
 
 package provide cowgod 1.0
