@@ -15,6 +15,11 @@ page_header -title "Turntable.fm Pit of no Shame"
 
 puts "<h3>Admin Control Panel</h3>"
 
+puts "<ul>"
+puts "<li><a href=\"specialusers\">Special Users</a></li>"
+puts "<li><a href=\"blacklist\">Banned Users (blacklist)</a></li>"
+puts "</ul>"
+
 if {![info exists ::user(turntable_user_id)] || $::user(turntable_user_id) eq ""} {
 	puts "<h2>Error</h2>"
 	puts "<p>Your account ($::user(username)) is not linked to a Turntable User ID</p>"

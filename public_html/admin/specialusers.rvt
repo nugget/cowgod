@@ -1,0 +1,42 @@
+<?
+
+package require macnugget
+package require cowgod
+
+page_init
+::macnugget::require_acl cowgod_admin
+
+opt header 0
+page_header -title "Special Users"
+
+::cowgod::dbconnect
+::cowgod::buttonbar
+
+webout [el_open table -class "table table-striped table-bordered table-condensed"]
+
+set flagfields {owner admin trendsetter ignore bot}
+foreach f $flagfields {
+	lappend boolwhere "$f IS TRUE"
+	lappend boolhead  "<th style=\"text-align: center;\">$f</th>"
+}
+webout "<tr><th>DJ</th>[join $boolhead ""]</tr>"
+pg_select $::cowgod::db "SELECT * FROM users WHERE [join $boolwhere " OR "] ORDER BY added" buf {
+	webout "<tr>"
+	webout "<td>[::cowgod::dj_link $buf(user_id)]</td>"
+	foreach f $flagfields {
+		if {[string is true -strict $buf($f)]} {
+			set output {<i class="icon-ok-sign"></i>}
+		} else {
+			set output "&nbsp;"
+		}
+		webout "<td style=\"text-align: center;\">$output</td>"
+	}
+	webout "</tr>"
+}
+webout [el_close table]
+
+::cowgod::dbdisconnect
+page_footer
+page_term
+
+?>
