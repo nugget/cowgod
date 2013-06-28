@@ -39,6 +39,9 @@ config['database']		= settings.db;
 config['say_snags']		= settings.say_snags;
 config['say_odometer']	= settings.say_odometer;
 
+var setting_description = new Object();
+setting_description['oneanddone'] = 'Epic No-Shame Mode';
+
 db_loadsettings();
 
 var users = new Object();
@@ -835,7 +838,11 @@ function opt (item) {
 }
 
 function say_config (item,user_id) {
-	pm(item+' setting is now '+config[item],user_id);
+	if (typeof setting_description[item] === 'undefined') {
+		pm(item+' setting is now '+config[item],user_id);
+	} else {
+		say(setting_description[item]+' is now '+config[item],user_id);
+	}
 }
 
 function say(text) {
