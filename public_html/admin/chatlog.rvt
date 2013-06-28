@@ -3,6 +3,7 @@
 package require macnugget
 package require cowgod
 
+require_https
 page_init
 ::macnugget::require_acl cowgod_admin
 
