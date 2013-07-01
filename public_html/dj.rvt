@@ -87,12 +87,14 @@ if {[info exists dj(nickname)]} {
 				}
 			}
 		}
-		webout "$tagline"
-		webout {<div class="btn-group"><button class="btn btn-small">Admin</button>}
-		webout {<button class="btn btn-small dropdown-toggle" data-toggle="dropdown"><span class="caret"></span></button>}
-		webout {<ul class="dropdown-menu">}
-		webout [join $actions "\n"]
-		webout {</ul></div>}
+		if {[info exists tagline]} {
+			webout "$tagline"
+			webout {<div class="btn-group"><button class="btn btn-small">Admin</button>}
+			webout {<button class="btn btn-small dropdown-toggle" data-toggle="dropdown"><span class="caret"></span></button>}
+			webout {<ul class="dropdown-menu">}
+			webout [join $actions "\n"]
+			webout {</ul></div>}
+		}
 	}
 
 	webout "<p>"
