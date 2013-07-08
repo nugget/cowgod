@@ -48,6 +48,7 @@ namespace eval ::cowgod {
 		if {$id eq ""} {
 			set id 1
 		}
+		return "${base_url}/avatars/$id/${type}.png"
 		return "${base_url}/avatars/${type}_[format "%03d" $id].png"
 	}
 
