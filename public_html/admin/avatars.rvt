@@ -12,12 +12,20 @@ page_header -title "Turntable.fm Pit of no Shame"
 ::cowgod::dbconnect
 ::cowgod::buttonbar
 
-foreach avatar_dir [glob [file join .. avatars "*"]] {
-	set fn [file join $avatar_dir "fullfront.png"]
+
+cd [file join ".." avatars]
+
+webout [el_open ul -class inline]
+foreach avatar_id [lsort -integer [glob "*"]] {
+	set fn [file join $avatar_id "fullfront.png"]
 	if {[file exists $fn]} {
-		webout "[el_open a -href "$fn"][el_oc img -src $fn -alt "$fn"][el_close a]"
+		webout "[el_open li -class text-center -style "margin-top: 16px;"]"
+		webout "[el_open a -href "../avatars/$fn"][el_oc img -class "img-rounded" -src "../avatars/$fn" -alt "$fn"][el_close a]"
+		webout "[el_open span -class "label label-inverse" -style "width: 100%;"]$avatar_id[el_close span]"
+		webout "[el_close li]"
 	}
 }
+webout [el_close ul]
 
 ::cowgod::dbdisconnect
 page_footer
