@@ -1,0 +1,26 @@
+<?
+
+package require macnugget
+package require cowgod
+
+page_init
+opt header 0
+page_header -title "Turntable.fm Pit of no Shame"
+
+::macnugget::require_acl cowgod_admin
+
+::cowgod::dbconnect
+::cowgod::buttonbar
+
+foreach avatar_dir [glob [file join .. avatars "*"]] {
+	set fn [file join $avatar_dir "fullfront.png"]
+	if {[file exists $fn]} {
+		webout "[el_open a -href "$fn"][el_oc img -src $fn -alt "$fn"][el_close a]"
+	}
+}
+
+::cowgod::dbdisconnect
+page_footer
+page_term
+
+?>
