@@ -415,26 +415,31 @@ function check_flood_rate(data) {
 		}
 		var rate = 0.00 + (global['speak_linecount'] / seconds);
 
-		logger(global['speak_last_user']+' spoke '+global['speak_linecount']+' lines since '+global['speak_epoch']+' at a rate of '+rate+' lines/sec over past '+seconds+' seconds');
 
 		botdb.query('SELECT * FROM users WHERE user_id = $1', [
 			data.userid
 		], after(function(result) {
 			result.rows.forEach(function(user) {
-				var tolerance = 3;
+				var rate_tolerance = 3;
+				var lines_tolerance = 8;
 
 				if (user.live_points > 50) {
-					tolerance = 5;
+					rate_tolerance = 5;
+					lines_tolerance = 10;
 				}
 				if (user.live_points > 100) {
-					tolerance = 8;
+					rate_tolerance = 8;
+					lines_tolerance = 10;
 				}
 				if (user.live_points > 10000) {
-					tolerance = 10;
+					rate_tolerance = 10;
+					lines_tolerance = 10;
 				}
 
-				if (rate > tolerance) {
-					if (user.admin == true || user.owner == true || user.trendsetter == true) {
+				logger(global['speak_last_user']+' spoke '+global['speak_linecount']+' lines (limit '+lines_tolerance+') since '+global['speak_epoch']+' at a rate of '+rate+' lines/sec over past '+seconds+' seconds (limit '+rate_tolerance+')');
+
+				if ( (seconds < 5 && rate > rate_tolerance) || (seconds >= 5 && global['speak_linecount'] > lines_tolerance) ) {
+					if (user.admin == true || user.owner == true || user.trendsetter == true || user.bot == true) {
 						logger('- I will ignore flood from trusted user '+user.nickname);
 						return
 					} 
