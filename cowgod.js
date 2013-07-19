@@ -413,23 +413,31 @@ function check_flood_rate(data) {
 		if (seconds == 0) {
 			seconds = 1;
 		}
-		var rate = global['speak_linecount'] / seconds;
+		var rate = 0.00 + (global['speak_linecount'] / seconds);
 
-		logger(global['speak_last_user']+' spoke '+global['speak_linecount']+' lines since '+global['speak_epoch']+' at a rate of '+rate+'lps over past '+seconds+' seconds');
+		logger(global['speak_last_user']+' spoke '+global['speak_linecount']+' lines since '+global['speak_epoch']+' at a rate of '+rate+' lines/sec over past '+seconds+' seconds');
 
 		botdb.query('SELECT * FROM users WHERE user_id = $1', [
 			data.userid
 		], after(function(result) {
 			result.rows.forEach(function(user) {
-				if (rate > 5) {
+				var tolerance = 3;
+
+				if (user.live_points > 50) {
+					tolerance = 5;
+				}
+				if (user.live_points > 100) {
+					tolerance = 8;
+				}
+				if (user.live_points > 10000) {
+					tolerance = 10;
+				}
+
+				if (rate > tolerance) {
 					if (user.admin == true || user.owner == true || user.trendsetter == true) {
 						logger('- I will ignore flood from trusted user '+user.nickname);
 						return
 					} 
-					if (user.live_points > 1000) {
-						logger('- I will ignore flood from user with lots of points');
-						return
-					}
 
 					if (user.live_points < 50) {
 						logger('Banning user because they have fewer than 50 points');
