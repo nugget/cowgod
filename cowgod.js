@@ -51,6 +51,9 @@ var global = new Object();
 global['myvote']	= 'none';
 global['cursong']	= 'none';
 global['roomid']	= settings.roomid;
+global['speak_last_user'] = '';
+global['speak_linecount'] = 0;
+global['speak_epoch'] = 0;
 
 var admins = new Array();
 var leaders = new Array();
@@ -396,6 +399,51 @@ function db_speak(data) {
 			], after(function(result) {} ));
 }
 
+function check_flood_rate(data) {
+	if (opt('flood_protection') == 'on') {
+		if (global['speak_last_user'] == data.userid) {
+			global['speak_linecount'] = global['speak_linecount'] + 1;
+		} else {
+			global['speak_last_user'] = data.userid;
+			global['speak_linecount'] = 1;
+			global['speak_epoch'] = Math.floor((new Date).getTime()/1000.00);
+		}
+
+		var seconds = (Math.floor((new Date).getTime()/1000.00) - global['speak_epoch']);
+		if (seconds == 0) {
+			seconds = 1;
+		}
+		var rate = global['speak_linecount'] / seconds;
+
+		logger(global['speak_last_user']+' spoke '+global['speak_linecount']+' lines since '+global['speak_epoch']+' at a rate of '+rate+'lps over past '+seconds+' seconds');
+
+		botdb.query('SELECT * FROM users WHERE user_id = $1', [
+			data.userid
+		], after(function(result) {
+			result.rows.forEach(function(user) {
+				if (rate > 5) {
+					if (user.admin == true || user.owner == true || user.trendsetter == true) {
+						logger('- I will ignore flood from trusted user '+user.nickname);
+						return
+					} 
+					if (user.live_points > 1000) {
+						logger('- I will ignore flood from user with lots of points');
+						return
+					}
+
+					if (user.live_points < 50) {
+						logger('Banning user because they have fewer than 50 points');
+						botdb.query('INSERT INTO blacklist (user_id,added_by,public_msg,private_msg) VALUES ($1,$2,$3,$4)', [
+						user.user_id, settings.userid, 'Flood Spammer Asshole', 'You are too loud for us'
+						], after(function(result) {} ));
+					}
+
+					bot.bootUser(userid,'You are too loud for us');
+				}
+			});
+		}));
+	}
+}
 function db_registered(data) {
 	if (!db_write()) { return; }
 
@@ -474,10 +522,10 @@ function db_loadsettings() {
 			], after(function(result) {
 				result.rows.forEach(function(setval) {
 					config[setval.key] = setval.value;
-					logger('- '+setval.key+' set to '+config[setval.key]);
+					logger('- '+setval.key+' set to '+config[setval.key]+' from the database');
 					loadcount = loadcount + 1;
 					});
-				logger('- Loaded '+loadcount+' settings rom database');
+				logger('- Loaded '+loadcount+' settings from database');
 				}));
 }
 
@@ -1367,7 +1415,7 @@ bot.on('add_dj', function (data) {
 });
 
 bot.on('rem_moderator', function (data) {
-	// util.log(util.inspect(data));
+	util.log(util.inspect(data));
 	logger('* '+id_to_name(data.userid)+' lost their moderator status');
 	if (is_owner(data.userid) || is_bot(data.userid)) {
 		logger('* '+id_to_name(data.userid)+' needs saving!');
@@ -1395,6 +1443,8 @@ bot.on('speak', function (data) {
 
 	logger('<'+data.name+'> '+data.text);
 	db_speak(data);
+
+	check_flood_rate(data);
 
 	if (data.text.toLowerCase().indexOf('make it stop') != -1) {
 		if (is_leader(data.userid)) {
