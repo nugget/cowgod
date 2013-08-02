@@ -217,14 +217,11 @@ function newsong_theme_management(data) {
 }
 
 function newsong_one_and_done(data) {
-	logger('- newsong_one_and_done');
 	var djid = data.room.metadata.current_song.djid;
 	var djs = data.room.metadata.djs;
 	var bootid = djs[0];
 	if (opt('one_and_done_allowed') == 'on') {
-		logger('- noad 1');
 		if (opt('oneanddone') == 'on') {
-			logger('- noad 2');
 			if(djs[1] == djid) {
 				logger('= new song is DJ number two, I should boot '+bootid);
 				bot.remDj(bootid);
