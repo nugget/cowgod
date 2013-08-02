@@ -882,11 +882,20 @@ function explain_rules(djname) {
 	}
 }
 
-function toggle_config (item) {
-	if (config[item] != 'on') {
-		config[item] = 'on';
+function toggle_config (item,toggle) {
+	logger('* toggle is '+toggle);
+	if (toggle === 'undefined') {
+		if (config[item] != 'on') {
+			config[item] = 'on';
+		} else {
+			config[item] = 'off';
+		}
 	} else {
-		config[item] = 'off';
+		if (toggle == 'on') {
+			config[item] = 'on';
+		} else {
+			config[item] = 'off';
+		}
 	}
 	logger('- config['+item+'] is now '+config[item]);
 }
@@ -1077,7 +1086,7 @@ function do_command (data) {
 			break;
 		case 'set':
 			if (argv.length == 1) {
-				pm(' /SET config_item [value]',data.senderid);
+				pm('Usage: /SET config_item [value]',data.senderid);
 				break;
 			}
 			var itemname = argv[1];
@@ -1087,11 +1096,14 @@ function do_command (data) {
 				pm('I have never heard of that setting',data.senderid);
 				break;
 			}
+
 			if (argv.length == 2) {
 				pm(itemname+' is currently '+config[itemname],data.senderid);
 				break;
 			}
-			toggle_config(itemname);
+
+			logger('toggle is ('+toggle+')');
+			toggle_config(itemname,toggle);
 			pm(itemname+' is now '+config[itemname],data.senderid);
 			break;
 		case 'snag':
