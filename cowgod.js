@@ -1023,7 +1023,7 @@ function do_vote (vote) {
 
 function do_command (data) {
 	var argv = data.text.replace(/\s+/g,' ').split(' ');
-	var command = argv[0].substr(1);
+	var command = argv[0].substr(1).toLowerCase();
 	var args_arr = argv.slice(1);
 	var args     = args_arr.join(' ');
 
@@ -1073,21 +1073,26 @@ function do_command (data) {
 		case 'follow':
 		case 'autoskip':
 		case 'database':
-			
-			if (args == '') {
-				toggle_config(command);
-			} else {
-				if (args != 'on') {
-					config[command] = 'off';
-				} else {
-					config[command] = 'on';
-				}
-			}
-			say_config(command,data.senderid);
-			logger('= '+id_to_name(data.senderid)+' set '+command+' to '+config[command]);
+			pm('Please use /SET to alter settings.  The old way is no longer supported.',data.senderid);
 			break;
 		case 'set':
-			toggle_config(args);
+			if (argv.length == 1) {
+				pm(' /SET config_item [value]',data.senderid);
+				break;
+			}
+			var itemname = argv[1];
+			var toggle   = argv[2];
+
+			if (typeof(config[itemname]) === 'undefined') {
+				pm('I have never heard of that setting',data.senderid);
+				break;
+			}
+			if (argv.length == 2) {
+				pm(itemname+' is currently '+config[itemname],data.senderid);
+				break;
+			}
+			toggle_config(itemname);
+			pm(itemname+' is now '+config[itemname],data.senderid);
 			break;
 		case 'snag':
 			logger('- '+id_to_name(data.senderid)+' wants me to add this song to my queue');
