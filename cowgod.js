@@ -451,7 +451,7 @@ function check_flood_rate(data) {
 						], after(function(result) {} ));
 					}
 
-					bot.bootUser(userid,'You are too loud for us');
+					bot.bootUser(user.user_id,'You are too loud for us');
 				}
 			});
 		}));
@@ -1022,50 +1022,42 @@ function do_vote (vote) {
 }
 
 function do_command (data) {
-	var moo     = data.text.indexOf(' ');
-	if (moo == -1) {
-		var command = data.text.substr(1);
-		var args	= '';
-	} else {
-		var command = data.text.substr(1,moo-1);
-		var args    = data.text.substr(moo+1);
-	}
+	var argv = data.text.replace(/\s+/g,' ').split(' ');
+	var command = argv[0].substr(1);
+	var args_arr = argv.slice(1);
+	var args     = args_arr.join(' ');
 
 	if (!is_admin(data.senderid)) {
 		logger('= '+id_to_name(data.senderid)+' tried admin command '+command+'('+args+')');
+		owners.forEach(function(owner) {
+			logger(id_to_name(data.senderid)+' just tried to do /'+command+' '+args);
+		});
+
+		pm('Not authorized',data.senderid);
 		return
 	}
 
+	logger('= '+id_to_name(data.senderid)+' issued admin command '+command+'('+args+')');
+
 	switch(command) {
 		case 'jump':
-			logger('= '+id_to_name(data.senderid)+' tried jump command '+command+'('+args+')');
-			if (args == 'down') {
+			if (argv[1] == 'down') {
 				bot.remDj(settings.userid);
 			} else {
 				bot.addDj();
 			}
 			break;
-		case 'pm':
-			moo			 = args.text.indexOf(' ');
-			var receiver = args.text.substr(1,moo-1);
-			var msg      = args.text.substr(moo+1);
-			pm(msg,receiver);
-			break;
 		case 'fortune':
-			logger('= '+id_to_name(data.senderid)+' made me give a fortune');
 			say_command('/usr/games/fortune -s -a');
 			break;
 		case 'phb':
-			logger('= '+id_to_name(data.senderid)+' made me give a phb');
 			say_command('/usr/local/bin/speak');
 			break;
 		case 'awesome':
 			do_vote('up');
-			logger('= '+id_to_name(data.senderid)+' made me vote awesome');
 			break;
 		case 'lame':
 			do_vote('down');
-			logger('= '+id_to_name(data.senderid)+' made me vote lame');
 			break;
 		case 'avatar':
 			args = parseInt(args);
@@ -1081,6 +1073,7 @@ function do_command (data) {
 		case 'follow':
 		case 'autoskip':
 		case 'database':
+			
 			if (args == '') {
 				toggle_config(command);
 			} else {
