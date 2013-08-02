@@ -38,6 +38,7 @@ config['follow']		= settings.follow;
 config['database']		= settings.db;
 config['say_snags']		= settings.say_snags;
 config['say_odometer']	= settings.say_odometer;
+config['owner_follow']	= 'on';
 
 var setting_description = new Object();
 setting_description['oneanddone'] = 'Epic No-Shame Mode';
@@ -54,6 +55,7 @@ global['roomid']	= settings.roomid;
 global['speak_last_user'] = '';
 global['speak_linecount'] = 0;
 global['speak_epoch'] = 0;
+global['owner_in_room'] = 0;
 
 var admins = new Array();
 var leaders = new Array();
@@ -1007,9 +1009,24 @@ function lag_vote (vote) {
 	setTimeout(function(){ do_vote(vote); }, waitms);
 }
 
+function look_for_owners(users) {
+	var in_room = 0;
+	users.forEach(function(user) {
+		if(is_owner(user.userid)) {
+			in_room = 1;
+		}
+	});
+
+	if (in_room != global['owner_in_room']) {
+		global['owner_in_room'] = in_room;
+		logger('* owner_in_room is now '+global['owner_in_room']);
+	}
+}
+
 function do_vote (vote) {
 	bot.roomInfo(false, function(roominfo) {
 		// util.log(util.inspect(roominfo));
+		look_for_owners(roominfo.users);
 		if(roominfo.room.metadata.current_dj == settings.userid) {
 			logger('- ignoring self-vote');
 		} else {
@@ -1249,6 +1266,8 @@ bot.on('roomChanged', function (data) {
 	logger('! Room changed to '+data.room.name+' ('+data.room.roomid+')');
 	logger_tsv([ 'event','newroom','roomname',data.room.name ]);
 
+	look_for_owners(data.users);
+
 	// util.log(util.inspect(data));
 
 	if (data.room.metadata.current_song == null) {
@@ -1335,6 +1354,10 @@ bot.on('newsong', function (data) {
 	newsong_theme_management(data);
 	newsong_one_and_done(data);
 
+	bot.roomInfo(false, function(roominfo) {
+		look_for_owners(roominfo.users);
+	});
+
 	global['cursong']      = data.room.metadata.current_song._id;
 	global['cursongname']  = data.room.metadata.current_song.metadata.song;
 	global['curdjid']      = data.room.metadata.current_song.djid;
@@ -1376,15 +1399,20 @@ bot.on('update_votes', function (data) {
 
 	logger('* '+id_to_name(user)+' voted '+vote);
 
-	if (user == '') {
-		if (vote == 'down') {
-			if (global['myvote'] != 'down') {
-				// logger('- Voting '+vote+'!  Because I will dump on anyone');
-				// global['myvote'] = vote;
-				// lag_vote(vote);
+	if (config['owner_follow'] == 'on') {
+		if (global['owner_in_room'] == 1) {
+			if (global['myvote'] == 'none') {
+				logger('- owner_follow is enabled and owner is in the room');
 			}
+		} else {
+			if (global['myvote'] == 'none') {
+				logger('- owner_follow is enabled and owner is NOT in the room');
+			}
+			return;
 		}
-	} else if (is_leader(user)||is_bot(user)) {
+	}
+
+	if (is_leader(user)||is_bot(user)) {
 		if (global['myvote'] == 'none') {
 			logger('- Voting '+vote+'!  I am such a follower');
 			global['myvote'] = vote;
