@@ -1175,6 +1175,11 @@ function do_command (data) {
 			logger('! '+id_to_name(data.senderid)+' asked for song stats');
 			db_songstats(args,data);
 			break;
+		case 'fallow':
+			logger('! '+id_to_name(data.senderid)+' wants me to enforce the theme rules');
+			bot.remDj(global['curdjid']);
+			explain_rules(global['curdjname']);
+			break;
 		case 'default':
 			logger('! '+id_to_name(data.senderid)+' tried unknown command '+command+'('+args+')');
 			break;
