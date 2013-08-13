@@ -877,7 +877,7 @@ function explain_rules(djname) {
 	if (opt('oneanddone') == 'on') {
 		say('Welcome to the Pit, @'+djname+'!  The Pit is in Epic No Shame rotation -- No follow required. Play the best of your worst, or the worst of your best. Push the limits of decency! If you have any questions, ask one of these Shameless Bastards! http://macnugget.org/cowgod/djstats');
 	} else {
-		say('Welcome to the Pit, @'+djname+'!  We usually play follow the leader here with theme rounds based on whatever 1st chair plays. Have fun!  You can see what was recently played at http://macnugget.org/cowgod/recent');
+		say('Welcome to the Pit, @'+djname+'!  We usually play follow the leader here with theme rounds based on whatever 1st chair plays. Have fun!  You can see what was recently played at http://alturl.com/9wjhy');
 	}
 }
 
