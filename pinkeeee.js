@@ -1553,6 +1553,7 @@ bot.on('speak', function (data) {
 			
 		if (data.user[0].userid == '51813658aaa5cd3df7b79831') {
                 	say_command('@Pinkeeee is the BEST!');
+			}
 		}
 	}
 
@@ -1587,4 +1588,4 @@ bot.on('speak', function (data) {
 	}
 
 
-});
+};
