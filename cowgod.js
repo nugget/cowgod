@@ -1405,12 +1405,17 @@ bot.on('update_votes', function (data) {
 		if (global['owner_in_room'] == 1) {
 			if (global['myvote'] == 'none') {
 				logger('- owner_follow is enabled and owner is in the room');
+				if (is_owner(user)) {
+					logger('- Voting '+vote+'!  Owner rules all');
+					global['myvote'] = vote;
+					lag_vote(vote);
+				}
+				return;
 			}
 		} else {
 			if (global['myvote'] == 'none') {
 				logger('- owner_follow is enabled and owner is NOT in the room');
 			}
-			return;
 		}
 	}
 
