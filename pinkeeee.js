@@ -1588,4 +1588,4 @@ bot.on('speak', function (data) {
 	}
 
 
-};
+});
