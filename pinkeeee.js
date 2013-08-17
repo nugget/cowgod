@@ -365,7 +365,7 @@ function join_response(data) {
                 lag_heart('I <3 YOU @Pinkeeee, You Da Boss');
         }
 		if (data.user[0].userid == '4e00e4e8a3f75104e10b7359') {
-                lag_heart('Oh Its my owner @nugget Im so Happy Now!');
+                lag_heart('Oh It\'s my owner @nugget I\'m so Happy Now!');
         }
 		if (data.user[0].userid == '4e1c8c8b4fe7d031420bdf59') {
                 lag_heart('Everyone Be Naughty the Boss is in!');
@@ -1544,6 +1544,15 @@ bot.on('speak', function (data) {
 		if (data.text.toLowerCase().indexOf('@flightaware') != -1) {
 			logger('= '+id_to_name(data.senderid)+' said my name');
 			say_command('/usr/local/bin/speak');
+		}
+	}
+	
+	if (settings.userid == '51fc4bb6eb35c104c18698d2') {
+		if (data.text.toLowerCase().indexOf('@Pink's Mini Me') != -1) {
+			logger('= '+id_to_name(data.senderid)+' said my name');
+			
+		if (data.user[0].userid == '51813658aaa5cd3df7b79831') {
+                	say_command('@Pinkeeee is the BEST!');
 		}
 	}
 
