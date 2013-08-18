@@ -5,7 +5,13 @@ var util = require('util');
 var argv = require('optimist').argv;
 var sys = require('sys');
 var exec = require('child_process').exec;
+var process = require('process');
 
+function init_pinkeeee_fortune() {
+	process.env['FORTUNE_PATH'] = '/home/pinkeeee/cowgod';
+	log_command('/usr/games/strfile minimetexts minimetexts.dat');
+	return;
+}
 
 if (typeof argv.nick === 'undefined') {
 	var myname = 'cowgod';
@@ -44,6 +50,8 @@ var setting_description = new Object();
 setting_description['oneanddone'] = 'Epic No-Shame Mode';
 
 db_loadsettings();
+
+init_pinkeeee_fortune();
 
 var users = new Object();
 var usernames = new Object();
@@ -242,6 +250,14 @@ function say_command(command) {
 		} else {
 			logger('= cmdout was too long to say ('+outbuf.length+') '+outbuf);
 		}
+	});
+}
+
+function log_command(command) {
+	child = exec(command, function (error,stdout,stderr) {
+		var outbuf = stdout;
+		outbuf = outbuf.trim();
+		logger(outbuf);
 	});
 }
 
