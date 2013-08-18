@@ -1548,9 +1548,14 @@ bot.on('speak', function (data) {
 	}
 	
 	if (settings.userid == '51fc4bb6eb35c104c18698d2') {
-		if (data.text.toLowerCase().indexOf('@pink\'s mini me') != -1) {
+		if (data.text.toLowerCase().indexOf('@pink\'s mini e') != -1) {
 			logger('= '+id_to_name(data.senderid)+' said my name');
-                	lag_say('@Pinkeeee is the BEST!');
+			
+			if (data.userid == '51813658aaa5cd3df7b79831') {
+                lag_say('You\'re the BEST!');
+		}	else {
+				lag_say('@Pinkeeee is the BEST!');
+			}
 		}
 	}
 
