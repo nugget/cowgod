@@ -1550,7 +1550,7 @@ bot.on('speak', function (data) {
 	if (settings.userid == '51fc4bb6eb35c104c18698d2') {
 		if (data.text.toLowerCase().indexOf('@pink\'s mini me') != -1) {
 			logger('= '+id_to_name(data.senderid)+' said my name');
-                	say_command('@Pinkeeee is the BEST!');
+                	lag_say('@Pinkeeee is the BEST!');
 		}
 	}
 
