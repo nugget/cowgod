@@ -1177,6 +1177,16 @@ function do_command (data) {
 			break;
 		case 'fallow':
 			logger('! '+id_to_name(data.senderid)+' wants me to enforce the theme rules');
+			if (global['curdjid'] == '4f072161a3f751171100088a') {
+				pm('Really?  It\'s Steck.  He\'s playing leftovers. If you haven\'t figure that out by now, I just don\'t know what to tell you.',data.senderid);
+				break;
+			}
+			if (global['curdjid'] == '4f072161a3f751171100088a') {
+				pm('Aw man, you\'ve gone and done it now!',data.senderid);
+			}
+			if (global['curdjid'] == '4e00e4e8a3f75104e10b7359') {
+				pm('I\'m scared to boot nugget.  If this goes badly, I\'ll throw you under the bus',data.senderid);
+			}
 			bot.remDj(global['curdjid']);
 			explain_rules(global['curdjname']);
 			break;
