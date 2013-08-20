@@ -39,6 +39,7 @@ config['database']		= settings.db;
 config['say_snags']		= settings.say_snags;
 config['say_odometer']	= settings.say_odometer;
 config['owner_follow']	= 'on';
+config['oneanddone']	= 'off';
 
 var setting_description = new Object();
 setting_description['oneanddone'] = 'Epic No-Shame Mode';
