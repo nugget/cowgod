@@ -1119,7 +1119,7 @@ function do_command (data) {
 
 			logger('toggle is ('+toggle+')');
 			toggle_config(itemname,toggle);
-			pm(itemname+' is now '+config[itemname],data.senderid);
+			say_config(itemname,data.senderid);
 			break;
 		case 'snag':
 			logger('- '+id_to_name(data.senderid)+' wants me to add this song to my queue');
