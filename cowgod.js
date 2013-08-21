@@ -1269,11 +1269,13 @@ console.log('connecting as '+settings.userid);
 var bot = new Bot(settings.token, settings.userid, settings.roomid);
 bot.debug = settings.debug;
 
+
 // bot.modifyLaptop(settings.laptop);
 // bot.setAvatar(settings.avatar);
 
 bot.on('roomChanged', function (data) { 
 	// util.log(util.inspect(data));
+	bot.modifyProfile({ website:'http://macnugget.org/cowgod/', twitter:'cowgodpit'});
 	
 	global['roomid'] = data.room.roomid;
 	logger('! Room changed to '+data.room.name+' ('+data.room.roomid+')');
@@ -1545,14 +1547,26 @@ bot.on('speak', function (data) {
 
 	if (settings.userid == '4f50ea86a3f7517d6c006f16') {
 		if (data.text.toLowerCase().indexOf('@cowgod') != -1) {
-			logger('= '+id_to_name(data.senderid)+' said my name');
+			logger('= '+id_to_name(data.userid)+' said my name');
 			say_command('/usr/games/fortune -s -a');
+		}
+
+		if (data.userid == '4e1c8c8b4fe7d031420bdf59') {
+			// SnS is saying something
+			
+			var match = data.text.match(/(buck|dollar|1|one).*more.*than.*nugget/i);
+			if (match === null) {
+				logger('= SNS Regexp match '+match);
+			} else {
+				logger('= SnS bragging about his dollar!');
+				lag_say('Sure, but @nugget also pays ANOTHER two bucks for me to have TT Gold, so. . . :trollface:');
+			}
 		}
 	}
 
 	if (settings.userid == '4f91a1a1aaa5cd581d000280') {
 		if (data.text.toLowerCase().indexOf('@flightaware') != -1) {
-			logger('= '+id_to_name(data.senderid)+' said my name');
+			logger('= '+id_to_name(data.userid)+' said my name');
 			say_command('/usr/local/bin/speak');
 		}
 	}
