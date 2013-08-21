@@ -381,7 +381,7 @@ function join_response(data) {
                 lag_heart('I <3 YOU @Pinkeeee, You Da Boss');
         }
 		if (data.user[0].userid == '4e00e4e8a3f75104e10b7359') {
-                lag_heart('Oh It\'s my owner @nugget I\'m so Happy Now!');
+                lag_heart('YAY @Nugget is here to comfort us with his Animated Character while he goes AFK');
         }
 		if (data.user[0].userid == '4e1c8c8b4fe7d031420bdf59') {
                 lag_heart('Everyone Be Naughty the Boss is in!');
