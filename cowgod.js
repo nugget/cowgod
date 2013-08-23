@@ -237,17 +237,16 @@ function newsong_roulette(data) {
 	var djid = data.room.metadata.current_song.djid;
 	var djs = data.room.metadata.djs;
 	var bootid = global['lastdjid'];
+
 	if (opt('roulette_allowed') == 'on') {
 		if (opt('roulette') == 'on') {
 			var odds = 6;
 			var roll = Math.floor((Math.random()*odds)+1);
-			logger('= Roll was '+roll+' and odds are 1 in '+odds);
-			if (odds == roll) {
+			logger('= '+id_to_name(bootid)+' roll was '+roll+' and odds are 1 in '+odds+' '+bootid);
+			if (bootid && odds == roll) {
 				logger('= Boot to da head!');
-				say(id_to_name(global['lastdjid'])+' :gun:  spun the barrel, pulled the trigger, and lost!');
-				bot.remDj(global['lastdjid']);
-			} else {
-				logger('= Safe');
+				say(id_to_name(bootid)+' :gun:  spun the barrel, pulled the trigger, and lost!');
+				bot.remDj(bootid);
 			}
 		}
 	}
@@ -818,7 +817,6 @@ function db_saysnag(data) {
 	global['cursong']       = data.room.metadata.current_song._id;
 	global['cursongname']   = data.room.metadata.current_song.metadata.song;
 	global['curartistname'] = data.room.metadata.current_song.metadata.artist;
-	global['lastdjid']		= global['curdjid'];
 	global['curdjid']       = data.room.metadata.current_song.djid;
 	global['curdjname']     = data.room.metadata.current_song.djname;
 
@@ -1314,6 +1312,7 @@ bot.on('roomChanged', function (data) {
 		global['cursong']      = data.room.metadata.current_song._id;
 		global['cursongname']  = data.room.metadata.current_song.metadata.song;
 		global['curartistname']  = data.room.metadata.current_song.metadata.artist;
+		global['lastdjid']      = data.room.metadata.current_song.djid;
 		global['curdjid']      = data.room.metadata.current_song.djid;
 		global['curdjname']    = data.room.metadata.current_song.djname;
 		logger('! Now Playing '+data.room.metadata.current_song.metadata.song);
@@ -1399,6 +1398,7 @@ bot.on('newsong', function (data) {
 
 	global['cursong']      = data.room.metadata.current_song._id;
 	global['cursongname']  = data.room.metadata.current_song.metadata.song;
+	global['lastdjid']		= global['curdjid'];
 	global['curdjid']      = data.room.metadata.current_song.djid;
 	global['curdjname']     = data.room.metadata.current_song.djname;
 
