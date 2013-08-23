@@ -211,6 +211,14 @@ CREATE VIEW chatlog_expanded AS
     SELECT c.*, u.live_avatar, u.nickname
 	FROM chat_log c LEFT JOIN users u USING (user_id);
 
-GRANT SELECT ON snaglog_expanded, songlog_expanded, joins_expanded,chatlog_expanded TO bots;
+CREATE VIEW auditlog_expanded AS
+    SELECT a.id,a.added,a.user_id,
+	       (SELECT nickname FROM users WHERE users.user_id = a.user_id LIMIT 1) as nickname,
+		   a.action, a.target_id,
+	       (SELECT nickname FROM users WHERE users.user_id = a.target_id LIMIT 1) as target,
+		   a.value,a.comments,a.source
+	FROM auditlog a;
+
+GRANT SELECT ON snaglog_expanded, songlog_expanded, joins_expanded,chatlog_expanded,auditlog_expanded TO bots;
 
 

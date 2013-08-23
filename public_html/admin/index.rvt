@@ -18,6 +18,7 @@ puts "<h3>Admin Control Panel</h3>"
 puts "<ul>"
 puts "<li><a href=\"specialusers\">Special Users</a></li>"
 puts "<li><a href=\"blacklist\">Banned Users (blacklist)</a></li>"
+puts "<li><a href=\"audit\">Audit Trail</a></li>"
 puts "<li><a href=\"avatars\">All Avatars</a></li>"
 puts "</ul>"
 
