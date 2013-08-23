@@ -40,9 +40,11 @@ config['say_snags']		= settings.say_snags;
 config['say_odometer']	= settings.say_odometer;
 config['owner_follow']	= 'on';
 config['oneanddone']	= 'off';
+config['roulette']		= 'off';
 
 var setting_description = new Object();
 setting_description['oneanddone'] = 'Epic No-Shame Mode';
+setting_description['roulette'] = 'Russian Roulette Mode';
 
 db_loadsettings();
 
@@ -226,6 +228,26 @@ function newsong_one_and_done(data) {
 			if(djs[1] == djid) {
 				logger('= new song is DJ number two, I should boot '+bootid);
 				bot.remDj(bootid);
+			}
+		}
+	}
+}
+
+function newsong_roulette(data) {
+	var djid = data.room.metadata.current_song.djid;
+	var djs = data.room.metadata.djs;
+	var bootid = djs[0];
+	if (opt('roulette_allowed') == 'on') {
+		if (opt('roulette') == 'on') {
+			var odds = 6;
+			var roll = Math.floor((Math.random()*odds)+1);
+			logger('= Roll was '+roll+' and odds are 1 in '+odds);
+			if (odds == roll) {
+				logger('= Boot to da head!');
+				say(id_to_name(userid)+' :gun:  spun the barrel, pulled the trigger, and lost!');
+				bot.remDj(global['lastdj']);
+			} else {
+				logger('= Safe');
 			}
 		}
 	}
@@ -793,10 +815,11 @@ function db_saysnag(data) {
 
 	//util.log(util.inspect(data));
 	//
-	global['cursong']      = data.room.metadata.current_song._id;
-	global['cursongname']  = data.room.metadata.current_song.metadata.song;
-	global['curartistname']  = data.room.metadata.current_song.metadata.artist;
-	global['curdjid']      = data.room.metadata.current_song.djid;
+	global['cursong']       = data.room.metadata.current_song._id;
+	global['cursongname']   = data.room.metadata.current_song.metadata.song;
+	global['curartistname'] = data.room.metadata.current_song.metadata.artist;
+	global['lastdj']		= global['curdj'];
+	global['curdjid']       = data.room.metadata.current_song.djid;
 	global['curdjname']     = data.room.metadata.current_song.djname;
 
 	botdb.query('SELECT * FROM snaglog_expanded WHERE song_id = $1 AND user_id = $2', [
@@ -1368,6 +1391,7 @@ bot.on('newsong', function (data) {
 	db_newsong(data);
 	newsong_theme_management(data);
 	newsong_one_and_done(data);
+	newsong_roulette(data);
 
 	bot.roomInfo(false, function(roominfo) {
 		look_for_owners(roominfo.users);
