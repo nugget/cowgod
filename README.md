@@ -12,8 +12,8 @@ Getting Started
 * mkdir log
 * run "node cowgod.js"
 
-Bot Commands
-------------
+Universal Bot Commands
+----------------------
 
 * `/jump up` Jump up to a DJ spot if available
 * `/jump down` Go back to the pit
@@ -26,6 +26,11 @@ Bot Commands
 * `/skip` Skip the currently playing song
 * `/comehere` Bot will join you in whatever room you're in
 * `/random #` Pick any # songs at random and push them to the top of the queue
+
+Optional Bot Commands (allowed or disallowed by settings)
+* `/set oneanddone (on|off)` Each DJ can play one song and then they're escorted off stage
+* `/set roulette (on|off)` After each song the DJ has a 1 in 6 chance of being escorted off stage
+
 
 Useful Links
 ------------
