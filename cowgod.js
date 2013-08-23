@@ -236,7 +236,7 @@ function newsong_one_and_done(data) {
 function newsong_roulette(data) {
 	var djid = data.room.metadata.current_song.djid;
 	var djs = data.room.metadata.djs;
-	var bootid = djs[0];
+	var bootid = global['lastdjid'];
 	if (opt('roulette_allowed') == 'on') {
 		if (opt('roulette') == 'on') {
 			var odds = 6;
