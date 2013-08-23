@@ -245,7 +245,7 @@ function newsong_roulette(data) {
 			if (odds == roll) {
 				logger('= Boot to da head!');
 				say(id_to_name(userid)+' :gun:  spun the barrel, pulled the trigger, and lost!');
-				bot.remDj(global['lastdj']);
+				bot.remDj(global['lastdjid']);
 			} else {
 				logger('= Safe');
 			}
@@ -818,7 +818,7 @@ function db_saysnag(data) {
 	global['cursong']       = data.room.metadata.current_song._id;
 	global['cursongname']   = data.room.metadata.current_song.metadata.song;
 	global['curartistname'] = data.room.metadata.current_song.metadata.artist;
-	global['lastdj']		= global['curdj'];
+	global['lastdjid']		= global['curdjid'];
 	global['curdjid']       = data.room.metadata.current_song.djid;
 	global['curdjname']     = data.room.metadata.current_song.djname;
 
