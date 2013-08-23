@@ -1390,7 +1390,6 @@ bot.on('newsong', function (data) {
 	db_newsong(data);
 	newsong_theme_management(data);
 	newsong_one_and_done(data);
-	newsong_roulette(data);
 
 	bot.roomInfo(false, function(roominfo) {
 		look_for_owners(roominfo.users);
@@ -1401,6 +1400,8 @@ bot.on('newsong', function (data) {
 	global['lastdjid']		= global['curdjid'];
 	global['curdjid']      = data.room.metadata.current_song.djid;
 	global['curdjname']     = data.room.metadata.current_song.djname;
+
+	newsong_roulette(data);
 
 	if (config['autobop'] == 'on') {
 		global['myvote'] = 'up';
