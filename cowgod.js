@@ -244,7 +244,7 @@ function newsong_roulette(data) {
 			logger('= Roll was '+roll+' and odds are 1 in '+odds);
 			if (odds == roll) {
 				logger('= Boot to da head!');
-				say(id_to_name(userid)+' :gun:  spun the barrel, pulled the trigger, and lost!');
+				say(id_to_name(global['lastdjid'])+' :gun:  spun the barrel, pulled the trigger, and lost!');
 				bot.remDj(global['lastdjid']);
 			} else {
 				logger('= Safe');
