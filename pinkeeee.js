@@ -1039,6 +1039,9 @@ function look_for_owners(users) {
 		if(is_owner(user.userid)) {
 			in_room = 1;
 		}
+		if(user.userid == '51813658aaa5cd3df7b79831') {
+			in_room = 1;
+		}
 	});
 
 	if (in_room != global['owner_in_room']) {
