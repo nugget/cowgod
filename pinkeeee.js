@@ -1581,6 +1581,15 @@ bot.on('speak', function (data) {
 			}
 		}
 	}
+	
+	if (settings.userid == '51fc4bb6eb35c104c18698d2') {
+		if (data.text.toLowerCase().indexOf('') != -1) {
+			if (data.userid == '51813658aaa5cd3df7b79831') {
+                		lag_say('YAY it WORKS');
+		
+			}
+		}
+	}
 
 	// All commands below are chatty, so ignore unless odometer is enabled
 	if (config['say_odometer'] != 'on') {
