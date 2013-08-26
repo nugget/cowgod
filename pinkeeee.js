@@ -377,7 +377,7 @@ function join_response(data) {
                 return;
         }
 
-        if (data.user[0].userid == '51813658aaa5cd3df7b79831') {
+        	if (data.user[0].userid == '51813658aaa5cd3df7b79831') {
                 lag_heart('I <3 YOU @Pinkeeee, You Da Boss');
         }
 		if (data.user[0].userid == '4e00e4e8a3f75104e10b7359') {
@@ -389,6 +389,9 @@ function join_response(data) {
 		if (data.user[0].userid == '4f072161a3f751171100088a') {
                 lag_heart('The Doctor is in!');
         }
+        	if (data.user[0].userid == '4510965ebaaa5cd68f091f8d2') {
+                lag_heart('How\'d you escape your bonds @typical tater? Quick Someone catch her!');
+       	}
 }
 
 
