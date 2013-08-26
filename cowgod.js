@@ -41,10 +41,12 @@ config['say_odometer']	= settings.say_odometer;
 config['owner_follow']	= 'on';
 config['oneanddone']	= 'off';
 config['roulette']		= 'off';
+config['rouletteone']	= 'off';
 
 var setting_description = new Object();
 setting_description['oneanddone'] = 'Epic No-Shame Mode';
 setting_description['roulette'] = 'Russian Roulette Mode';
+setting_description['rouletteone'] = 'First Chair Roulette Mode';
 
 db_loadsettings();
 
@@ -237,9 +239,20 @@ function newsong_roulette(data) {
 	var djid = data.room.metadata.current_song.djid;
 	var djs = data.room.metadata.djs;
 	var bootid = global['lastdjid'];
+	var do_the_boot = 0;
 
 	if (opt('roulette_allowed') == 'on') {
-		if (opt('roulette') == 'on') {
+		if (opt('rouletteone') == 'on') {
+			if (bootid == djs[0]) {
+				logger('= rouletteone: lastdj is first chair!  do_the_boot!');
+				do_the_boot = 1;
+			}
+		} else if (opt('roulette') == 'on') {
+			logger('= roulette is enabled');
+			do_the_boot = 1;
+		}
+
+		if (do_the_boot == 1) {
 			var odds = 6;
 			var roll = Math.floor((Math.random()*odds)+1);
 			logger('= '+id_to_name(bootid)+' roll was '+roll+' and odds are 1 in '+odds+' '+bootid);
