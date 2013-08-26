@@ -30,6 +30,7 @@ Universal Bot Commands
 Optional Bot Commands (allowed or disallowed by settings)
 * `/set oneanddone (on|off)` Each DJ can play one song and then they're escorted off stage
 * `/set roulette (on|off)` After each song the DJ has a 1 in 6 chance of being escorted off stage
+* `/set rouletteone (on|off)` After each time the first chair plays a song he has a 1 in 6 chance of being escorted off stage
 
 
 Useful Links
