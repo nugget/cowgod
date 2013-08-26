@@ -282,6 +282,8 @@ function newsong_roulette(data) {
 				logger('= Boot to da head!');
 				say(id_to_name(bootid)+' :gun:  spun the barrel, pulled the trigger, and lost!');
 				bot.remDj(bootid);
+			} else {
+				pm('/roulette_safe','4f50ea86a3f7517d6c006f16');
 			}
 		}
 	}
@@ -1107,7 +1109,7 @@ function do_command (data) {
 	var args_arr = argv.slice(1);
 	var args     = args_arr.join(' ');
 
-	if (!is_admin(data.senderid)) {
+	if (!is_admin(data.senderid) && !is_bot(data.senderid)) {
 		logger('= '+id_to_name(data.senderid)+' tried admin command '+command+'('+args+')');
 		owners.forEach(function(owner) {
 			logger(id_to_name(data.senderid)+' just tried to do /'+command+' '+args);
@@ -1232,6 +1234,14 @@ function do_command (data) {
 			logger('! '+id_to_name(data.senderid)+' asked for song stats');
 			db_songstats(args,data);
 			break;
+		case 'roulette_safe':
+			if (data.senderid == '4f50ed44590ca261fa004904') {
+				var imgnum = Math.floor((Math.random()*4)+1);
+				say('http://macnugget.org/cowgod/images/roulette_safe'+imgnum+'.gif');
+			} else {
+				pm('talk to the hand',data.senderid);
+			}
+			break;
 		case 'fallow':
 			logger('! '+id_to_name(data.senderid)+' wants me to enforce the theme rules');
 			if (global['curdjid'] == '4f072161a3f751171100088a') {
@@ -1331,7 +1341,7 @@ bot.debug = settings.debug;
 
 bot.on('roomChanged', function (data) { 
 	// util.log(util.inspect(data));
-	bot.modifyProfile({ website:'http://macnugget.org/cowgod/', twitter:'cowgodpit'});
+	// bot.modifyProfile({ website:'http://flightaware.com/', twitter:'flightaware'});
 	
 	global['roomid'] = data.room.roomid;
 	logger('! Room changed to '+data.room.name+' ('+data.room.roomid+')');
@@ -1602,6 +1612,12 @@ bot.on('speak', function (data) {
 					say('That was fun, thanks everyone.');
 				}
 			}
+		}
+	}
+
+	if (data.text.toLowerCase().indexOf('pulled the trigger') != -1) {
+		if (is_bot(data.userid)) {
+			bot.snag();
 		}
 	}
 
