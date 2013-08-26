@@ -41,7 +41,7 @@ config['say_odometer']	= settings.say_odometer;
 config['owner_follow']	= 'on';
 config['oneanddone']	= 'off';
 config['roulette']		= 'off';
-config['rouletteone']	= 'off';
+config['rouletteone']	= 'on';
 
 var setting_description = new Object();
 setting_description['oneanddone'] = 'Epic No-Shame Mode';
@@ -240,9 +240,27 @@ function newsong_roulette(data) {
 	var djs = data.room.metadata.djs;
 	var bootid = global['lastdjid'];
 	var do_the_boot = 0;
+	var listeners = data.room.metadata.listeners;
+
+	var odds = 6;
+
+	if (listeners >= 30) {
+		odds = 2;
+	} else if (listeners >= 26) {
+		odds = 3;
+	} else if (listeners > 20) {
+		odds = 4;
+	} else if (listeners > 16) {
+		odds = 5;
+	}
 
 	if (opt('roulette_allowed') == 'on') {
 		if (opt('rouletteone') == 'on') {
+			if (djid == djs[0]) {
+				if (data.room.metadata.djcount >= 5) {
+					say('First Chair Roulette is enabled! Odds are 1 in '+odds+'.  Get the revolver ready...');
+				}
+			}
 			if (bootid == djs[0]) {
 				logger('= rouletteone: lastdj is first chair!  do_the_boot!');
 				do_the_boot = 1;
@@ -252,8 +270,12 @@ function newsong_roulette(data) {
 			do_the_boot = 1;
 		}
 
+		if (data.room.metadata.djcount < 5) {
+			logger('= fewer than five DJs, no need to spin the barrel');
+			do_the_boot = 0;
+		}
+
 		if (do_the_boot == 1) {
-			var odds = 6;
 			var roll = Math.floor((Math.random()*odds)+1);
 			logger('= '+id_to_name(bootid)+' roll was '+roll+' and odds are 1 in '+odds+' '+bootid);
 			if (bootid && odds == roll) {
