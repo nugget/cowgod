@@ -61,6 +61,8 @@ global['speak_last_user'] = '';
 global['speak_linecount'] = 0;
 global['speak_epoch'] = 0;
 global['owner_in_room'] = 0;
+global['roulette_streak'] = 0;
+global['roulette_lastid'] = '';
 
 var admins = new Array();
 var leaders = new Array();
@@ -241,8 +243,12 @@ function newsong_roulette(data) {
 	var bootid = global['lastdjid'];
 	var do_the_boot = 0;
 	var listeners = data.room.metadata.listeners;
-
 	var odds = 6;
+	var rules = 'unknown';
+
+	if (bootid != global['roulette_lastid']) {
+		global['roulette_streak'] = 0;
+	}
 
 	if (listeners >= 30) {
 		odds = 2;
@@ -263,10 +269,12 @@ function newsong_roulette(data) {
 			}
 			if (bootid == djs[0]) {
 				logger('= rouletteone: lastdj is first chair!  do_the_boot!');
+				rules = 'rouletteone';
 				do_the_boot = 1;
 			}
 		} else if (opt('roulette') == 'on') {
 			logger('= roulette is enabled');
+			rules = 'roulette';
 			do_the_boot = 1;
 		}
 
@@ -279,12 +287,23 @@ function newsong_roulette(data) {
 			var roll = Math.floor((Math.random()*odds)+1);
 			logger('= '+id_to_name(bootid)+' roll was '+roll+' and odds are 1 in '+odds+' '+bootid);
 			if (bootid && odds == roll) {
-				logger('= Boot to da head!');
-				say(id_to_name(bootid)+' :gun:  spun the barrel, pulled the trigger, and lost!');
+				logger('= Boot to da head! winning streak ended '+global['roulette_streak']);
+				var logline = id_to_name(bootid)+' :gun:  spun the barrel, pulled the trigger, and lost!';
+				if (global['roulette_streak'] > 1) {
+					logline = 'After '+global['roulette_streak']+' clicks, '+logline;
+				}
+				say(logline);
 				bot.remDj(bootid);
 			} else {
 				pm('/roulette_safe','4f50ea86a3f7517d6c006f16');
+				global['roulette_streak'] = global['roulette_streak'] + 1;
 			}
+			botdb.query('INSERT INTO roulettelog (rules,user_id,odds,roll) SELECT $1,$2,$3,$4', [
+				rules,
+				bootid,
+				odds,
+				roll
+				], after(function(result) {} ));
 		}
 	}
 }
@@ -1236,7 +1255,7 @@ function do_command (data) {
 			break;
 		case 'roulette_safe':
 			if (data.senderid == '4f50ed44590ca261fa004904') {
-				var imgnum = Math.floor((Math.random()*5)+1);
+				var imgnum = Math.floor((Math.random()*10)+1);
 				say('http://macnugget.org/cowgod/images/roulette_safe'+imgnum+'.gif');
 			} else {
 				pm('talk to the hand',data.senderid);
