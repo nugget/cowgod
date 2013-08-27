@@ -189,6 +189,18 @@ CREATE OR REPLACE FUNCTION nick(varchar) RETURNS varchar AS $$
 	END;
 $$ LANGUAGE plpgsql;
 
+
+CREATE TABLE roulettelog (
+	id serial NOT NULL,
+	added timestamp(0) without time zone NOT NULL DEFAULT (current_timestamp at time zone 'utc'),
+	rules varchar NOT NULL DEFAULT 'rouletteone',
+	user_id varchar NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+	odds integer,
+	roll integer,
+	PRIMARY KEY(id)
+);
+GRANT SELECT,INSERT ON roulettelog TO bots;
+
 DROP VIEW snaglog_expanded, songlog_expanded, joins_expanded, chatlog_expanded;
 
 CREATE VIEW songlog_expanded AS
