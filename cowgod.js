@@ -63,6 +63,7 @@ global['speak_epoch'] = 0;
 global['owner_in_room'] = 0;
 global['roulette_streak'] = 0;
 global['roulette_lastid'] = '';
+global['bullets'] = 1;
 
 var admins = new Array();
 var leaders = new Array();
@@ -237,34 +238,47 @@ function newsong_one_and_done(data) {
 	}
 }
 
+function eval_bullet_count() {
+	// logger('* how many bullets?');
+	bot.roomInfo(false, function(roominfo) {
+		var listeners = roominfo.room.metadata.listeners;
+		// util.log(util.inspect(roominfo));
+		// logger('* there are '+listeners+' in the room');
+		botdb.query('SELECT max(stats_listeners) FROM songlog',after(function(result) {
+			result.rows.forEach(function(stats) {
+				var increment = Math.floor(stats.max * .25);
+				var newbullets = Math.floor(listeners / increment);
+				logger(listeners+' listeners compared to '+stats.max+' max so increment is '+increment+' so I want '+newbullets+' bullets');
+
+				if (newbullets > global['bullets']) {
+					global['bullets'] = newbullets;
+					lag_say('The room is filling up, I\'m putting another bullet in the revolver :gun: ('+global['bullets']+')');
+				} else if (newbullets < global['bullets']) {
+					global['bullets'] = newbullets;
+					lag_say('The crowd is thinning, I\'m taking a bullet out of the revolver :gun: ('+global['bullets']+')');
+				}
+			});
+		}));
+	});
+}
+
 function newsong_roulette(data) {
 	var djid = data.room.metadata.current_song.djid;
 	var djs = data.room.metadata.djs;
 	var bootid = global['lastdjid'];
 	var do_the_boot = 0;
 	var listeners = data.room.metadata.listeners;
-	var odds = 6;
 	var rules = 'unknown';
 
 	if (bootid != global['roulette_lastid']) {
 		global['roulette_streak'] = 0;
 	}
 
-	if (listeners >= 30) {
-		odds = 2;
-	} else if (listeners >= 26) {
-		odds = 3;
-	} else if (listeners > 20) {
-		odds = 4;
-	} else if (listeners > 16) {
-		odds = 5;
-	}
-
 	if (opt('roulette_allowed') == 'on') {
 		if (opt('rouletteone') == 'on') {
 			if (djid == djs[0]) {
 				if (data.room.metadata.djcount >= 5) {
-					say('First Chair Roulette is enabled! Odds are 1 in '+odds+'.  Get the revolver ready...');
+					say('First Chair Roulette is enabled! :gun: There are '+global['bullets']+' bullets in the revolver...');
 				}
 			}
 			if (bootid == djs[0]) {
@@ -284,9 +298,12 @@ function newsong_roulette(data) {
 		}
 
 		if (do_the_boot == 1) {
-			var roll = Math.floor((Math.random()*odds)+1);
-			logger('= '+id_to_name(bootid)+' roll was '+roll+' and odds are 1 in '+odds+' '+bootid);
-			if (bootid && odds == roll) {
+			var roll = Math.floor((Math.random()*6)+1);
+			var bang = 'FALSE';
+			logger('= '+id_to_name(bootid)+' hit chamber '+roll+' with '+global['bullets']+' in the gun');
+			if (bootid && roll <= global['bullets']) {
+				bang = 'TRUE';
+
 				logger('= Boot to da head! winning streak ended '+global['roulette_streak']);
 				var logline = id_to_name(bootid)+' :gun:  spun the barrel, pulled the trigger, and lost!';
 				if (global['roulette_streak'] > 1) {
@@ -298,11 +315,12 @@ function newsong_roulette(data) {
 				pm('/roulette_safe','4f50ea86a3f7517d6c006f16');
 				global['roulette_streak'] = global['roulette_streak'] + 1;
 			}
-			botdb.query('INSERT INTO roulettelog (rules,user_id,odds,roll) SELECT $1,$2,$3,$4', [
+			botdb.query('INSERT INTO roulettelog (rules,user_id,bullets,roll,bang) SELECT $1,$2,$3,$4,$5', [
 				rules,
 				bootid,
-				odds,
-				roll
+				global['bullets'],
+				roll,
+				bang
 				], after(function(result) {} ));
 		}
 	}
@@ -1368,6 +1386,8 @@ bot.on('roomChanged', function (data) {
 
 	look_for_owners(data.users);
 
+	eval_bullet_count();
+
 	// util.log(util.inspect(data));
 
 	if (data.room.metadata.current_song == null) {
@@ -1546,6 +1566,8 @@ bot.on('add_dj', function (data) {
 	logger('* New DJ '+data.user[0].name);
 	logger_tsv([ 'event','newdj','userid',data.user[0].userid ]);
 
+	eval_bullet_count();
+
 	// logger('+ dj_scold is '+opt('dj_scold'));
 	if (opt('dj_scold') == 'on') {
 		botdb.query('SELECT count(*) FROM songlog WHERE dj_id = $1', [
@@ -1572,6 +1594,13 @@ bot.on('add_dj', function (data) {
 	} else if (is_admin(data.user[0].userid)) {
 		say('I love '+data.user[0].name+'! (no homo)');
 	}
+});
+
+bot.on('rem_dj', function (data) {
+	logger('* DJ '+data.user[0].name+' left the room');
+	logger_tsv([ 'event','remdj','userid',data.user[0].userid ]);
+
+	eval_bullet_count();
 });
 
 bot.on('rem_moderator', function (data) {
