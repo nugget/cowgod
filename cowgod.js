@@ -1424,6 +1424,7 @@ bot.on('registered', function (data) {
 	db_registered(data);
 	join_response(data);
 	enforce_blacklist(data);
+	eval_bullet_count();
 });
 
 bot.on('snagged', function (data) {
@@ -1447,6 +1448,7 @@ bot.on('snagged', function (data) {
 bot.on('deregistered', function (data) {
 	logger('* '+data.user[0].name+' left the room');
 	logger_tsv([ 'event','part','userid',data.user[0].userid,'username',data.user[0].name ]);
+	eval_bullet_count();
 	return;
 
 	if (is_admin(data.user[0].userid)) {
@@ -1597,9 +1599,8 @@ bot.on('add_dj', function (data) {
 });
 
 bot.on('rem_dj', function (data) {
-	logger('* DJ '+data.user[0].name+' left the room');
+	logger('* DJ '+data.user[0].name+' dropped down');
 	logger_tsv([ 'event','remdj','userid',data.user[0].userid ]);
-
 	eval_bullet_count();
 });
 
