@@ -1,0 +1,48 @@
+<?
+
+package require macnugget
+package require cowgod
+
+page_init
+opt header 0
+page_header -title "Pit Roulette"
+
+::cowgod::dbconnect
+::cowgod::buttonbar
+
+set limit 100
+
+set sql "SELECT *,(odds = roll) as result FROM roulettelog ORDER BY id DESC LIMIT $limit"
+
+set rules(roulette) "All Plays"
+set rules(rouletteone) "First Chair"
+set result(t) "*bang*"
+set result(f) "&nbsp;"
+
+webout [el_open table -class "table table-striped table-bordered table-centered"]
+webout "<tr><th colspan=\"5\">Recent Roulette Attempts in the Pit</th></tr>"
+set last_date ""
+pg_select $::cowgod::db $sql buf {
+	set date [clock format [clock scan $buf(added)] -format "%A, %d-%b-%Y"]
+	if {$date ne $last_date} {
+		set last_date $date
+		webout "<tr><th colspan=\"6\" align=\"left\">$date</th></tr>"
+		webout "<tr><th>Time</th><th>Rules</th><th>DJ</th><th>Odds</th><th>Result</th></tr>"
+	}
+	set time [clock format [clock scan $buf(added)] -format "%H:%M"]
+	webout "<tr>"
+	webout "<td>$time</td>"
+	webout "<td>$rules($buf(rules))</td>"
+	webout "<td>[::cowgod::dj_link $buf(user_id)]</td>"
+	webout "<td align=\"right\">1 in $buf(odds)</td>"
+	webout "<td align=\"right\">$result($buf(result))</td>"
+	webout "</tr>"
+
+}
+webout "</table>"
+
+::cowgod::dbdisconnect
+page_footer
+page_term
+
+?>
