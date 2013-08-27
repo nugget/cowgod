@@ -63,7 +63,7 @@ global['speak_epoch'] = 0;
 global['owner_in_room'] = 0;
 global['roulette_streak'] = 0;
 global['roulette_lastid'] = '';
-global['bullets'] = 1;
+global['bullets'] = 0;
 
 var admins = new Array();
 var leaders = new Array();
@@ -250,7 +250,9 @@ function eval_bullet_count() {
 				var newbullets = Math.floor(listeners / increment);
 				logger(listeners+' listeners compared to '+stats.max+' max so increment is '+increment+' so I want '+newbullets+' bullets');
 
-				if (newbullets > global['bullets']) {
+				if (global['bullets'] == 0) {
+					global['bullets'] = newbullets;
+				} else if (newbullets > global['bullets']) {
 					global['bullets'] = newbullets;
 					lag_say('The room is filling up, I\'m putting another bullet in the revolver :gun: ('+global['bullets']+')');
 				} else if (newbullets < global['bullets']) {
@@ -266,9 +268,13 @@ function newsong_roulette(data) {
 	var djid = data.room.metadata.current_song.djid;
 	var djs = data.room.metadata.djs;
 	var bootid = global['lastdjid'];
+	var origid = bootid;
+	var bystander = null;
 	var do_the_boot = 0;
 	var listeners = data.room.metadata.listeners;
 	var rules = 'unknown';
+
+	var chance_to_miss = 2;
 
 	if (bootid != global['roulette_lastid']) {
 		global['roulette_streak'] = 0;
@@ -304,10 +310,20 @@ function newsong_roulette(data) {
 			if (bootid && roll <= global['bullets']) {
 				bang = 'TRUE';
 
-				logger('= Boot to da head! winning streak ended '+global['roulette_streak']);
-				var logline = id_to_name(bootid)+' :gun:  spun the barrel, pulled the trigger, and lost!';
-				if (global['roulette_streak'] > 1) {
-					logline = 'After '+global['roulette_streak']+' clicks, '+logline;
+				var did_i_miss = Math.floor((Math.random()*100)+1);
+				logger(' = did_i_miss '+did_i_miss+' chance_to_miss '+chance_to_miss);
+				if (did_i_miss <= chance_to_miss) {
+					var innocent_bystander = Math.floor((Math.random()*3)+2);
+					bootid = djs[innocent_bystander];
+					bystander = bootid;
+					logger('= DJ lost but missed and hit DJ '+innocent_bystander+' by mistake!');
+					var logline = id_to_name(origid)+' :gun: spun the barrel, pulled the trigger...  but missed and hit '+id_to_name(bootid)+' instead!  What a klutz!';
+				} else {
+					logger('= Boot to da head! winning streak ended '+global['roulette_streak']);
+					var logline = id_to_name(bootid)+' :gun:  spun the barrel, pulled the trigger, and lost!';
+					if (global['roulette_streak'] > 1) {
+						logline = 'After '+global['roulette_streak']+' clicks, '+logline;
+					}
 				}
 				say(logline);
 				bot.remDj(bootid);
@@ -315,12 +331,13 @@ function newsong_roulette(data) {
 				pm('/roulette_safe','4f50ea86a3f7517d6c006f16');
 				global['roulette_streak'] = global['roulette_streak'] + 1;
 			}
-			botdb.query('INSERT INTO roulettelog (rules,user_id,bullets,roll,bang) SELECT $1,$2,$3,$4,$5', [
+			botdb.query('INSERT INTO roulettelog (rules,user_id,bullets,roll,bang,bystander_id) SELECT $1,$2,$3,$4,$5,$6', [
 				rules,
-				bootid,
+				origid,
 				global['bullets'],
 				roll,
-				bang
+				bang,
+				bystander
 				], after(function(result) {} ));
 		}
 	}
