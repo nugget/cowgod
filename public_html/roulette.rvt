@@ -12,7 +12,7 @@ page_header -title "Pit Roulette"
 
 set limit 100
 
-set sql "SELECT *,(odds = roll) as result FROM roulettelog ORDER BY id DESC LIMIT $limit"
+set sql "SELECT * FROM roulettelog ORDER BY id DESC LIMIT $limit"
 
 set rules(roulette) "All Plays"
 set rules(rouletteone) "First Chair"
@@ -27,15 +27,15 @@ pg_select $::cowgod::db $sql buf {
 	if {$date ne $last_date} {
 		set last_date $date
 		webout "<tr><th colspan=\"6\" align=\"left\">$date</th></tr>"
-		webout "<tr><th>Time</th><th>Rules</th><th>DJ</th><th>Odds</th><th>Result</th></tr>"
+		webout "<tr><th>Time</th><th>Rules</th><th>DJ</th><th>Bullets</th><th>Result</th></tr>"
 	}
 	set time [clock format [clock scan $buf(added)] -format "%H:%M"]
 	webout "<tr>"
 	webout "<td>$time</td>"
 	webout "<td>$rules($buf(rules))</td>"
 	webout "<td>[::cowgod::dj_link $buf(user_id)]</td>"
-	webout "<td align=\"right\">1 in $buf(odds)</td>"
-	webout "<td align=\"right\">$result($buf(result))</td>"
+	webout "<td align=\"right\">$buf(bullets)</td>"
+	webout "<td align=\"right\">$result($buf(bang))</td>"
 	webout "</tr>"
 
 }
