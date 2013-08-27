@@ -27,7 +27,7 @@ pg_select $::cowgod::db $sql buf {
 	if {$date ne $last_date} {
 		set last_date $date
 		webout "<tr><th colspan=\"6\" align=\"left\">$date</th></tr>"
-		webout "<tr><th>Time</th><th>Rules</th><th>DJ</th><th>Bullets</th><th>Result</th></tr>"
+		webout "<tr><th>Time</th><th>Rules</th><th>DJ</th><th>Bullets</th><th>Chamber</th><th>Result</th></tr>"
 	}
 	set time [clock format [clock scan $buf(added)] -format "%H:%M"]
 	webout "<tr>"
@@ -35,6 +35,7 @@ pg_select $::cowgod::db $sql buf {
 	webout "<td>$rules($buf(rules))</td>"
 	webout "<td>[::cowgod::dj_link $buf(user_id)]</td>"
 	webout "<td align=\"right\">$buf(bullets)</td>"
+	webout "<td align=\"right\">$buf(roll)</td>"
 	webout "<td align=\"right\">$result($buf(bang))</td>"
 	webout "</tr>"
 
