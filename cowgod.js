@@ -1296,7 +1296,7 @@ function do_command (data) {
 			break;
 		case 'roulette_safe':
 			if (data.senderid == '4f50ed44590ca261fa004904') {
-				var imgnum = Math.floor((Math.random()*10)+1);
+				var imgnum = Math.floor((Math.random()*12)+1);
 				say('http://macnugget.org/cowgod/images/roulette_safe'+imgnum+'.gif');
 			} else {
 				pm('talk to the hand',data.senderid);
