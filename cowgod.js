@@ -242,8 +242,10 @@ function eval_bullet_count() {
 	// logger('* how many bullets?');
 	bot.roomInfo(false, function(roominfo) {
 		var listeners = roominfo.room.metadata.listeners;
-		// util.log(util.inspect(roominfo));
-		// logger('* there are '+listeners+' in the room');
+		var djcount = roominfo.room.metadata.djcount;
+
+		//util.log(util.inspect(roominfo));
+
 		botdb.query('SELECT max(stats_listeners) FROM songlog',after(function(result) {
 			result.rows.forEach(function(stats) {
 				var increment = Math.floor(stats.max * .25);
@@ -254,10 +256,14 @@ function eval_bullet_count() {
 					global['bullets'] = newbullets;
 				} else if (newbullets > global['bullets']) {
 					global['bullets'] = newbullets;
-					lag_say('The room is filling up, I\'m putting another bullet in the revolver :gun: ('+global['bullets']+')');
+					if (djcount >= 5) {
+						lag_say('The room is filling up, I\'m putting another bullet in the revolver :gun: ('+global['bullets']+')');
+					}
 				} else if (newbullets < global['bullets']) {
 					global['bullets'] = newbullets;
-					lag_say('The crowd is thinning, I\'m taking a bullet out of the revolver :gun: ('+global['bullets']+')');
+					if (djcount >= 5) {
+						lag_say('The crowd is thinning, I\'m taking a bullet out of the revolver :gun: ('+global['bullets']+')');
+					}
 				}
 			});
 		}));
