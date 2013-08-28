@@ -389,7 +389,7 @@ function join_response(data) {
 		if (data.user[0].userid == '4f072161a3f751171100088a') {
                 lag_heart('The Doctor is in!');
         }
-        	if (data.user[0].userid == '4510965ebaaa5cd68f091f8d2') {
+        	if (data.user[0].userid == '510965ebaaa5cd68f091f8d2') {
                 lag_heart('How\'d you escape your bonds @typical tater? Quick Someone catch her!');
        	}
 }
