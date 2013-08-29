@@ -1126,6 +1126,7 @@ function do_command (data) {
 		case 'autobop':
 		case 'oneanddone':
 		case 'mute':
+		case 'missinnug':
 		case 'follow':
 		case 'autoskip':
 		case 'database':
@@ -1211,10 +1212,6 @@ function do_command (data) {
 		case 'default':
 			logger('! '+id_to_name(data.senderid)+' tried unknown command '+command+'('+args+')');
 			break;
-		case 'missinnug':
-			if ('data.senderid' == '4e00e4e8a3f75104e10b7359')
-				pm('HEY NOW! None of that!',data.senderid);
-					break;
 	}
 }
 
