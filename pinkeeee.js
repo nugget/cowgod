@@ -1212,9 +1212,9 @@ function do_command (data) {
 			logger('! '+id_to_name(data.senderid)+' tried unknown command '+command+'('+args+')');
 			break;
 		case 'missinnug':
-			if ('data.senderid' == '4e00e4e8a3f75104e10b7359') {
+			if ('data.senderid' == '4e00e4e8a3f75104e10b7359')
 				pm('HEY NOW! None of that!',data.senderid);
-				break;}
+					break;
 	}
 }
 
