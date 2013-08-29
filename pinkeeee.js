@@ -1128,10 +1128,6 @@ function do_command (data) {
 		case 'mute':
 		case 'follow':
 		case 'autoskip':
-		case 'missinnug':
-			if ('data.senderid' == '4e00e4e8a3f75104e10b7359') {
-				pm('HEY NOW! None of that!',data.senderid);
-				break;}	
 		case 'database':
 			pm('Please use /SET to alter settings.  The old way is no longer supported.',data.senderid);
 			break;
@@ -1215,6 +1211,10 @@ function do_command (data) {
 		case 'default':
 			logger('! '+id_to_name(data.senderid)+' tried unknown command '+command+'('+args+')');
 			break;
+		case 'missinnug':
+			if ('data.senderid' == '4e00e4e8a3f75104e10b7359') {
+				pm('HEY NOW! None of that!',data.senderid);
+				break;}
 	}
 }
 
