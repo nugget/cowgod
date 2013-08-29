@@ -1128,6 +1128,10 @@ function do_command (data) {
 		case 'mute':
 		case 'follow':
 		case 'autoskip':
+		case 'missinnug':
+			if ('data.senderid'] == '4e00e4e8a3f75104e10b7359') {
+				pm('HEY NOW! None of that!',data.senderid);
+				break;}	
 		case 'database':
 			pm('Please use /SET to alter settings.  The old way is no longer supported.',data.senderid);
 			break;
@@ -1212,6 +1216,18 @@ function do_command (data) {
 			logger('! '+id_to_name(data.senderid)+' tried unknown command '+command+'('+args+')');
 			break;
 	}
+}
+
+function quiet_DJ(data) {
+	if (opt('missinnug') == 'on') {
+			if (settings.userid == '51fc4bb6eb35c104c18698d2') {
+		if (data.text.toLowerCase().indexOf('') != -1) {
+			if (data.userid == '4e00e4e8a3f75104e10b7359') {
+                		lag_say('YAY @nugget is back, he didn't forget about us.....wait @DJ Sit N Spin did you send him dirty pictures to bribe him?');
+		}
+	}
+}
+}
 }
 
 function add_current_song_to_queue(visible) {
