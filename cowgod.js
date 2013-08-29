@@ -576,12 +576,12 @@ function check_flood_rate(data) {
 	}
 }
 function db_registered(data) {
+
 	if (!db_write()) { return; }
 
+	// util.log(util.inspect(data));
+
 	logger('logging join to db');
-
-
-	//util.log(util.inspect(data));
 
 	botdb.query('INSERT INTO users (user_id,nickname) SELECT $1,$2 WHERE 1 NOT IN (SELECT 1 FROM users WHERE user_id = $3)', [
 			data.user[0].userid,
@@ -1092,11 +1092,24 @@ function update_dj_live_stats (dj_id) {
 	bot.getProfile(dj_id, function(data) {
 		logger('- Updating live DJ stats for '+dj_id);
 		// util.log(util.inspect(data));
-		botdb.query('UPDATE users SET live_points = $2, live_avatar = $3 WHERE user_id = $1', [
+		botdb.query('UPDATE users SET live_points = $2, live_avatar = $3, subscription_level = $4 WHERE user_id = $1', [
 			dj_id,
 			data.points,
-			data.avatarid
+			data.avatarid,
+			data.subscription_level
 		]);
+		if (data.twitter != '') {
+			botdb.query('UPDATE users SET twitter = $2 WHERE user_id = $1 AND twitter IS NULL', [
+				dj_id,
+				data.twitter
+			]);
+		}
+		if (data.facebook != '') {
+			botdb.query('UPDATE users SET facebook = $2 WHERE user_id = $1 AND facebook IS NULL', [
+				dj_id,
+				data.facebook
+			]);
+		}
 	});
 }
 
