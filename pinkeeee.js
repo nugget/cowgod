@@ -1129,7 +1129,7 @@ function do_command (data) {
 		case 'follow':
 		case 'autoskip':
 		case 'missinnug':
-			if ('data.senderid'] == '4e00e4e8a3f75104e10b7359') {
+			if ('data.senderid' == '4e00e4e8a3f75104e10b7359') {
 				pm('HEY NOW! None of that!',data.senderid);
 				break;}	
 		case 'database':
