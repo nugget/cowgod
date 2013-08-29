@@ -239,6 +239,10 @@ function newsong_one_and_done(data) {
 }
 
 function eval_bullet_count() {
+	if (opt('roulette_allowed') == 'off') {
+		return;
+	}
+
 	// logger('* how many bullets?');
 	bot.roomInfo(false, function(roominfo) {
 		var listeners = roominfo.room.metadata.listeners;
