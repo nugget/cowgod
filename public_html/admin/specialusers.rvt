@@ -20,7 +20,7 @@ foreach f $flagfields {
 	lappend boolwhere "$f IS TRUE"
 	lappend boolhead  "<th style=\"text-align: center;\">$f</th>"
 }
-webout "<tr><th>DJ</th>[join $boolhead ""]</tr>"
+webout "<tr><th>DJ</th>[join $boolhead ""]<th colspan=\"2\">Twitface</th></tr>"
 pg_select $::cowgod::db "SELECT * FROM users WHERE [join $boolwhere " OR "] ORDER BY added" buf {
 	webout "<tr>"
 	webout "<td>[::cowgod::dj_link $buf(user_id)]</td>"
@@ -32,6 +32,19 @@ pg_select $::cowgod::db "SELECT * FROM users WHERE [join $boolwhere " OR "] ORDE
 		}
 		webout "<td style=\"text-align: center;\">$output</td>"
 	}
+
+	webout "<td>"
+
+	if {$buf(twitter) ne ""} {
+		webout "<a href=\"http://twitter.com/$buf(twitter)\">Twit</a>"
+	}
+
+	if {$buf(facebook) ne ""} {
+		webout "<a href=\"https://facebook.com/$buf(facebook)\">Face</a>"
+	}
+
+	webout "</td>"
+
 	webout "</tr>"
 }
 webout [el_close table]
