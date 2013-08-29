@@ -1223,7 +1223,7 @@ function quiet_DJ(data) {
 			if (settings.userid == '51fc4bb6eb35c104c18698d2') {
 		if (data.text.toLowerCase().indexOf('') != -1) {
 			if (data.userid == '4e00e4e8a3f75104e10b7359') {
-                		lag_say('YAY @nugget is back, he didn't forget about us.....wait @DJ Sit N Spin did you send him dirty pictures to bribe him?');
+                		lag_say('YAY @nugget is back, he didn\'t forget about us.....wait @DJ Sit N Spin did you send him dirty pictures to bribe him?');
 		}
 	}
 }
