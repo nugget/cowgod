@@ -10,7 +10,58 @@ page_header -title "Pit Roulette"
 ::cowgod::dbconnect
 ::cowgod::buttonbar
 
-set limit 100
+set sql "SELECT user_id,count(*) AS plays,count(nullif(bang,false)) AS hits,
+               (count(nullif(bang,true))::numeric(5,3) / count(*))::numeric(10,4) AS survival_rate
+         FROM roulettelog GROUP BY user_id ORDER BY 4 DESC LIMIT 10"
+
+webout [el_open div -class row]
+webout [el_open div -class span6]
+
+webout [el_open table -class "table table-striped table-bordered table-centered"]
+webout "<tr><th colspan=\"4\">Luckiest DJs</th></tr>"
+webout "<tr><th>Rank</th><th>DJ</th><th>Spins</th><th>Bangs</th><th>Survival Rate</th></tr>"
+set rank 1
+pg_select $::cowgod::db $sql buf {
+	set rate [format "%2.2f" [expr $buf(survival_rate) * 100]]
+	webout [el_open tr]
+	webout "<td style=\"text-align: right;\">${rank}</td>"
+	webout "<td>[::cowgod::dj_link $buf(user_id)]</td>"
+	webout "<td style=\"text-align: right;\">[comma $buf(plays)]</td>"
+	webout "<td style=\"text-align: right;\">[comma $buf(hits)]</td>"
+	webout "<td style=\"text-align: right;\">${rate}%</td>"
+	webout [el_close tr]
+	incr rank
+}
+webout [el_close table]
+
+webout [el_close div]
+webout [el_open div -class span6]
+
+set sql "SELECT user_id,count(*) AS plays,count(nullif(bang,false)) AS hits,
+               (count(nullif(bang,true))::numeric(5,3) / count(*))::numeric(10,4) AS survival_rate
+         FROM roulettelog GROUP BY user_id ORDER BY 4 LIMIT 10"
+
+webout [el_open table -class "table table-striped table-bordered table-centered"]
+webout "<tr><th colspan=\"4\">Unuckiest DJs</th></tr>"
+webout "<tr><th>Rank</th><th>DJ</th><th>Spins</th><th>Bangs</th><th>Survival Rate</th></tr>"
+set rank 1
+pg_select $::cowgod::db $sql buf {
+	set rate [format "%2.2f" [expr $buf(survival_rate) * 100]]
+	webout [el_open tr]
+	webout "<td style=\"text-align: right;\">${rank}</td>"
+	webout "<td>[::cowgod::dj_link $buf(user_id)]</td>"
+	webout "<td style=\"text-align: right;\">[comma $buf(plays)]</td>"
+	webout "<td style=\"text-align: right;\">[comma $buf(hits)]</td>"
+	webout "<td style=\"text-align: right;\">${rate}%</td>"
+	webout [el_close tr]
+	incr rank
+}
+webout [el_close table]
+
+webout [el_close div]
+webout [el_close div]
+
+set limit 32
 
 set sql "SELECT * FROM roulettelog ORDER BY id DESC LIMIT $limit"
 
