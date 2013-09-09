@@ -69,6 +69,7 @@ var admins = new Array();
 var leaders = new Array();
 var owners = new Array();
 var bots = new Array();
+var roulette_kills = new Array();
 
 //Bagel added this to track pending queue dump
 var pendingQueueDump;
@@ -238,6 +239,40 @@ function newsong_one_and_done(data) {
 	}
 }
 
+function newsong_roulette_check_reset(data) {
+	if (opt('roulette_allowed') == 'off') {
+		return;
+	}
+
+	var djid = data.room.metadata.current_song.djid;
+	var djs = data.room.metadata.djs;
+	if(djs[0] == djid) {
+		logger('= chair one, resetting roulette history');
+		roulette_kills.length = 0;
+	}
+
+}
+
+function eval_roulette_doubledip(data) {
+	if (opt('roulette_allowed') == 'off') {
+		return;
+	}
+
+	if (opt('rouletteone') == 'on' || opt('roulette') == 'on') {
+		// util.log(util.inspect(data));
+		var djid = data.user[0].userid;
+
+		logger('* kill_list '+roulette_kills);
+		logger('= new DJ checking to see if they were shot ('+id_to_name(djid)+')');
+		if (was_shot(djid)) {
+			logger('= I should boot them for double dipping');
+			bot.remDj(djid);
+			say('No double-dipping, '+id_to_name(djid)+'.  Wait until the next round before you hop back up after losing roulette.');
+		}
+	}
+}
+
+
 function eval_bullet_count() {
 	if (opt('roulette_allowed') == 'off') {
 		return;
@@ -337,6 +372,7 @@ function newsong_roulette(data) {
 				}
 				say(logline);
 				bot.remDj(bootid);
+				roulette_kills.push(bootid);
 			} else {
 				pm('/roulette_safe','4f50ea86a3f7517d6c006f16');
 				global['roulette_streak'] = global['roulette_streak'] + 1;
@@ -996,6 +1032,10 @@ function is_leader(userid) {
 	return 0
 }
 
+function was_shot(userid) {
+	return (roulette_kills.indexOf(userid) != -1);
+}
+
 function explain_rules(djname) {
 	if (opt('oneanddone') == 'on') {
 		say('Welcome to the Pit, @'+djname+'!  The Pit is in Epic No Shame rotation -- No follow required. Play the best of your worst, or the worst of your best. Push the limits of decency! If you have any questions, ask one of these Shameless Bastards! http://macnugget.org/cowgod/djstats');
@@ -1516,6 +1556,7 @@ bot.on('newsong', function (data) {
 	db_newsong(data);
 	newsong_theme_management(data);
 	newsong_one_and_done(data);
+	newsong_roulette_check_reset(data);
 
 	bot.roomInfo(false, function(roominfo) {
 		look_for_owners(roominfo.users);
@@ -1609,6 +1650,7 @@ bot.on('add_dj', function (data) {
 	logger_tsv([ 'event','newdj','userid',data.user[0].userid ]);
 
 	eval_bullet_count();
+	eval_roulette_doubledip(data);
 
 	// logger('+ dj_scold is '+opt('dj_scold'));
 	if (opt('dj_scold') == 'on') {
