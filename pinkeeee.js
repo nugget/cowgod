@@ -1541,7 +1541,9 @@ bot.on('speak', function (data) {
 	db_speak(data);
 
 	check_flood_rate(data);
-
+	
+	quiet_DJ(data);
+	
 	if (data.text.toLowerCase().indexOf('make it stop') != -1) {
 		if (is_leader(data.userid)) {
 			logger('user wants us to lame');
