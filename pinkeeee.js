@@ -1222,7 +1222,7 @@ function quiet_DJ(data) {
 		if (data.text.toLowerCase().indexOf('') != -1) {
 			if (data.userid == '4e00e4e8a3f75104e10b7359') {
                 		lag_say('YAY @nugget is back, he didn\'t forget about us.....wait @DJ Sit N Spin did you send him dirty pictures to bribe him?')
-                		connfig['missinnug']	= 'off';
+                		config['missinnug']	= 'off';
 									}
 								}
 }
