@@ -60,9 +60,14 @@ if {[info exists dj(nickname)]} {
 	set sql "$sqlprefix WHERE stats_djs ilike '%'||[pg_quote $dj_id]||'%'"
 	load_array $::cowgod::db $sql ondeck
 
+	set sql "SELECT user_id,count(*) AS plays,count(nullif(bang,false)) AS hits, (count(nullif(bang,true))::numeric(5,3) / count(*))::numeric(10,4) AS survival_rate FROM roulettelog WHERE user_id = [pg_quote $dj_id] GROUP BY user_id"
+
+	load_array $::cowgod::db $sql roulette
+
 	#parray dj
 	#parray plays
 	#parray ondeck
+	#parray roulette
 
 	webout [el_open div -class row]
 
@@ -117,6 +122,11 @@ if {[info exists dj(nickname)]} {
 	}
 	webout "Snagged [comma $snags(snags)] songs from other DJs."
 	webout "<br />"
+	if {[info exists roulette(plays)] && $roulette(plays) > 0} {
+		set rate [format "%3.2f" [expr $roulette(survival_rate) * 100]]
+		webout "[comma $roulette(plays)] spins of the <a href=\"/cowgod/roulette\">revolver</a> with [comma $roulette(hits)] kills (${rate}% survival rate)"
+		webout "<br />"
+	}
 	webout "Enthralled as many as [comma $plays(max_listeners)] listeners with their lack of shame."
 	webout "</p>"
 
