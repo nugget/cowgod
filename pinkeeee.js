@@ -393,6 +393,30 @@ function join_response(data) {
         	if (data.user[0].userid == '510965ebaaa5cd68f091f8d2') {
                 lag_heart('How\'d you escape your bonds @typical tater? Quick Someone catch her!');
        	}
+       		if (data.user[0].userid == '4e15cf89a3f751698c020b2f') {
+                lag_heart('YAY It\'s Bubs our Master Uploader, quick everyone send their requests at the same time!');
+       	}
+       		if (data.user[0].userid == '4e4535674fe7d02a4303a4c2') {
+                lag_heart('It\'s our favorite pigtails!');
+       	}
+       		if (data.user[0].userid == '5081ba40aaa5cd3535000165') {
+                lag_heart('YAY I <3 @Evil Puppet Theatre');
+       	}
+       		if (data.user[0].userid == '54e1c6fb1a3f75163090bc3ae') {
+                lag_heart('and here comes @Mr. Bagel with the party favors!');
+       	}
+       		if (data.user[0].userid == '4e28ed324fe7d0158f025363') {
+                lag_heart('FUCK YOU @MasterDebator');
+       	}
+       		if (data.user[0].userid == '4e00e584a3f75104e30b9fec') {
+                lag_heart('YAY It\'s @kuoirad even with all the metal we still like you :)');
+       	}
+       		if (data.user[0].userid == '4e00e584a3f75104e30b9fec') {
+                lag_heart('YAY It\'s @kuoirad even with all the metal we still like you :)');
+       	}
+       		if (data.user[0].userid == '515517bfeb35c12f52b127b2') {
+                lag_heart('Come here Boy, Come here; Good Boy @Waggy');
+       	}
 }
 
 
