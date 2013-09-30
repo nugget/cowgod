@@ -61,7 +61,6 @@ global['speak_last_user'] = '';
 global['speak_linecount'] = 0;
 global['speak_epoch'] = 0;
 global['owner_in_room'] = 0;
-global['roulette_streak'] = 0;
 global['roulette_lastid'] = '';
 global['bullets'] = 0;
 
@@ -321,10 +320,6 @@ function newsong_roulette(data) {
 
 	var chance_to_miss = 2;
 
-	if (bootid != global['roulette_lastid']) {
-		global['roulette_streak'] = 0;
-	}
-
 	if (opt('roulette_allowed') == 'on') {
 		if (opt('rouletteone') == 'on') {
 			if (djid == djs[0]) {
@@ -352,6 +347,7 @@ function newsong_roulette(data) {
 			var roll = Math.floor((Math.random()*6)+1);
 			var bang = 'FALSE';
 			logger('= '+id_to_name(bootid)+' hit chamber '+roll+' with '+global['bullets']+' in the gun');
+
 			if (bootid && roll <= global['bullets']) {
 				bang = 'TRUE';
 
@@ -362,20 +358,15 @@ function newsong_roulette(data) {
 					bootid = djs[innocent_bystander];
 					bystander = bootid;
 					logger('= DJ lost but missed and hit DJ '+innocent_bystander+' by mistake!');
-					var logline = id_to_name(origid)+' :gun: spun the barrel, pulled the trigger...  but missed and hit '+id_to_name(bootid)+' instead!  What a klutz!';
+					var logline = '/me spins the barrel and aims the revolver at '+id_to_name(origid)+' but misses and hits '+id_to_name(bootid)+' instead!  What a klutz! :gun:';
 				} else {
-					logger('= Boot to da head! winning streak ended '+global['roulette_streak']);
-					var logline = id_to_name(bootid)+' :gun:  spun the barrel, pulled the trigger, and lost!';
-					if (global['roulette_streak'] > 1) {
-						logline = 'After '+global['roulette_streak']+' clicks, '+logline;
-					}
+					var logline = '/me spins the barrel, aims the revolver at '+id_to_name(origid)+', and pulls the trigger! :gun:';
 				}
 				say(logline);
 				bot.remDj(bootid);
 				roulette_kills.push(bootid);
 			} else {
 				pm('/roulette_safe','4f50ea86a3f7517d6c006f16');
-				global['roulette_streak'] = global['roulette_streak'] + 1;
 			}
 			botdb.query('INSERT INTO roulettelog (rules,user_id,bullets,roll,bang,bystander_id) SELECT $1,$2,$3,$4,$5,$6', [
 				rules,
