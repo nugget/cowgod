@@ -43,11 +43,11 @@ foreach hash $all {
 
 webout [el_open div -class row]
 
-webout [el_open div -class span2]
+webout [el_open div -class col-md-2]
 webout "<img class=\"img-rounded\" src=\"[::cowgod::avatar_href $bagel_avatar]\" />"
 webout [el_close div]
 
-webout [el_open div -class span8]
+webout [el_open div -class col-md-8]
 webout "<h3>The Coveted Bagel \"Diggin' It\" Award</h3>"
 
 webout "<p>"
@@ -59,7 +59,8 @@ webout "</p>"
 webout [el_close div]
 webout [el_close div]
 
-webout [el_open table -class "table table-striped table-bordered table-centered table-condensed"]
+webout [el_open table -class "table table-striped table-bordered table-centered table-condensed table-responsive"]
+webout {<tr><th>Date</th><th>DJ</th><th>Song</th><th>Bagel</th></tr>}
 
 foreach hash $all {
 	unset -nocomplain play buf
@@ -69,7 +70,7 @@ foreach hash $all {
 	if {[info exists play(id)]} {
 		webout "<tr>"
 		set date [clock format [clock scan $buf(ts)] -format "%A, %d-%b-%Y"]
-		webout "<td align=\"right\">[el_open a -href [::cowgod::href play $play(id)]]$date[el_close a]</td>"
+		webout "<td align=\"right\" nowrap=\"nowrap\">[el_open a -href [::cowgod::href play $play(id)]]$date[el_close a]</td>"
 		webout "<td>[el_open a -href [::cowgod::href dj $play(dj_id)]]$play(nickname)[el_close a]</td>"
 		webout "<td align=\"right\">[el_open a -href [::cowgod::href song $play(song_id)]]$play(song) by $play(artist)[el_close a]</td>"
 		webout "<td><small><strong>$buf(nickname)</strong> $buf(text)</small></td>"

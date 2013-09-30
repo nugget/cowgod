@@ -25,13 +25,13 @@ if {[info exists id]} {
 
 		webout [el_open div -class row]
 
-	    webout [el_open div -class span2]
+	    webout [el_open div -class col-md-2]
 	    if {[info exists song(coverart)] && $song(coverart) ne "" && $song(coverart) ne "undefined"} {
 	        webout "<img class=\"img-rounded\" src=\"$song(coverart)\" />"
 	    }
 	    webout [el_close div]
 
-		webout [el_open div -class span8]
+		webout [el_open div -class col-md-8]
 		webout "<h3>$song(song)</h3>"
 		webout "<h4>$song(artist)<br/>$song(album)</h4>"
 		webout [el_close div]
@@ -47,7 +47,7 @@ if {[info exists id]} {
 		}
 
 	    webout [el_open div -class row]
-	    webout [el_open div -class span12]
+	    webout [el_open div -class col-md-12]
 		set sql "SELECT * FROM songlog_expanded WHERE song_id IN ('[join $idlist "','"]') ORDER BY ts DESC LIMIT 10"
 		webout [el_open table -class "table table-striped table-bordered"]
 		webout "<tr><th colspan=\"4\">Play Log</th></tr>"

@@ -17,7 +17,7 @@ pg_select $::cowgod::db $sql buf {
 }
 
 webout [el_open div -class row]
-webout [el_open div -class span12]
+webout [el_open div -class col-md-12]
 webout [el_open table -class "table table-bordered"]
 webout "<tr><th colspan=\"[llength [array names braves]]\" style=\"text-align: center;\">DJs Who Have Braved a <strong>$bullets</strong> Bullet Revolver:</th></tr>"
 webout "<tr>"
@@ -45,7 +45,7 @@ webout [el_close div]
 webout [el_close div]
 
 webout [el_open div -class row]
-webout [el_open div -class span6]
+webout [el_open div -class col-md-6]
 
 set sql "SELECT user_id,count(*) AS plays,count(nullif(bang,false)) AS hits,
                (count(nullif(bang,true))::numeric(5,3) / count(*))::numeric(10,4) AS survival_rate
@@ -69,7 +69,7 @@ pg_select $::cowgod::db $sql buf {
 webout [el_close table]
 
 webout [el_close div]
-webout [el_open div -class span6]
+webout [el_open div -class col-md-6]
 
 set sql "SELECT user_id,count(*) AS plays,count(nullif(bang,false)) AS hits,
                (count(nullif(bang,true))::numeric(5,3) / count(*))::numeric(10,4) AS survival_rate

@@ -73,12 +73,12 @@ namespace eval ::cowgod {
 
 	proc buttonbar {} {
 		webout "<p></p>"
-		webout [el_open div -class row]
-		webout [el_open div -class span12]
-		webout "[el_open div -class btn-group]"
-		webout "[el_open a -href "/cowgod/"][el_open button -class "btn"][el_oc img -style "height: 1em; vertical-align: text-top;" -src [::cowgod::avatar_href 15 headfront]] The Pit[el_close button][el_close a]"
+		webout [el_open div -class row -style "margin-bottom: 8px;"]
+		webout [el_open div -class col-md-12]
+		webout [el_open div -class "btn-group btn-group-sm"]
+		webout "[el_open a -href "/cowgod/"][el_open button -class "btn btn-default"][el_oc img -style "height: 1em; vertical-align: text-top;" -src [::cowgod::avatar_href 15 headfront]] The Pit[el_close button][el_close a]"
 		foreach {href title} {djstats "DJ Stats" recent "Recent Plays" bagel "CBDIA" peak "Peak Users"} {
-			webout "[el_open a -href "/cowgod/$href"][el_open button -class "btn"]$title[el_close button][el_close a]"
+			webout "[el_open a -href "/cowgod/$href"][el_open button -class "btn btn-default"]$title[el_close button][el_close a]"
 		}
 		if {[::macnugget::acl_check cowgod_admin]} {
 			webout "[el_open a -href "/cowgod/admin/"][el_open button -class "btn btn-warning"]Admin Tools[el_close button][el_close a]"
@@ -89,6 +89,7 @@ namespace eval ::cowgod {
 		webout "[el_close form]"
 		webout [el_close div]
 		webout [el_close div]
+
 	}
 
 	proc auditlog {args} {

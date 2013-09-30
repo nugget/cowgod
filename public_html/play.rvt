@@ -30,11 +30,11 @@ pg_select $::cowgod::db $sql buf {
 
 if {![array exists play]} {
 	webout [el_open div -class row]
-	webout [el_open div -class span10]
+	webout [el_open div -class col-md-10]
 	puts "<p>Unable to locate this play in the database.</p>"
 	webout [el_close div]
 
-	webout [el_open div -class span2]
+	webout [el_open div -class col-md-2]
 	webout [el_open div -class btn-group]
 	pg_select $::cowgod::db "SELECT max(id) as id FROM songlog_expanded WHERE id < [pg_quote $id]" buf {
 		if {$buf(id) ne ""} {
@@ -68,12 +68,12 @@ if {[info exists play(id)]} {
 
 	webout [el_open div -class row]
 
-	webout [el_open div -class span2]
+	webout [el_open div -class col-md-2]
 	if {[info exists song(coverart)] && $song(coverart) ne "" && $song(coverart) ne "undefined"} {
 		webout "<img class=\"img-rounded\" src=\"$song(coverart)\" />"
 	}
 	webout [el_close div]
-	webout [el_open div -class span8]
+	webout [el_open div -class col-md-8]
 	webout "<h3>$song(song)</h3>"
 	webout "<h4>$song(artist)<br/>$song(album)</h4>"
 	if {$stats(plays) == 1} {
@@ -82,7 +82,7 @@ if {[info exists play(id)]} {
 		webout "<p>Played [el_open a -href [::cowgod::href song $play(song_id)]][comma [expr $stats(plays) - 1]] other times[el_close a] by [comma $stats(djs)] DJs in the Pit</p>"
 	}
 	webout [el_close div]
-	webout [el_open div -class span2]
+	webout [el_open div -class col-md-2]
 	webout [el_open div -class btn-group]
 	webout "[el_open a -href [::cowgod::href play [expr $play(id) - 1]] -class "btn"]Prev</a>"
 	webout "[el_open a -href [::cowgod::href play [expr $play(id) + 1]] -class "btn"]Next</a>"
@@ -96,7 +96,7 @@ if {[info exists play(id)]} {
 	webout [el_close div]
 
 	webout [el_open div -class row]
-	webout [el_open div -class span12 -style "text-align: right;"]
+	webout [el_open div -class col-md-12 -style "text-align: right;"]
 	set sql "SELECT * FROM snaglog_expanded WHERE play_id = $play(id)"
 	pg_select $::cowgod::db $sql snags {
 		webout "[el_open span -class "label label-info"]Snagged by $snags(nickname)[el_close span]"

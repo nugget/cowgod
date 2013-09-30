@@ -71,11 +71,11 @@ if {[info exists dj(nickname)]} {
 
 	webout [el_open div -class row]
 
-	webout [el_open div -class span2]
+	webout [el_open div -class col-md-2]
 	webout "<img class=\"img-rounded\" src=\"[::cowgod::avatar_href $lastjoin(avatarid)]\" />"
 	webout [el_close div]
 
-	webout [el_open div -class span8]
+	webout [el_open div -class col-md-8]
 	webout "<h3>$dj(nickname)</h3>"
 
 	if {[::macnugget::acl_check cowgod_admin]} {
@@ -153,7 +153,7 @@ if {[info exists dj(nickname)]} {
 	webout "<hr />"
 	webout [el_open div -class row]
 
-	webout [el_open div -class span6]
+	webout [el_open div -class col-md-6]
 	set sql "SELECT lower(artist) as artist,count(*) as plays FROM songlog_expanded WHERE dj_id = [pg_quote $dj_id] GROUP BY lower(artist) ORDER BY plays DESC LIMIT $toplimit"
 	webout "<h3>Top $toplimit Artists</h3>"
 	webout [el_open table -class "table table-striped table-bordered table-condensed"]
@@ -167,7 +167,7 @@ if {[info exists dj(nickname)]} {
 	webout [el_close table]
 	webout [el_close div]
 
-	webout [el_open div -class span6]
+	webout [el_open div -class col-md-6]
 	set sql "SELECT lower(song) as song,lower(artist) as artist,max(song_id) as song_id,count(*) as plays FROM songlog_expanded WHERE dj_id = [pg_quote $dj_id] GROUP BY 1,2 ORDER BY plays DESC LIMIT $toplimit"
 	webout "<h3>Top $toplimit Songs</h3>"
 	webout [el_open table -class "table table-striped table-bordered table-condensed"]

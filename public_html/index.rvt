@@ -12,7 +12,7 @@ page_header -title "Turntable.fm Pit of no Shame"
 ::cowgod::buttonbar
 
 webout [el_open p -class "text-center"]
-webout [el_oc img -src "/cowgod/images/tpons.jpg" -class "img-polaroid"]
+webout [el_oc img -src "/cowgod/images/tpons.jpg" -class "img-thumbnail"]
 webout [el_close p]
 
 webout [el_open p -class "text-center"]
