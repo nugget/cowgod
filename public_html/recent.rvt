@@ -26,7 +26,7 @@ pg_select $::cowgod::db $sql buf {
 	}
 	set time [clock format [clock scan $buf(ts)] -format "%H:%M"]
 	if {[string range $buf(stats_djs) 2 25] eq $buf(dj_id)} {
-		puts "<tr class=\"info\">"
+		puts "<tr class=\"warning\">"
 	} else {
 		puts "<tr>"
 	}
