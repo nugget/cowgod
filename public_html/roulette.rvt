@@ -10,32 +10,44 @@ page_header -title "Pit Roulette"
 ::cowgod::dbconnect
 ::cowgod::buttonbar
 
-set sql "SELECT user_id, bullets, array_to_string(array_agg(bang),' ') as results FROM roulettelog WHERE bullets = (SELECT max(bullets) FROM roulettelog) GROUP BY user_id,bullets"
+set count(1) "Once"
+set count(2) "Twice"
+
+set sql "SELECT user_id, bullets, array_to_string(array_agg(bang),' ') as results FROM roulettelog WHERE bullets = (SELECT max(bullets) FROM roulettelog) AND roll > bullets GROUP BY user_id,bullets ORDER BY min(added)"
 pg_select $::cowgod::db $sql buf {
+	lappend blist $buf(user_id)
+	set verb "Survived"
 	set bullets $buf(bullets)
-	set braves($buf(user_id)) $buf(results)
+	set c [llength $buf(results)]
+	if {[info exists count($c)]} {
+		set results $count($c)
+	} else {
+		set results "$c Times"
+	}
+	set braves($buf(user_id)) $results
+}
+
+if {![info exists verb]} {
+	set sql "SELECT user_id, bullets, array_to_string(array_agg(bang),' ') as results FROM roulettelog WHERE bullets = (SELECT max(bullets) FROM roulettelog) GROUP BY user_id,bullets ORDER BY min(added)
+	pg_select $::cowgod::db $sql buf {
+		lappend blist $buf(user_id)
+		set verb "Braved"
+		set bullets $buf(bullets)
+		set braves($buf(user_id)) [join $buf(results) ","]
+	}
 }
 
 webout [el_open div -class row]
 webout [el_open div -class col-md-12]
 webout [el_open table -class "table table-bordered"]
-webout "<tr><th colspan=\"[llength [array names braves]]\" style=\"text-align: center;\">DJs Who Have Braved a <strong>$bullets</strong> Bullet Revolver:</th></tr>"
+webout "<tr><th colspan=\"[llength [array names braves]]\" style=\"text-align: center;\">DJs Who Have $verb a <strong>$bullets</strong> Bullet Revolver:</th></tr>"
 webout "<tr>"
-foreach dj_id [array names braves] {
+foreach dj_id $blist {
        pg_select $::cowgod::db "SELECT * FROM users WHERE user_id = [pg_quote $dj_id]" user {
-			set results $braves($dj_id)
-			set lout [list]
-			foreach bang $results {
-				if {[string is true -strict $bang]} {
-					lappend lout "Bang"
-				} else {
-					lappend lout "Miss"
-				}
-			}
             webout [el_open td -style "text-align: center;"]
             webout "<img style=\"height: 64px;\"  src=\"[::cowgod::avatar_href $user(live_avatar) headfront]\" /><br />"
             webout "[el_open a -href [::cowgod::href dj $dj_id]]$user(nickname)[el_close a]<br/>"
-			webout [join $lout ", "]
+			webout "<small>$braves($dj_id)</small>"
             webout [el_close td]
         }
 }
@@ -49,10 +61,10 @@ webout [el_open div -class col-md-6]
 
 set sql "SELECT user_id,count(*) AS plays,count(nullif(bang,false)) AS hits,
                (count(nullif(bang,true))::numeric(5,3) / count(*))::numeric(10,4) AS survival_rate
-         FROM roulettelog GROUP BY user_id ORDER BY 4 DESC LIMIT 10"
+         FROM roulettelog GROUP BY user_id HAVING count(*) > 1 ORDER BY 4 DESC LIMIT 10"
 
 webout [el_open table -class "table table-striped table-bordered table-centered"]
-webout "<tr><th colspan=\"4\">Luckiest DJs</th></tr>"
+webout "<tr><th colspan=\"5\">Luckiest DJs</th></tr>"
 webout "<tr><th>Rank</th><th>DJ</th><th>Spins</th><th>Bangs</th><th>Survival Rate</th></tr>"
 set rank 1
 pg_select $::cowgod::db $sql buf {
@@ -73,10 +85,10 @@ webout [el_open div -class col-md-6]
 
 set sql "SELECT user_id,count(*) AS plays,count(nullif(bang,false)) AS hits,
                (count(nullif(bang,true))::numeric(5,3) / count(*))::numeric(10,4) AS survival_rate
-         FROM roulettelog GROUP BY user_id ORDER BY 4 LIMIT 10"
+         FROM roulettelog GROUP BY user_id HAVING count(*) > 1 ORDER BY 4 LIMIT 10"
 
 webout [el_open table -class "table table-striped table-bordered table-centered"]
-webout "<tr><th colspan=\"4\">Unuckiest DJs</th></tr>"
+webout "<tr><th colspan=\"5\">Unuckiest DJs</th></tr>"
 webout "<tr><th>Rank</th><th>DJ</th><th>Spins</th><th>Bangs</th><th>Survival Rate</th></tr>"
 set rank 1
 pg_select $::cowgod::db $sql buf {
@@ -105,7 +117,7 @@ set result(t) "*bang*"
 set result(f) "&nbsp;"
 
 webout [el_open table -class "table table-striped table-bordered table-centered"]
-webout "<tr><th colspan=\"5\">Recent Roulette Attempts in the Pit</th></tr>"
+webout "<tr><th colspan=\"6\">Recent Roulette Attempts in the Pit</th></tr>"
 set last_date ""
 pg_select $::cowgod::db $sql buf {
 	set date [clock format [clock scan $buf(added)] -format "%A, %d-%b-%Y"]
