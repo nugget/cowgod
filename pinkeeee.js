@@ -402,14 +402,11 @@ function join_response(data) {
        		if (data.user[0].userid == '5081ba40aaa5cd3535000165') {
                 lag_heart('YAY I <3 @Evil Puppet Theatre');
        	}
-       		if (data.user[0].userid == '54e1c6fb1a3f75163090bc3ae') {
+       		if (data.user[0].userid == '4e1c6fb1a3f75163090bc3ae') {
                 lag_heart('and here comes @Mr. Bagel with the party favors!');
        	}
        		if (data.user[0].userid == '4e28ed324fe7d0158f025363') {
                 lag_heart('FUCK YOU @MasterDebator');
-       	}
-       		if (data.user[0].userid == '4e00e584a3f75104e30b9fec') {
-                lag_heart('YAY It\'s @kuoirad even with all the metal we still like you :)');
        	}
        		if (data.user[0].userid == '4e00e584a3f75104e30b9fec') {
                 lag_heart('YAY It\'s @kuoirad even with all the metal we still like you :)');
@@ -419,6 +416,9 @@ function join_response(data) {
        	}
        		if (data.user[0].userid == '515ace92eb35c134da95c460') {
                 lag_heart('Welcome to the Party @BigRedAce2!');
+       	}
+       		if (data.user[0].userid == '5039a325eb35c153b200048d') {
+                lag_heart('Hey @Westlykins, I\'ll let you touch my boobs anyday!);
        	}
 }
 
