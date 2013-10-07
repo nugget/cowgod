@@ -23,7 +23,10 @@ if {1} {
 			set streak 0
 			set curdj $buf(user_id)
 		}
-		incr streak
+
+		if {[string is false -strict $buf(bang)]} {
+			incr streak
+		}
 
 		if {![info exists max_streak($curdj)] || $max_streak($curdj) < $streak} {
 			set max_streak($curdj) $streak
@@ -39,8 +42,6 @@ if {1} {
 			lappend topdjlist $sdj
 		}
 	}
-
-	set topstreak [expr $topstreak - 1]
 }
 
 set sql "SELECT user_id, bullets, array_to_string(array_agg(bang),' ') as results FROM roulettelog WHERE bullets = (SELECT max(bullets) FROM roulettelog) AND roll > bullets GROUP BY user_id,bullets ORDER BY min(added)"
