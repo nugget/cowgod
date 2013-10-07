@@ -13,6 +13,36 @@ page_header -title "Pit Roulette"
 set count(1) "Once"
 set count(2) "Twice"
 
+if {1} {
+	set curdj ""
+	set streak 0
+	set topstreak 0
+
+	pg_select $::cowgod::db "SELECT * FROM roulettelog ORDER BY id" buf {
+		if {$buf(user_id) ne $curdj} {
+			set streak 0
+			set curdj $buf(user_id)
+		}
+		incr streak
+
+		if {![info exists max_streak($curdj)] || $max_streak($curdj) < $streak} {
+			set max_streak($curdj) $streak
+		}
+	}
+
+	foreach sdj [array names max_streak] {
+		if {$max_streak($sdj) > $topstreak} {
+			set topstreak $max_streak($sdj)
+			set topdjlist [list]
+		}
+		if {$max_streak($sdj) == $topstreak} {
+			lappend topdjlist $sdj
+		}
+	}
+
+	set topstreak [expr $topstreak - 1]
+}
+
 set sql "SELECT user_id, bullets, array_to_string(array_agg(bang),' ') as results FROM roulettelog WHERE bullets = (SELECT max(bullets) FROM roulettelog) AND roll > bullets GROUP BY user_id,bullets ORDER BY min(added)"
 pg_select $::cowgod::db $sql buf {
 	lappend blist $buf(user_id)
@@ -55,6 +85,25 @@ webout "</tr>"
 webout [el_close table]
 webout [el_close div]
 webout [el_close div]
+
+webout [el_open div -class row]
+webout [el_open div -class col-md-12]
+webout [el_open table -class "table table-bordered"]
+webout "<tr><th colspan=\"[llength $topdjlist]\" style=\"text-align: center;\">DJs Who Have Survived <strong>$topstreak</strong> Shots In a Row</th></tr>"
+webout "<tr>"
+foreach dj_id $topdjlist {
+       pg_select $::cowgod::db "SELECT * FROM users WHERE user_id = [pg_quote $dj_id]" user {
+            webout [el_open td -style "text-align: center;"]
+            webout "<img style=\"height: 64px;\"  src=\"[::cowgod::avatar_href $user(live_avatar) headfront]\" /><br />"
+            webout "[el_open a -href [::cowgod::href dj $dj_id]]$user(nickname)[el_close a]<br/>"
+            webout [el_close td]
+        }
+}
+webout "</tr>"
+webout [el_close table]
+webout [el_close div]
+webout [el_close div]
+
 
 webout [el_open div -class row]
 webout [el_open div -class col-md-6]
