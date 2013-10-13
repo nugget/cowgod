@@ -409,7 +409,7 @@ function join_response(data) {
                 lag_heart('FUCK YOU @MasterDebator');
        	}
        		if (data.user[0].userid == '4e00e584a3f75104e30b9fec') {
-                lag_heart('YAY It\'s @kuoirad even with all the metal we still like you :)');
+                lag_heart('YAY It\'s @kuoirad even with all the metal we still like you :\)');
        	}
        		if (data.user[0].userid == '515517bfeb35c12f52b127b2') {
                 lag_heart('Come here Boy, Come here; Good Boy @Waggy');
@@ -418,7 +418,7 @@ function join_response(data) {
                 lag_heart('Welcome to the Party @BigRedAce2!');
        	}
        		if (data.user[0].userid == '5039a325eb35c153b200048d') {
-                lag_heart('Hey @Westlykins, I\'ll let you touch my boobs anyday!);
+                lag_heart('Hey @Westlykins, I\'ll let you touch my boobs anyday!');
        	}
 }
 
