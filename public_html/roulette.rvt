@@ -110,7 +110,7 @@ webout [el_open div -class row]
 webout [el_open div -class col-md-6]
 
 set sql "SELECT user_id,count(*) AS plays,count(nullif(bang,false)) AS hits,
-               (count(nullif(bang,true))::numeric(5,3) / count(*))::numeric(10,4) AS survival_rate
+               (count(nullif(bang,true))::numeric(20,10) / count(*))::numeric(20,10) AS survival_rate
          FROM roulettelog GROUP BY user_id HAVING count(*) > 1 ORDER BY 4 DESC LIMIT 10"
 
 webout [el_open table -class "table table-striped table-bordered table-centered"]
@@ -134,7 +134,7 @@ webout [el_close div]
 webout [el_open div -class col-md-6]
 
 set sql "SELECT user_id,count(*) AS plays,count(nullif(bang,false)) AS hits,
-               (count(nullif(bang,true))::numeric(5,3) / count(*))::numeric(10,4) AS survival_rate
+               (count(nullif(bang,true))::numeric(20,10) / count(*))::numeric(20,10) AS survival_rate
          FROM roulettelog GROUP BY user_id HAVING count(*) > 1 ORDER BY 4 LIMIT 10"
 
 webout [el_open table -class "table table-striped table-bordered table-centered"]
