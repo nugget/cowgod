@@ -60,7 +60,7 @@ if {[info exists dj(nickname)]} {
 	set sql "$sqlprefix WHERE stats_djs ilike '%'||[pg_quote $dj_id]||'%'"
 	load_array $::cowgod::db $sql ondeck
 
-	set sql "SELECT user_id,count(*) AS plays,count(nullif(bang,false)) AS hits, (count(nullif(bang,true))::numeric(5,3) / count(*))::numeric(10,4) AS survival_rate FROM roulettelog WHERE user_id = [pg_quote $dj_id] GROUP BY user_id"
+	set sql "SELECT user_id,count(*) AS plays,count(nullif(bang,false)) AS hits, (count(nullif(bang,true))::numeric(20,10) / count(*))::numeric(20,10) AS survival_rate FROM roulettelog WHERE user_id = [pg_quote $dj_id] GROUP BY user_id"
 
 	load_array $::cowgod::db $sql roulette
 
