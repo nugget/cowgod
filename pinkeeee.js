@@ -391,7 +391,7 @@ function join_response(data) {
                 lag_heart('The Doctor is in!');
         }
         	if (data.user[0].userid == '510965ebaaa5cd68f091f8d2') {
-                lag_heart('How\'d you escape your bonds @typical tater? Quick Someone catch her!');
+                lag_heart('Hey little French Fry and the Tater you come from');
        	}
        		if (data.user[0].userid == '4e15cf89a3f751698c020b2f') {
                 lag_heart('YAY It\'s Bubs our Master Uploader, quick everyone send their requests at the same time!');
@@ -400,7 +400,7 @@ function join_response(data) {
                 lag_heart('It\'s our favorite pigtails!');
        	}
        		if (data.user[0].userid == '5081ba40aaa5cd3535000165') {
-                lag_heart('YAY I <3 @Evil Puppet Theatre');
+                lag_heart('YAY I <3 @Badass Unicorn ');
        	}
        		if (data.user[0].userid == '4e1c6fb1a3f75163090bc3ae') {
                 lag_heart('and here comes @Mr. Bagel with the party favors!');
@@ -419,6 +419,12 @@ function join_response(data) {
        	}
        		if (data.user[0].userid == '5039a325eb35c153b200048d') {
                 lag_heart('Hey @Westlykins, I\'ll let you touch my boobs anyday!');
+       	}
+       		if (data.user[0].userid == '518137f5aaa5cd3deb8ab94d') {
+                lag_heart('YAY The Brain is here to keep @pinkeeee in line!');
+       	}
+       		if (data.user[0].userid == '5228b3a1aaa5cd75f0dba797') {
+                lag_heart('<3 @crookedwings <3 Just tell me when and I\'ll start the drive down there');
        	}
 }
 
