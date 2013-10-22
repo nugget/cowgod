@@ -424,7 +424,7 @@ function join_response(data) {
                 lag_heart('YAY The Brain is here to keep @pinkeeee in line!');
        	}
        		if (data.user[0].userid == '5228b3a1aaa5cd75f0dba797') {
-                lag_heart('<3 @crookedwings <3 Just tell me when and I\'ll start the drive down there');
+                lag_heart('<3 @crookedwings <3 Just say when and I\'ll head down there :D');
        	}
 }
 
