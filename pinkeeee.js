@@ -400,7 +400,7 @@ function join_response(data) {
                 lag_heart('It\'s our favorite pigtails!');
        	}
        		if (data.user[0].userid == '5081ba40aaa5cd3535000165') {
-                lag_heart('YAY I <3 @Badass Unicorn ');
+                lag_heart('/me Tackles @Ominous Unicorn and nibbles at his neck "Don\'t worry guys I tamed him :D');
        	}
        		if (data.user[0].userid == '4e1c6fb1a3f75163090bc3ae') {
                 lag_heart('and here comes @Mr. Bagel with the party favors!');
@@ -409,7 +409,7 @@ function join_response(data) {
                 lag_heart('FUCK YOU @MasterDebator');
        	}
        		if (data.user[0].userid == '4e00e584a3f75104e30b9fec') {
-                lag_heart('YAY It\'s @kuoirad even with all the metal we still like you :\)');
+                lag_heart('Quick Someone play the Electric Slide! It\'s @kuoirad FAVORITE song :p');
        	}
        		if (data.user[0].userid == '515517bfeb35c12f52b127b2') {
                 lag_heart('Come here Boy, Come here; Good Boy @Waggy');
@@ -421,7 +421,7 @@ function join_response(data) {
                 lag_heart('Hey @Westlykins, I\'ll let you touch my boobs anyday!');
        	}
        		if (data.user[0].userid == '518137f5aaa5cd3deb8ab94d') {
-                lag_heart('YAY The Brain is here to keep @pinkeeee in line!');
+                lag_heart('YAY The Brain is here to keep @Pinkeeee in line!');
        	}
        		if (data.user[0].userid == '5228b3a1aaa5cd75f0dba797') {
                 lag_heart('<3 @crookedwings <3 Just say when and I\'ll head down there :D');
