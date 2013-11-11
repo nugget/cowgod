@@ -412,7 +412,7 @@ function join_response(data) {
                 lag_heart('Quick Someone play the Electric Slide! It\'s @kuoirad FAVORITE song :p');
        	}
        		if (data.user[0].userid == '515517bfeb35c12f52b127b2') {
-                lag_heart('Come sit next to me in the back seat @Wagglesworth and we'll make this car bounce!');
+                lag_heart('Come sit next to me in the back seat @Wagglesworth and we\'ll make this car bounce!');
        	}
        		if (data.user[0].userid == '515ace92eb35c134da95c460') {
                 lag_heart('Welcome to the Party @BigRedAce2!');
