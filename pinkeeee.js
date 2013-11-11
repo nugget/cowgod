@@ -400,7 +400,7 @@ function join_response(data) {
                 lag_heart('It\'s our favorite pigtails!');
        	}
        		if (data.user[0].userid == '5081ba40aaa5cd3535000165') {
-                lag_heart('/me Tackles @Ominous Unicorn and nibbles at his neck "Don\'t worry guys I tamed him :D');
+                lag_heart('/me Tackles @Ominous Unicorn and nibbles at his neck "Don\'t worry guys I tamed him" :D');
        	}
        		if (data.user[0].userid == '4e1c6fb1a3f75163090bc3ae') {
                 lag_heart('and here comes @Mr. Bagel with the party favors!');
@@ -412,7 +412,7 @@ function join_response(data) {
                 lag_heart('Quick Someone play the Electric Slide! It\'s @kuoirad FAVORITE song :p');
        	}
        		if (data.user[0].userid == '515517bfeb35c12f52b127b2') {
-                lag_heart('Come here Boy, Come here; Good Boy @Waggy');
+                lag_heart('Come sit next to me in the back seat @Wagglesworth and we'll make this car bounce!');
        	}
        		if (data.user[0].userid == '515ace92eb35c134da95c460') {
                 lag_heart('Welcome to the Party @BigRedAce2!');
@@ -1630,6 +1630,14 @@ bot.on('speak', function (data) {
 		if (data.text.toLowerCase().indexOf('at work') != -1) {
 			if (data.userid == '51813658aaa5cd3df7b79831') {
                 		lag_say('She really just wants you to throw her down and take her');
+		
+			}
+		}
+	}
+if (settings.userid == '51fc4bb6eb35c104c18698d2') {
+		if (data.text.toLowerCase().indexOf('I Predict') != -1) {
+			if (data.userid == '4e1c6fb1a3f75163090bc3ae') {
+                		lag_say('Watchout @Mr. Bagel has been consulting the horoscopes again!');
 		
 			}
 		}
