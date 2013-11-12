@@ -514,6 +514,9 @@ function join_response(data) {
 	if (data.user[0].userid == '4eeabf24590ca2576200265b') {
 		lag_heart('Yay! I <3 Becca!');
 	}
+	if (data.user[0].userid == '4e1c6fb1a3f75163090bc3ae') {
+		lag_say('http://31.media.tumblr.com/98a0849910642e43808a144b01fae784/tumblr_mvvfp4fZ3Y1s373hwo1_500.gif');
+	}
 }
 
 function enforce_blacklist(data) {
