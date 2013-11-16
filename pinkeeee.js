@@ -1635,6 +1635,14 @@ bot.on('speak', function (data) {
 	 {lag_say('You have been added to the Cutest Que EVER!');
 		
 			}
+	if (data.text.toLowerCase().indexOf('que') != -1)
+	 {lag_say('You have been added to the Cutest Que EVER!');
+		
+			}
+	if (data.text.toLowerCase().indexOf('queue') != -1)
+	 {lag_say('You have been added to the Cutest Que EVER!');
+		
+			}
 	if (settings.userid == '51fc4bb6eb35c104c18698d2') {
 		if (data.text.toLowerCase().indexOf('at work') != -1) {
 			if (data.userid == '51813658aaa5cd3df7b79831') {
@@ -1647,6 +1655,14 @@ if (settings.userid == '51fc4bb6eb35c104c18698d2') {
 		if (data.text.toLowerCase().indexOf('I Predict') != -1) {
 			if (data.userid == '4e1c6fb1a3f75163090bc3ae') {
                 		lag_say('Watchout @Mr. Bagel has been consulting the horoscopes again!');
+		
+			}
+		}
+	}
+	if (settings.userid == '51fc4bb6eb35c104c18698d2') {
+		if (data.text.toLowerCase().indexOf('/predict') != -1) {
+			if (data.userid == '4e1c6fb1a3f75163090bc3ae') {
+                		lag_say('Bagel be careful, remember what happened last time you consorted an oracle?');
 		
 			}
 		}
