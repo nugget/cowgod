@@ -1629,7 +1629,6 @@ bot.on('speak', function (data) {
 		}
 	}
 	 
-	 }
 	 if (data.text.toLowerCase().indexOf('q+') != -1)
 	 {say('You have been added to the Cutest Que EVER!') ;
 			}
