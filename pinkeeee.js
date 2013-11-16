@@ -426,6 +426,9 @@ function join_response(data) {
        		if (data.user[0].userid == '5228b3a1aaa5cd75f0dba797') {
                 lag_heart('<3 @crookedwings <3 Just say when and I\'ll head down there :D');
        	}
+       	if (data.user[0].userid == '52292307aaa5cd75fc67f91f') {
+                lag_heart('<3 @Shameless13 <3 while you may be @crookedwings other half....I\'ll be happy to your third);
+       	}
 }
 
 
@@ -1623,6 +1626,12 @@ bot.on('speak', function (data) {
 		if (data.text.toLowerCase().indexOf('@miniature pink') != -1) {
 			logger('= '+id_to_name(data.senderid)+' said my name');
 			say_command('/usr/games/fortune minimetexts');
+		}
+	}
+	 {if (data.text.toLowerCase().indexOf('q+') != -1) {
+	 {lag_say('You have been added to the Cutest Que EVER!);
+		
+			}
 		}
 	}
 
