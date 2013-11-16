@@ -1629,20 +1629,18 @@ bot.on('speak', function (data) {
 		}
 	}
 	 if (data.text.toLowerCase().indexOf('q+') != -1)
-	 {lag_say('You have been added to the Cutest Que EVER!');
+	 {say('You have been added to the Cutest Que EVER!');
 			}
 	if (data.text.toLowerCase().indexOf('/q') != -1)
-	 {lag_say('You have been added to the Cutest Que EVER!');
-		
+	 {say('You have been added to the Cutest Que EVER!');
 			}
 	if (data.text.toLowerCase().indexOf('que') != -1)
-	 {lag_say('You have been added to the Cutest Que EVER!');
-		
+	 {say('You have been added to the Cutest Que EVER!');
 			}
 	if (data.text.toLowerCase().indexOf('queue') != -1)
-	 {lag_say('You have been added to the Cutest Que EVER!');
-		
+	 {say('You have been added to the Cutest Que EVER!');
 			}
+			
 	if (settings.userid == '51fc4bb6eb35c104c18698d2') {
 		if (data.text.toLowerCase().indexOf('at work') != -1) {
 			if (data.userid == '51813658aaa5cd3df7b79831') {
