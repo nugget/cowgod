@@ -427,7 +427,7 @@ function join_response(data) {
                 lag_heart('<3 @crookedwings <3 Just say when and I\'ll head down there :D');
        	}
        	if (data.user[0].userid == '52292307aaa5cd75fc67f91f') {
-                lag_heart('<3 @Shameless13 <3 while you may be @crookedwings other half....I\'ll be happy to your third);
+                lag_heart('<3 @Shameless13 <3 while you may be @crookedwings other half....I\'ll be happy to your third');
        	}
 }
 
@@ -1629,7 +1629,7 @@ bot.on('speak', function (data) {
 		}
 	}
 	 {if (data.text.toLowerCase().indexOf('q+') != -1) {
-	 {lag_say('You have been added to the Cutest Que EVER!);
+	 {lag_say('You have been added to the Cutest Que EVER!');
 		
 			}
 		}
