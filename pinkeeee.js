@@ -1633,21 +1633,20 @@ bot.on('speak', function (data) {
 	 if (data.text.toLowerCase().indexOf('q+') != -1)
 	 {say('You have been added to the Cutest Que EVER!') ;
 			}
-	else if (data.text.toLowerCase().indexOf('/q') != -1)
+	if (data.text.toLowerCase().indexOf('/q') != -1)
 	 {say('You have been added to the Cutest Que EVER!');
 			}
-	else if (data.text.toLowerCase().indexOf('que') != -1)
+	if (data.text.toLowerCase().indexOf('que') != -1){
 	if (data.userid == settings.userid || data.userid == '51fc4bb6eb35c104c18698d2') {
 		// logger('- ignoring self-snag');
 		// this is me!  ignore it
-		return;
+		return;}
 	}
 	 {say('You have been added to the Cutest Que EVER!') ;
 			}
-	else if (data.text.toLowerCase().indexOf('queue') != -1)
+	if (data.text.toLowerCase().indexOf('queue') != -1)
 	 {say('we will be with you as soon as possible, please take a number....now serving #69');
 			}
-	 }
 	if (settings.userid == '51fc4bb6eb35c104c18698d2') {
 		if (data.text.toLowerCase().indexOf('at work') != -1) {
 			if (data.userid == '51813658aaa5cd3df7b79831') {
