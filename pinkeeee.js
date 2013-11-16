@@ -1629,17 +1629,17 @@ bot.on('speak', function (data) {
 		}
 	}
 	 if (data.text.toLowerCase().indexOf('q+') != -1)
-	 {say('You have been added to the Cutest Que EVER!');
-			} { return; }
+	 {say('You have been added to the Cutest Que EVER!')return;
+			}
 	if (data.text.toLowerCase().indexOf('/q') != -1)
-	 {say('You have been added to the Cutest Que EVER!');
-			} { return; }
+	 {say('You have been added to the Cutest Que EVER!')return;
+			}
 	if (data.text.toLowerCase().indexOf('que') != -1)
-	 {say('You have been added to the Cutest Que EVER!');
-			} { return; }
+	 {say('You have been added to the Cutest Que EVER!')return;
+			}
 	if (data.text.toLowerCase().indexOf('queue') != -1)
-	 {say('we will be with you as soon as possible, please take a number....now serving #69');
-			} { return; }
+	 {say('we will be with you as soon as possible, please take a number....now serving #69')return;
+			}
 			
 	if (settings.userid == '51fc4bb6eb35c104c18698d2') {
 		if (data.text.toLowerCase().indexOf('at work') != -1) {
