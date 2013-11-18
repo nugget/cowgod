@@ -1640,8 +1640,7 @@ bot.on('speak', function (data) {
 		// logger('- ignoring self-snag');
 		// this is me!  ignore it
 		return;}
-	}
-	 {say('You have been added to the Cutest Que EVER!') ;
+	 say('You have been added to the Cutest Que EVER!') ;
 			}
 	if (data.text.toLowerCase().indexOf('queue') != -1)
 	 {say('we will be with you as soon as possible, please take a number....now serving #69');
