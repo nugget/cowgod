@@ -1628,7 +1628,7 @@ bot.on('speak', function (data) {
 			say_command('/usr/games/fortune minimetexts');
 		}
 	}
-	 if (data.userid == settings.userid || data.userid == '51fc4bb6eb35c104c18698d2'){ {
+	 if (data.userid == settings.userid || data.userid == '51fc4bb6eb35c104c18698d2') {
 		// logger('- ignoring self-snag');
 		// this is me!  ignore it
 		return;}
@@ -1644,7 +1644,6 @@ bot.on('speak', function (data) {
 	if (data.text.toLowerCase().indexOf('que') != -1){
 	 say('You have been added to the Cutest Que EVER!');
 			}
-	 }
 			
 			
 	if (settings.userid == '51fc4bb6eb35c104c18698d2') {
