@@ -1639,8 +1639,8 @@ bot.on('speak', function (data) {
 	 {say('You have been added to the Cutest Que EVER!');
 			}
 	if (data.text.toLowerCase().indexOf('queue') != -1)
-	 {say('we will be with you as soon as possible, please take a number....now serving #69'){return};
-			}
+	 {say('we will be with you as soon as possible, please take a number....now serving #69');
+			{return}}
 	if (data.text.toLowerCase().indexOf('que') != -1){
 	 say('You have been added to the Cutest Que EVER!');
 			}
