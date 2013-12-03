@@ -19,6 +19,8 @@ logger('! My Name Is '+myname+' headed for '+settings.plug_room);
 var PlugAPI  = require('plugapi');
 var UPDATECODE = 'fe940c';
 
+var log_tsv  = fs.createWriteStream(settings.log_tsv,  {'flags': 'a'});
+
 // var bot = new PlugAPI(settings.plug_auth);
 // bot.connect(settings.plug_room);
 //
@@ -39,16 +41,19 @@ PlugAPI.getAuth({
 
     bot.on('roomJoin', function(data) {
 		logger('roomJoin');
+		logger_tsv([ 'event','roomJoin','nickname',data.user.profile.username,'plug_user_id',data.user.profile.id,'djPoints',data.user.profile.djPoints,'fans',data.user.profile.fans,'listenerPoints',data.user.profile.listenerPoints,'avatarID',data.user.profile.avatarid ]);
 		util.log(util.inspect(data));
     });
 
 	bot.on('chat', function(data) {
 		logger('chat');
+		logger_tsv([ 'event','chat','nickname',data.from,'room',data.room,'plug_user_id',data.fromID,'message',data.message,'type',data.type ]);
 		util.log(util.inspect(data));
 	});
 
 	bot.on('emote', function(data) {
-		logger('chat');
+		logger('emote');
+		logger_tsv([ 'event','chat','nickname',data.from,'room',data.room,'plug_user_id',data.fromID,'message',data.message,'type',data.type ]);
 		util.log(util.inspect(data));
 	});
 
@@ -75,9 +80,21 @@ PlugAPI.getAuth({
 	bot.on('djAdvance', function(data) {
 		logger('djAdvance');
 		util.log(util.inspect(data));
-		bot.chat('Woot!');
-		bot.woot();
+		logger_tsv( [ 'event','djAdvance','plug_user_id',data.currentDJ,'playlistID',data.playlistID,'song',data.media.author,'title',data.media.title,'duration',data.media.duration,'media_id',data.media.id,'media_cid',data.media.cid,'media_format',data.media.format ]);
+		lag_vote();
 	});
+
+function do_vote (vote) {
+	bot.chat('Woot!');
+	bot.woot();
+}
+
+function lag_vote (vote) {
+	waitms = parseInt(Math.random() * 20000)+500;
+	logger('- will vote '+vote+' in '+waitms+' ms');
+	setTimeout(function(){ do_vote(vote); }, waitms);
+}
+
 
 });
 
@@ -100,4 +117,16 @@ function logger(buf) {
 	}
 	console.log('['+hh+':'+mm+'] '+buf);
 }
+
+function logger_tsv(larray) {
+if (typeof log_tsv === 'undefined') {
+} else {
+	var d = Math.round(new Date().getTime() / 1000.0);
+
+	log_tsv.write('clock\t'+d);
+	log_tsv.write('\t');
+	log_tsv.write(larray.join('\t'));
+	log_tsv.write('\n');
+}
+																	}
 
