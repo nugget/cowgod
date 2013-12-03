@@ -47,7 +47,12 @@ PlugAPI.getAuth({
 		util.log(util.inspect(data));
 	});
 
-	bot.on('error', function(data) {
+	bot.on('emote', function(data) {
+		logger('chat');
+		util.log(util.inspect(data));
+	});
+
+	bot.on('close', function(data) {
 		logger('close');
 		util.log(util.inspect(data));
 	});
@@ -56,6 +61,24 @@ PlugAPI.getAuth({
 		logger('error');
 		util.log(util.inspect(data));
 	});
+
+	bot.on('userJoin', function(data) {
+		logger('userJoin');
+		util.log(util.inspect(data));
+	});
+
+	bot.on('userLeave', function(data) {
+		logger('userLeave');
+		util.log(util.inspect(data));
+	});
+
+	bot.on('djAdvance', function(data) {
+		logger('djAdvance');
+		util.log(util.inspect(data));
+		bot.chat('Woot!');
+		bot.woot();
+	});
+
 });
 
 logger('! Hi Hi');
