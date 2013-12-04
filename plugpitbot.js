@@ -46,15 +46,11 @@ PlugAPI.getAuth({
     });
 
 	bot.on('chat', function(data) {
-		logger('chat');
-		logger_tsv([ 'event','chat','nickname',data.from,'room',data.room,'plug_user_id',data.fromID,'message',data.message,'type',data.type ]);
-		util.log(util.inspect(data));
+		log_chat(data);
 	});
 
 	bot.on('emote', function(data) {
-		logger('emote');
-		logger_tsv([ 'event','chat','nickname',data.from,'room',data.room,'plug_user_id',data.fromID,'message',data.message,'type',data.type ]);
-		util.log(util.inspect(data));
+		log_chat(data);
 	});
 
 	bot.on('close', function(data) {
@@ -77,11 +73,34 @@ PlugAPI.getAuth({
 		util.log(util.inspect(data));
 	});
 
+	bot.on('djUpdate', function(data) {
+		logger('djUpdate');
+		util.log(util.inspect(data));
+	});
+
+	bot.on('curateUpdate', function(data) {
+		logger('curateUpdate');
+		util.log(util.inspect(data));
+	});
+
+	bot.on('voteUpdate', function(data) {
+		logger('voteUpdate');
+		util.log(util.inspect(data));
+		logger_tsv
+	});
+
+	bot.on('userUpdate', function(data) {
+		logger('userUpdate');
+		util.log(util.inspect(data));
+	});
+
 	bot.on('djAdvance', function(data) {
 		logger('djAdvance');
 		util.log(util.inspect(data));
-		logger_tsv( [ 'event','djAdvance','plug_user_id',data.currentDJ,'playlistID',data.playlistID,'song',data.media.author,'title',data.media.title,'duration',data.media.duration,'media_id',data.media.id,'media_cid',data.media.cid,'media_format',data.media.format ]);
-		lag_vote();
+		if (data.media.author !== 'undefined') {
+			logger_tsv( [ 'event','djAdvance','plug_user_id',data.currentDJ,'playlistID',data.playlistID,'song',data.media.author,'title',data.media.title,'duration',data.media.duration,'media_id',data.media.id,'media_cid',data.media.cid,'media_format',data.media.format ]);
+			lag_vote();
+		}
 	});
 
 function do_vote (vote) {
@@ -110,23 +129,29 @@ function logger(buf) {
 	if(hh < 10) {
 		hh = '0'+hh;
 	}
-	if (typeof log_chat === 'undefined') {
-	} else {
-		log_chat.write('['+d+'] ');
-		log_chat.write(buf+'\n');
-	}
 	console.log('['+hh+':'+mm+'] '+buf);
 }
 
 function logger_tsv(larray) {
-if (typeof log_tsv === 'undefined') {
-} else {
-	var d = Math.round(new Date().getTime() / 1000.0);
+	if (typeof log_tsv === 'undefined') {
+	} else {
+		var d = Math.round(new Date().getTime() / 1000.0);
 
-	log_tsv.write('clock\t'+d);
-	log_tsv.write('\t');
-	log_tsv.write(larray.join('\t'));
-	log_tsv.write('\n');
+		log_tsv.write('clock\t'+d);
+		log_tsv.write('\t');
+		log_tsv.write(larray.join('\t'));
+		log_tsv.write('\n');
+	}
 }
-																	}
 
+function log_chat(data) {
+	if (data.type == 'message') {
+		logger('<'+data.from+'> '+data.message);
+	} else if (data.type == 'emote') {
+		logger('* '+data.from+' '+data.message);
+	} else {
+		logger('chat (unknown type)');
+		util.log(util.inspect(data));
+	}
+	logger_tsv([ 'event','chat','nickname',data.from,'room',data.room,'plug_user_id',data.fromID,'message',data.message,'type',data.type ]);
+}
