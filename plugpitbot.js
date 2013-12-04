@@ -85,8 +85,7 @@ PlugAPI.getAuth({
 	});
 
 	bot.on('curateUpdate', function(data) {
-		logger('curateUpdate');
-		util.log(util.inspect(data));
+		log_curate(data);
 	});
 
 	bot.on('voteUpdate', function(data) {
@@ -169,6 +168,12 @@ function log_vote(data) {
 	}
 	logger_tsv([ 'event','vote','vote',data.vote,'plug_user_id',data.id ]);
 }
+
+function log_curate(data) {
+	logger(id_to_name(data.id)+' snagged this song');
+	logger_tsv([ 'event','snag','plug_user_id',data.id ]);
+}
+
 
 function remember_user(id,name) {
 	if (typeof usernames[id] === 'undefined') {
