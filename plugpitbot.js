@@ -45,6 +45,7 @@ PlugAPI.getAuth({
 		logger('roomJoin');
 		logger_tsv([ 'event','roomJoin','nickname',data.user.profile.username,'plug_user_id',data.user.profile.id,'djPoints',data.user.profile.djPoints,'fans',data.user.profile.fans,'listenerPoints',data.user.profile.listenerPoints,'avatarID',data.user.profile.avatarid ]);
 		util.log(util.inspect(data));
+		remember_user(data.user.profile.id,data.user.profile.username);
     });
 
 	bot.on('chat', function(data) {
@@ -70,6 +71,7 @@ PlugAPI.getAuth({
 	bot.on('userJoin', function(data) {
 		logger('userJoin');
 		util.log(util.inspect(data));
+		remember_user(data.id,data.username);
 	});
 
 	bot.on('userLeave', function(data) {
