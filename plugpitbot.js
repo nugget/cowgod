@@ -16,6 +16,8 @@ if (typeof argv.nick === 'undefined') {
 }       
 logger('! My Name Is '+myname+' headed for '+settings.plug_room);
 
+var usernames = new Object();
+
 var PlugAPI  = require('plugapi');
 var UPDATECODE = 'fe940c';
 
@@ -47,10 +49,12 @@ PlugAPI.getAuth({
 
 	bot.on('chat', function(data) {
 		log_chat(data);
+		remember_user(data.fromID,data.from);
 	});
 
 	bot.on('emote', function(data) {
 		log_chat(data);
+		remember_user(data.fromID,data.from);
 	});
 
 	bot.on('close', function(data) {
@@ -84,9 +88,7 @@ PlugAPI.getAuth({
 	});
 
 	bot.on('voteUpdate', function(data) {
-		logger('voteUpdate');
-		util.log(util.inspect(data));
-		logger_tsv
+		log_vote(data);
 	});
 
 	bot.on('userUpdate', function(data) {
@@ -154,4 +156,39 @@ function log_chat(data) {
 		util.log(util.inspect(data));
 	}
 	logger_tsv([ 'event','chat','nickname',data.from,'room',data.room,'plug_user_id',data.fromID,'message',data.message,'type',data.type ]);
+}
+
+function log_vote(data) {
+	if (data.vote == 1) {
+		logger(id_to_name(data.id)+' wooted');
+	} else {
+		logger('vote (unknown type)');
+		util.log(util.inspect(data));
+	}
+	logger_tsv([ 'event','vote','vote',data.vote,'plug_user_id',data.id ]);
+}
+
+function remember_user(id,name) {
+	if (typeof usernames[id] === 'undefined') {
+		logger('- remembering that '+name+' is user_id '+id);
+		usernames[id] = name;
+	}
+}
+
+function id_to_name (user_id) {
+    for (var k in usernames) {
+        if (k == user_id) {
+            return usernames[k];
+        }
+    }
+	return 'unknown user';
+}
+
+function name_to_id (username) {
+	for (var k in usernames) {
+		if (usernames[k] == username) {
+			return k;
+		}
+	}
+	return;
 }
