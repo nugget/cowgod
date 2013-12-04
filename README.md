@@ -3,6 +3,8 @@ cowgod Turntable.fm bot
 
 Nugget's Turntable.fm alter-ego.
 
+This branch is deprecated now, since Turntable.fm has shut down.
+
 Getting Started
 ---------------
 
