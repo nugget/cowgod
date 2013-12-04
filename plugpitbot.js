@@ -74,8 +74,7 @@ PlugAPI.getAuth({
 	});
 
 	bot.on('userLeave', function(data) {
-		logger('userLeave');
-		util.log(util.inspect(data));
+		log_part(data);
 	});
 
 	bot.on('djUpdate', function(data) {
@@ -84,6 +83,7 @@ PlugAPI.getAuth({
 	});
 
 	bot.on('curateUpdate', function(data) {
+		// this is like a TT snag
 		log_curate(data);
 	});
 
@@ -104,7 +104,8 @@ PlugAPI.getAuth({
 	});
 
 function do_vote (vote) {
-	bot.chat('Woot!');
+	// bot.chat('Woot!');
+	logger(' I am wooting');
 	bot.woot();
 }
 
@@ -116,8 +117,6 @@ function lag_vote (vote) {
 
 
 });
-
-logger('! Hi Hi');
 
 function logger(buf) {
 	var d=new Date();
@@ -169,6 +168,11 @@ function log_vote(data) {
 function log_join(data) {
 	logger(data.username+' joined the room');
 	logger_tsv([ 'event','join','nickname',data.username,'plug_user_id',data.id,'status',data.status,'fans',data.fans,'listenerPoints',data.listenerPoints,'avatarID',data.avatarID,'djPoints',data.djPoints,'permission',data.permission ]);
+}
+
+function log_part(data) {
+	logger(id_to_name(data.id)+' left the room');
+	logger_tsv([ 'event','part','plug_user_id',data.id ]);
 }
 
 function log_curate(data) {
