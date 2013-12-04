@@ -18,8 +18,6 @@ if (typeof argv.nick === 'undefined') {
 }       
 cowgod.logger('! My Name Is '+myname+' headed for '+settings.plug_room);
 
-var usernames = new Object();
-
 var PlugAPI  = require('plugapi');
 var UPDATECODE = 'fe940c';
 
@@ -52,19 +50,19 @@ bot.on('roomJoin', function(data) {
 	cowgod.logger('roomJoin');
 	logger_tsv([ 'event','roomJoin','nickname',data.user.profile.username,'plug_user_id',data.user.profile.id,'djPoints',data.user.profile.djPoints,'fans',data.user.profile.fans,'listenerPoints',data.user.profile.listenerPoints,'avatarID',data.user.profile.avatarid ]);
 	util.log(util.inspect(data));
-	remember_user(data.user.profile.id,data.user.profile.username);
+	cowgod.remember_user(data.user.profile.id,data.user.profile.username);
 	process_waitlist();
 
 });
 
 bot.on('chat', function(data) {
 	log_chat(data);
-	remember_user(data.fromID,data.from);
+	cowgod.remember_user(data.fromID,data.from);
 });
 
 bot.on('emote', function(data) {
 	log_chat(data);
-	remember_user(data.fromID,data.from);
+	cowgod.remember_user(data.fromID,data.from);
 });
 
 bot.on('close', function(data) {
@@ -79,7 +77,7 @@ bot.on('error', function(data) {
 
 bot.on('userJoin', function(data) {
 	log_join(data);
-	remember_user(data.id,data.username);
+	cowgod.remember_user(data.id,data.username);
 });
 
 bot.on('userLeave', function(data) {
@@ -151,7 +149,7 @@ function log_chat(data) {
 
 function log_vote(data) {
 	if (data.vote == 1) {
-		cowgod.logger(id_to_name(data.id)+' wooted');
+		cowgod.logger(cowgod.id_to_name(data.id)+' wooted');
 	} else {
 		cowgod.logger('vote (unknown type)');
 		util.log(util.inspect(data));
@@ -165,17 +163,17 @@ function log_join(data) {
 }
 
 function log_part(data) {
-	cowgod.logger(id_to_name(data.id)+' left the room');
+	cowgod.logger(cowgod.id_to_name(data.id)+' left the room');
 	logger_tsv([ 'event','part','plug_user_id',data.id ]);
 }
 
 function log_curate(data) {
-	cowgod.logger(id_to_name(data.id)+' snagged this song');
+	cowgod.logger(cowgod.id_to_name(data.id)+' snagged this song');
 	logger_tsv([ 'event','snag','plug_user_id',data.id ]);
 }
 
 function log_play(data) {
-	cowgod.logger(id_to_name(data.currentDJ)+' is playing '+data.media.title+' by '+data.media.author);
+	cowgod.logger(cowgod.id_to_name(data.currentDJ)+' is playing '+data.media.title+' by '+data.media.author);
 	if (data.media.author !== 'undefined') {
 		logger_tsv( [ 'event','djAdvance','plug_user_id',data.currentDJ,'playlistID',data.playlistID,'song',data.media.author,'title',data.media.title,'duration',data.media.duration,'media_id',data.media.id,'media_cid',data.media.cid,'media_format',data.media.format ]);
 	}
@@ -191,32 +189,6 @@ function log_djupdate(data) {
 		cowgod.logger('logging a u.user '+u);
 		util.log(util.inspect(data.djs[u]));
 	}
-}
-
-
-function remember_user(id,name) {
-	if (typeof usernames[id] === 'undefined') {
-		cowgod.logger('- remembering that '+name+' is user_id '+id);
-		usernames[id] = name;
-	}
-}
-
-function id_to_name (user_id) {
-    for (var k in usernames) {
-        if (k == user_id) {
-            return usernames[k];
-        }
-    }
-	return 'unknown user';
-}
-
-function name_to_id (username) {
-	for (var k in usernames) {
-		if (usernames[k] == username) {
-			return k;
-		}
-	}
-	return;
 }
 
 function process_waitlist() {
