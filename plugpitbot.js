@@ -69,8 +69,7 @@ PlugAPI.getAuth({
 	});
 
 	bot.on('userJoin', function(data) {
-		logger('userJoin');
-		util.log(util.inspect(data));
+		log_join(data);
 		remember_user(data.id,data.username);
 	});
 
@@ -98,10 +97,8 @@ PlugAPI.getAuth({
 	});
 
 	bot.on('djAdvance', function(data) {
-		logger('djAdvance');
-		util.log(util.inspect(data));
+		log_play(data);
 		if (data.media.author !== 'undefined') {
-			logger_tsv( [ 'event','djAdvance','plug_user_id',data.currentDJ,'playlistID',data.playlistID,'song',data.media.author,'title',data.media.title,'duration',data.media.duration,'media_id',data.media.id,'media_cid',data.media.cid,'media_format',data.media.format ]);
 			lag_vote();
 		}
 	});
@@ -169,11 +166,22 @@ function log_vote(data) {
 	logger_tsv([ 'event','vote','vote',data.vote,'plug_user_id',data.id ]);
 }
 
+function log_join(data) {
+	logger(data.username+' joined the room');
+	logger_tsv([ 'event','join','nickname',data.username,'plug_user_id',data.id,'status',data.status,'fans',data.fans,'listenerPoints',data.listenerPoints,'avatarID',data.avatarID,'djPoints',data.djPoints,'permission',data.permission ]);
+}
+
 function log_curate(data) {
 	logger(id_to_name(data.id)+' snagged this song');
 	logger_tsv([ 'event','snag','plug_user_id',data.id ]);
 }
 
+function log_play(data) {
+	logger(id_to_name(data.currentDJ)+' is playing '+data.media.title+' by '+data.media.author);
+	if (data.media.author !== 'undefined') {
+		logger_tsv( [ 'event','djAdvance','plug_user_id',data.currentDJ,'playlistID',data.playlistID,'song',data.media.author,'title',data.media.title,'duration',data.media.duration,'media_id',data.media.id,'media_cid',data.media.cid,'media_format',data.media.format ]);
+	}
+}
 
 function remember_user(id,name) {
 	if (typeof usernames[id] === 'undefined') {
