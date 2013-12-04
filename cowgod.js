@@ -1,6 +1,7 @@
 var cowgod = new Object();
 
 var usernames = new Object();
+var bot;
 
 cowgod.logger = function (buf) {
 	var d=new Date();
@@ -28,7 +29,11 @@ cowgod.id_to_name = function (user_id) {
             return usernames[k];
         }
     }
-	return 'unknown user';
+	bot.getUser(user_id, function(data) {
+		cowgod.logger('Looked up user!');
+		util.log(util.inspect(data));
+	});
+	return 'uid '+user_id;
 }
 
 cowgod.name_to_id = function (username) {
@@ -37,6 +42,12 @@ cowgod.name_to_id = function (username) {
 			return k;
 		}
 	}
+	return;
+}
+
+cowgod.set_active_bot = function (botobj) {
+	bot = botobj;
+	cowgod.logger('Setting active bot');
 	return;
 }
 

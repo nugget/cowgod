@@ -41,10 +41,15 @@ var nugget = {
 //
 
 var bot = new PlugAPI(settings.plug_auth, UPDATECODE);
+util.log(util.inspect(bot));
+cowgod.set_active_bot(bot);
+
 cowgod.logger('doing that logging thing, whatever the fuck that is');
 bot.setLogObject(nugget);
 cowgod.logger('connecting to '+settings.plug_room);
 bot.connect(settings.plug_room);
+
+cowgod.id_to_name('52499dacc3b97a430c54501d');
 
 bot.on('roomJoin', function(data) {
 	cowgod.logger('roomJoin');
