@@ -1,25 +1,14 @@
 var settings = {};
 
-settings.token  = 'auth+live+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx';
-settings.userid = 'xxxxxxxxxxxxxxxxxxxxxxxx';
-settings.roomid = 'xxxxxxxxxxxxxxxxxxxxxxxx';
-
-settings.laptop = 'mac';
-
-settings.autobop		= 'off';
-settings.mute			= 'off';
-settings.follow			= 'on';
-settings.log_chat		= 'log/chat.log';
-settings.log_tsv		= 'log/log.tsv';
-settings.say_snags		= 'off';
-settings.say_odometer	= 'off';
+settings.plug_auth = 'XXXXXXXXXXXXXXXXXXXXXXXXXXX=?_expires=XXXXXXXXXXXXXXXXXX==&user_id=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX===';
+settings.plug_room = 'pit-of-no-shame';
 
 // settings.dbname = 'databasename';
 // settings.dbhost = 'localhost';
 // settings.dbport = '5432';
 // settings.dbuser = 'username';
 // settings.dbpass = 'password';
-// settings.dbreadonly = false;
+// settings.dbreadonly = true;
 
 settings.debug = false;
 
