@@ -1,5 +1,12 @@
 #!/usr/bin/env node
 
+// This code is deprecated.  Turntable.fm is no more.
+// New Plug.dj bot started over from scratch in a different
+// script entirely.
+
+console.log('This script is deprecated.  Do not try to run it');
+process.exit(1);
+
 var fs = require('fs');
 var util = require('util');
 var argv = require('optimist').argv;
