@@ -27,81 +27,71 @@ var log_tsv  = fs.createWriteStream(settings.log_tsv,  {'flags': 'a'});
 // bot.connect(settings.plug_room);
 //
 
-PlugAPI.getAuth({
-    username: 'cowgodpit',
-    password: 'GDe4AxX9quIEkwjhSrMf'
-}, function(err, auth) {
-    if(err) {
-        logger("An error occurred: " + err);
-        return;
-    }
-	logger('getAuth seems to have worked with '+auth);
+var bot = new PlugAPI(settings.plug_auth, UPDATECODE);
+logger('connecting to '+settings.plug_room);
+bot.connect(settings.plug_room);
 
-    var bot = new PlugAPI(auth, UPDATECODE);
-	logger('connecting to '+settings.plug_room);
-    bot.connect(settings.plug_room);
+bot.on('roomJoin', function(data) {
+	logger('roomJoin');
+	logger_tsv([ 'event','roomJoin','nickname',data.user.profile.username,'plug_user_id',data.user.profile.id,'djPoints',data.user.profile.djPoints,'fans',data.user.profile.fans,'listenerPoints',data.user.profile.listenerPoints,'avatarID',data.user.profile.avatarid ]);
+	util.log(util.inspect(data));
+	remember_user(data.user.profile.id,data.user.profile.username);
+});
 
-    bot.on('roomJoin', function(data) {
-		logger('roomJoin');
-		logger_tsv([ 'event','roomJoin','nickname',data.user.profile.username,'plug_user_id',data.user.profile.id,'djPoints',data.user.profile.djPoints,'fans',data.user.profile.fans,'listenerPoints',data.user.profile.listenerPoints,'avatarID',data.user.profile.avatarid ]);
-		util.log(util.inspect(data));
-		remember_user(data.user.profile.id,data.user.profile.username);
-    });
+bot.on('chat', function(data) {
+	log_chat(data);
+	remember_user(data.fromID,data.from);
+});
 
-	bot.on('chat', function(data) {
-		log_chat(data);
-		remember_user(data.fromID,data.from);
-	});
+bot.on('emote', function(data) {
+	log_chat(data);
+	remember_user(data.fromID,data.from);
+});
 
-	bot.on('emote', function(data) {
-		log_chat(data);
-		remember_user(data.fromID,data.from);
-	});
+bot.on('close', function(data) {
+	logger('close');
+	util.log(util.inspect(data));
+});
 
-	bot.on('close', function(data) {
-		logger('close');
-		util.log(util.inspect(data));
-	});
+bot.on('error', function(data) {
+	logger('error');
+	util.log(util.inspect(data));
+});
 
-	bot.on('error', function(data) {
-		logger('error');
-		util.log(util.inspect(data));
-	});
+bot.on('userJoin', function(data) {
+	log_join(data);
+	remember_user(data.id,data.username);
+});
 
-	bot.on('userJoin', function(data) {
-		log_join(data);
-		remember_user(data.id,data.username);
-	});
+bot.on('userLeave', function(data) {
+	log_part(data);
+});
 
-	bot.on('userLeave', function(data) {
-		log_part(data);
-	});
+bot.on('djUpdate', function(data) {
+	logger('djUpdate');
+	util.log(util.inspect(data));
+});
 
-	bot.on('djUpdate', function(data) {
-		logger('djUpdate');
-		util.log(util.inspect(data));
-	});
+bot.on('curateUpdate', function(data) {
+	// this is like a TT snag
+	log_curate(data);
+});
 
-	bot.on('curateUpdate', function(data) {
-		// this is like a TT snag
-		log_curate(data);
-	});
+bot.on('voteUpdate', function(data) {
+	log_vote(data);
+});
 
-	bot.on('voteUpdate', function(data) {
-		log_vote(data);
-	});
+bot.on('userUpdate', function(data) {
+	logger('userUpdate');
+	util.log(util.inspect(data));
+});
 
-	bot.on('userUpdate', function(data) {
-		logger('userUpdate');
-		util.log(util.inspect(data));
-	});
-
-	bot.on('djAdvance', function(data) {
-		log_play(data);
-		if (data.media.author !== 'undefined') {
-			lag_vote();
-		}
-	});
+bot.on('djAdvance', function(data) {
+	log_play(data);
+	if (data.media.author !== 'undefined') {
+		lag_vote();
+	}
+});
 
 function do_vote (vote) {
 	// bot.chat('Woot!');
@@ -114,9 +104,6 @@ function lag_vote (vote) {
 	logger('- will vote '+vote+' in '+waitms+' ms');
 	setTimeout(function(){ do_vote(vote); }, waitms);
 }
-
-
-});
 
 function logger(buf) {
 	var d=new Date();
