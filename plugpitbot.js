@@ -95,7 +95,7 @@ bot.on('roomJoin', function(data) {
 	logger_tsv([ 'event','roomJoin','nickname',data.user.profile.username,'plug_user_id',data.user.profile.id,'djPoints',data.user.profile.djPoints,'fans',data.user.profile.fans,'listenerPoints',data.user.profile.listenerPoints,'avatarID',data.user.profile.avatarid ]);
 	util.log(util.inspect(data));
 	cowgod.remember_user(data.user.profile.id,data.user.profile.username);
-	// process_waitlist();
+	load_current_userlist(data);
 
 });
 
@@ -148,13 +148,25 @@ bot.on('userUpdate', function(data) {
 });
 
 bot.on('djAdvance', function(data) {
+	var leader_prefix  = '';
+	var leader_suffix  = '';
+
+	if (typeof config[leader] !== 'undefined' && config[leader] === data.currentDJ) {
+		data.pitleader = true;
+		leader_prefix   = '*** ';
+		leader_suffix   = ' ***';
+	} else {
+		data.pitleader = false;
+	}
+
 	log_play(data);
 	util.log(util.inspect(data));
+
 	if (data.media.author !== 'undefined') {
 		lag_vote();
+		irc_set_topic(data.media.author+' - '+data.media.title+' ('+cowgod.id_to_name(data.currentDJ)+')'+leader_suffix);
+		bot.chat(leader_prefix+data.media.author+' - '+data.media.title+' ('+cowgod.id_to_name(data.currentDJ)+')'+leader_suffix);
 	}
-	irc_set_topic(data.media.author+' - '+data.media.title+' ('+cowgod.id_to_name(data.currentDJ)+')');
-	// process_waitlist();
 });
 
 function do_vote (vote) {
@@ -220,7 +232,7 @@ function log_curate(data) {
 function log_play(data) {
 	cowgod.logger(cowgod.id_to_name(data.currentDJ)+' is playing '+data.media.title+' by '+data.media.author);
 	if (data.media.author !== 'undefined') {
-		logger_tsv( [ 'event','djAdvance','plug_user_id',data.currentDJ,'playlistID',data.playlistID,'song',data.media.author,'title',data.media.title,'duration',data.media.duration,'media_id',data.media.id,'media_cid',data.media.cid,'media_format',data.media.format ]);
+		logger_tsv( [ 'event','djAdvance','plug_user_id',data.currentDJ,'playlistID',data.playlistID,'song',data.media.author,'title',data.media.title,'duration',data.media.duration,'media_id',data.media.id,'media_cid',data.media.cid,'media_format',data.media.format,'leader',data.pitleader ]);
 	}
 }
 
@@ -312,16 +324,25 @@ function irc_set_topic(topic) {
 	}
 }
 
+function load_current_userlist(data) {
+	for (var u in data.room.users) {
+		// cowgod.logger('logging a u.user '+u);
+		// util.log(util.inspect(data.room.users[u]));
+		cowgod.remember_user(data.room.users[u].id,data.room.users[u].username);
+	}
+	
+	
+}
 
 function after(callback) {
     return function(err, queryResult) {
-        if(err) {
+		if(err) {
             logger('database '+err+' (code '+err.code+' at pos '+err.position+')');
-                    return;
-                    }
-                    callback(queryResult)
-                    }
-                    }
+			return;
+		}
+		callback(queryResult);
+	}
+}
 
 function db_loadsettings() {
 	if (!settings.db) { return; }
