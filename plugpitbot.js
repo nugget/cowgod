@@ -151,7 +151,7 @@ bot.on('djAdvance', function(data) {
 	var leader_prefix  = '';
 	var leader_suffix  = '';
 
-	if (typeof config[leader] !== 'undefined' && config[leader] === data.currentDJ) {
+	if ('leader' in config && config[leader] === data.currentDJ) {
 		data.pitleader = true;
 		leader_prefix   = '*** ';
 		leader_suffix   = ' ***';
