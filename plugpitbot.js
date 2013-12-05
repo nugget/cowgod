@@ -19,7 +19,7 @@ if (typeof argv.nick === 'undefined') {
 cowgod.logger('! My Name Is '+myname+' headed for '+settings.plug_room);
 
 var PlugAPI  = require('plugapi');
-var UPDATECODE = 'fe940c';
+var UPDATECODE = 'fe940d';
 
 if (typeof settings.log_tsv !== 'undefined') {
 	var log_tsv  = fs.createWriteStream(settings.log_tsv,  {'flags': 'a'});
@@ -130,9 +130,11 @@ bot.on('userUpdate', function(data) {
 
 bot.on('djAdvance', function(data) {
 	log_play(data);
+	util.log(util.inspect(data));
 	if (data.media.author !== 'undefined') {
 		lag_vote();
 	}
+	irc_set_topic(data.media.author+' - '+data.media.title+' ('+cowgod.id_to_name(data.currentDJ)+')');
 	// process_waitlist();
 });
 
@@ -236,7 +238,22 @@ function process_cnc_command(command) {
 		case 'plugsay':
 			bot.chat(args);
 			break;
+		case 'woot':
+		case 'awesome':
+			bot.woot();
+			return('Wooted');
+			break;
 		default:
-			return "Unknown command";
+			return('Unknown command');
+	}
+}
+
+function irc_set_topic(topic) {
+	if (typeof cuckoo === 'undefined') {
+		return;
+	}
+
+	if (settings.irc_topic) {
+		cuckoo.send('TOPIC',settings.irc_channel,topic);
 	}
 }
