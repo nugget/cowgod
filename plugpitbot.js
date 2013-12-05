@@ -6,8 +6,6 @@ var argv = require('optimist').argv;
 var sys = require('sys');
 var exec = require('child_process').exec;
 var argv = require('optimist').argv;
-var http = require('http');
-var querystring = require('querystring');
 
 var cowgod = require('./cowgod.js');
 
@@ -19,13 +17,6 @@ if (typeof argv.nick === 'undefined') {
 	var settings = require('./settings_'+myname+'.js');
 }       
 cowgod.logger('! My Name Is '+myname+' headed for '+settings.plug_room);
-
-if (settings.http == true) {
-	cowgod.logger('Initializing webserver');
-	var cnc = http.createServer(function(req,res) {
-		process_cnc_request(req,res);
-	}).listen(settings.http_port);;
-}
 
 var PlugAPI  = require('plugapi');
 var UPDATECODE = 'fe940c';
@@ -213,50 +204,3 @@ function process_waitlist() {
 		util.log(util.inspect(data));
 	});
 }
-
-function control_request(req,res) {
-	res.writeHead(200);
-	res.end('Hello, world.');
-};
-
-function processPost(request, response, callback) {
-    var queryData = "";
-    if(typeof callback !== 'function') return null;
-
-    if(request.method == 'POST') {
-        request.on('data', function(data) {
-            queryData += data;
-            if(queryData.length > 1e6) {
-                queryData = "";
-                response.writeHead(413, {'Content-Type': 'text/plain'}).end();
-                request.connection.destroy();
-            }
-        });
-
-        request.on('end', function() {
-            request.post = querystring.parse(queryData);
-            callback();
-        });
-
-    } else {
-        response.writeHead(405, {'Content-Type': 'text/plain'});
-        response.end();
-    }
-}
-
-function process_cnc_request(request,response) {
-	var POST;
-
-	cowgod.logger(request.method);
-
-	if (request.method == 'POST') {
-		processPost(request,response,function() {
-			util.log(util.inspect(request.post));
-
-			response.write('moo cow');
-			response.statusCode = 200;
-			response.end();
-		});	
-	}
-
-};
