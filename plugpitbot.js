@@ -6,6 +6,8 @@ var argv = require('optimist').argv;
 var sys = require('sys');
 var exec = require('child_process').exec;
 var argv = require('optimist').argv;
+var http = require('http');
+var querystring = require('querystring');
 
 var cowgod = require('./cowgod.js');
 
@@ -18,10 +20,19 @@ if (typeof argv.nick === 'undefined') {
 }       
 cowgod.logger('! My Name Is '+myname+' headed for '+settings.plug_room);
 
+if (settings.http == true) {
+	cowgod.logger('Initializing webserver');
+	var cnc = http.createServer(function(req,res) {
+		process_cnc_request(req,res);
+	}).listen(settings.http_port);;
+}
+
 var PlugAPI  = require('plugapi');
 var UPDATECODE = 'fe940c';
 
-var log_tsv  = fs.createWriteStream(settings.log_tsv,  {'flags': 'a'});
+if (typeof settings.log_tsv !== 'undefined') {
+	var log_tsv  = fs.createWriteStream(settings.log_tsv,  {'flags': 'a'});
+}
 
 var nugget = {
 	//moo: function() {
@@ -56,7 +67,7 @@ bot.on('roomJoin', function(data) {
 	logger_tsv([ 'event','roomJoin','nickname',data.user.profile.username,'plug_user_id',data.user.profile.id,'djPoints',data.user.profile.djPoints,'fans',data.user.profile.fans,'listenerPoints',data.user.profile.listenerPoints,'avatarID',data.user.profile.avatarid ]);
 	util.log(util.inspect(data));
 	cowgod.remember_user(data.user.profile.id,data.user.profile.username);
-	process_waitlist();
+	// process_waitlist();
 
 });
 
@@ -91,7 +102,7 @@ bot.on('userLeave', function(data) {
 
 bot.on('djUpdate', function(data) {
 	log_djupdate(data);
-	process_waitlist();
+	// process_waitlist();
 });
 
 bot.on('curateUpdate', function(data) {
@@ -113,7 +124,7 @@ bot.on('djAdvance', function(data) {
 	if (data.media.author !== 'undefined') {
 		lag_vote();
 	}
-	process_waitlist();
+	// process_waitlist();
 });
 
 function do_vote (vote) {
@@ -129,8 +140,7 @@ function lag_vote (vote) {
 }
 
 function logger_tsv(larray) {
-	if (typeof log_tsv === 'undefined') {
-	} else {
+	if (typeof log_tsv !== 'undefined') {
 		var d = Math.round(new Date().getTime() / 1000.0);
 
 		log_tsv.write('clock\t'+d);
@@ -203,3 +213,50 @@ function process_waitlist() {
 		util.log(util.inspect(data));
 	});
 }
+
+function control_request(req,res) {
+	res.writeHead(200);
+	res.end('Hello, world.');
+};
+
+function processPost(request, response, callback) {
+    var queryData = "";
+    if(typeof callback !== 'function') return null;
+
+    if(request.method == 'POST') {
+        request.on('data', function(data) {
+            queryData += data;
+            if(queryData.length > 1e6) {
+                queryData = "";
+                response.writeHead(413, {'Content-Type': 'text/plain'}).end();
+                request.connection.destroy();
+            }
+        });
+
+        request.on('end', function() {
+            request.post = querystring.parse(queryData);
+            callback();
+        });
+
+    } else {
+        response.writeHead(405, {'Content-Type': 'text/plain'});
+        response.end();
+    }
+}
+
+function process_cnc_request(request,response) {
+	var POST;
+
+	cowgod.logger(request.method);
+
+	if (request.method == 'POST') {
+		processPost(request,response,function() {
+			util.log(util.inspect(request.post));
+
+			response.write('moo cow');
+			response.statusCode = 200;
+			response.end();
+		});	
+	}
+
+};
