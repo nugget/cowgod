@@ -42,11 +42,9 @@ if (typeof settings.irc_server !== 'undefined') {
 	var irc = require('irc');
 	cowgod.logger('Connecting to IRC '+settings.irc_server+' as '+settings.irc_nick);
 	cuckoo = new irc.Client(settings.irc_server, settings.irc_nick, {
-		port: 994,
-		secure: true,
 		selfSigned: true,
 		certExpired: true,
-		channels: ['#pitofnoshame'],
+		channels: [settings.irc_channel],
 		userName: myname,
 		realName: 'Plug.dj bot',
 		debug: true,
@@ -54,9 +52,10 @@ if (typeof settings.irc_server !== 'undefined') {
 	});
 
 	cuckoo.addListener('message',function(from,to,text,message) {
-		cowgod.logger('IRC <'+from+'> '+message);
+		cowgod.logger('IRC <'+from+'> '+text);
 		if (to == settings.irc_nick) {
-			cuckoo.say(from, 'Unsupported');
+			var response = process_cnc_command(text);
+			cuckoo.say(from, response);
 		}
 	});
 }
@@ -222,4 +221,22 @@ function process_waitlist() {
 		cowgod.logger('I gotWaitList');
 		util.log(util.inspect(data));
 	});
+}
+
+function process_cnc_command(command) {
+	var argv = command.replace(/\s+/g,' ').split(' ');
+	var command = argv[0].substr(1).toLowerCase();
+	var args_arr = argv.slice(1);
+	var args     = args_arr.join(' ');
+
+	switch(command) {
+		case 'say':
+			cuckoo.say(settings.irc_channel,args);
+			break;
+		case 'plugsay':
+			bot.chat(args);
+			break;
+		default:
+			return "Unknown command";
+	}
 }
