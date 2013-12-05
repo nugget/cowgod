@@ -9,6 +9,8 @@ var argv = require('optimist').argv;
 
 var cowgod = require('./cowgod.js');
 
+var config = new Object();
+
 if (typeof argv.nick === 'undefined') {
 	console.log('Need a -nick name!');
 	process.exit(1);
@@ -16,7 +18,24 @@ if (typeof argv.nick === 'undefined') {
 	var myname = argv.nick;
 	var settings = require('./settings_'+myname+'.js');
 }       
+
+if (settings.dbname) {
+	cowgod.logger('connecting to postgresql database '+settings.dbname);
+	var PostgreSQL = require('pg').Client;
+
+	var connstring = 'postgres://'+settings.dbuser+':'+settings.dbpass+'@'+settings.dbhost+':'+settings.dbport+'/'+settings.dbname;
+
+	var botdb = new PostgreSQL(connstring);
+	botdb.connect();
+
+	settings.db = true;
+} else {
+	settings.db = false;
+}
+
 cowgod.logger('! My Name Is '+myname+' headed for '+settings.plug_room);
+
+db_loadsettings();
 
 var PlugAPI  = require('plugapi');
 var UPDATECODE = 'fe940d';
@@ -243,9 +262,44 @@ function process_cnc_command(command) {
 			bot.woot();
 			return('Wooted');
 			break;
+		case 'set':
+			if (argv.length == 1) {
+				return('Usage: /SET config_item [value]');
+				break;
+			}
+			var itemname = argv[1];
+			var toggle   = argv[2];
+
+			if (argv.length == 3) {
+				set_config(itemname,toggle);
+			}
+			return(itemname+' is currently '+config[itemname]);
+			break;
 		default:
 			return('Unknown command');
 	}
+}
+
+function set_config (item,toggle) {
+	config[item] = toggle;
+    cowgod.logger('- config['+item+'] is now '+config[item]);
+}
+
+function toggle_config (item,toggle) {
+    if (toggle === 'undefined') {
+        if (config[item] != 'on') {
+            config[item] = 'on';
+        } else {
+            config[item] = 'off';
+        }
+    } else {
+        if (toggle == 'on') {
+            config[item] = 'on';
+        } else {
+            config[item] = 'off';
+        }
+    }
+    cowgod.logger('- config['+item+'] is now '+config[item]);
 }
 
 function irc_set_topic(topic) {
@@ -256,4 +310,31 @@ function irc_set_topic(topic) {
 	if (settings.irc_topic) {
 		cuckoo.send('TOPIC',settings.irc_channel,topic);
 	}
+}
+
+
+function after(callback) {
+    return function(err, queryResult) {
+        if(err) {
+            logger('database '+err+' (code '+err.code+' at pos '+err.position+')');
+                    return;
+                    }
+                    callback(queryResult)
+                    }
+                    }
+
+function db_loadsettings() {
+	if (!settings.db) { return; }
+
+	loadcount = 0;
+	botdb.query('SELECT * FROM settings WHERE deleted IS NULL AND enabled IS TRUE AND (bot_id IS NULL OR bot_id = $1) ORDER BY bot_id DESC', [
+		settings.userid
+	], after(function(result) {
+		result.rows.forEach(function(setval) {
+			config[setval.key] = setval.value;
+			cowgod.logger('- '+setval.key+' set to '+config[setval.key]+' from the database');
+			loadcount = loadcount + 1;
+		});
+		cowgod.logger('- Loaded '+loadcount+' settings from database');
+	}));
 }
