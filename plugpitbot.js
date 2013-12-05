@@ -38,9 +38,28 @@ var nugget = {
 	}
 }
 
-// var bot = new PlugAPI(settings.plug_auth);
-// bot.connect(settings.plug_room);
-//
+if (typeof settings.irc_server !== 'undefined') {
+	var irc = require('irc');
+	cowgod.logger('Connecting to IRC '+settings.irc_server+' as '+settings.irc_nick);
+	cuckoo = new irc.Client(settings.irc_server, settings.irc_nick, {
+		port: 994,
+		secure: true,
+		selfSigned: true,
+		certExpired: true,
+		channels: ['#pitofnoshame'],
+		userName: myname,
+		realName: 'Plug.dj bot',
+		debug: true,
+		showErrors: true
+	});
+
+	cuckoo.addListener('message',function(from,to,text,message) {
+		cowgod.logger('IRC <'+from+'> '+message);
+		if (to == settings.irc_nick) {
+			cuckoo.say(from, 'Unsupported');
+		}
+	});
+}
 
 var bot = new PlugAPI(settings.plug_auth, UPDATECODE);
 util.log(util.inspect(bot));
