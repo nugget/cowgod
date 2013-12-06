@@ -165,7 +165,10 @@ bot.on('djAdvance', function(data) {
 	if (data.media.author !== 'undefined') {
 		lag_vote();
 		irc_set_topic(data.media.author+' - '+data.media.title+' ('+cowgod.id_to_name(data.currentDJ)+')'+leader_suffix);
-		bot.chat(leader_prefix+data.media.author+' - '+data.media.title+' ('+cowgod.id_to_name(data.currentDJ)+')'+leader_suffix);
+
+		if (settings.announce_play) {
+			bot.chat(leader_prefix+data.media.author+' - '+data.media.title+' ('+cowgod.id_to_name(data.currentDJ)+')'+leader_suffix);
+		}
 	}
 });
 
@@ -230,8 +233,8 @@ function log_curate(data) {
 }
 
 function log_play(data) {
-	cowgod.logger(cowgod.id_to_name(data.currentDJ)+' is playing '+data.media.title+' by '+data.media.author);
 	if (data.media.author !== 'undefined') {
+		cowgod.logger(cowgod.id_to_name(data.currentDJ)+' is playing '+data.media.title+' by '+data.media.author);
 		logger_tsv( [ 'event','djAdvance','plug_user_id',data.currentDJ,'playlistID',data.playlistID,'song',data.media.author,'title',data.media.title,'duration',data.media.duration,'media_id',data.media.id,'media_cid',data.media.cid,'media_format',data.media.format,'leader',data.pitleader ]);
 	}
 }
