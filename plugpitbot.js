@@ -73,8 +73,22 @@ if (typeof settings.irc_server !== 'undefined') {
 	cuckoo.addListener('message',function(from,to,text,message) {
 		cowgod.logger('IRC <'+from+'> '+text);
 		if (to == settings.irc_nick) {
-			var response = process_cnc_command(text);
-			cuckoo.say(from, response);
+			var response = process_irc_message(from,to,text,message);
+			if (response != null) {
+				cowgod.logger('irc send '+response);
+				cuckoo.say(from, response);
+			}
+		}
+	});
+
+	cuckoo.addListener('notice',function(from,to,text,message) {
+		cowgod.logger('IRC <'+from+'> '+text);
+		if (to == settings.irc_nick) {
+			var response = process_irc_message(from,to,text,message);
+			if (response != null) {
+				cowgod.logger('irc send '+response);
+				cuckoo.say(from, response);
+			}
 		}
 	});
 }
@@ -265,6 +279,23 @@ function process_waitlist() {
 	});
 }
 
+function process_irc_message(from,to,text,message) {
+	if(text.substr(0,1) == '/') {
+		cowgod.logger('Command detected');
+		return process_cnc_command(text);
+	}
+
+	if(from == 'NickServ') {
+		if(text.indexOf('You have 30 seconds to identify to your nickname before it is changed') >= 0) {
+			nickserv_identify();
+			return;
+		}
+		return;
+	}
+
+	return 'Moo';
+}
+
 function process_cnc_command(command) {
 	var argv = command.replace(/\s+/g,' ').split(' ');
 	var command = argv[0].substr(1).toLowerCase();
@@ -277,6 +308,11 @@ function process_cnc_command(command) {
 			break;
 		case 'plugsay':
 			bot.chat(args);
+			break;
+		case 'ircpm':
+			var target = argv[1];
+			var message = argv.slice(2).join(' ');
+			cuckoo.say(target,message);
 			break;
 		case 'woot':
 		case 'awesome':
@@ -296,9 +332,29 @@ function process_cnc_command(command) {
 			}
 			return(itemname+' is currently '+config[itemname]);
 			break;
+		case 'nickserv_register':
+			nickserv_register();
+			break;
+		case 'nickserv_identify':
+			nickserv_identify();
+			break;
 		default:
 			return('Unknown command');
 	}
+}
+
+function nickserv_register() {
+	cuckoo.say('NickServ','REGISTER '+settings.irc_password+' '+settings.irc_nick+'@macnugget.org');
+	cuckoo.say('NickServ','SET ENFORCE ON');
+	cuckoo.say('NickServ','SET HIDEMAIL ON');
+	cuckoo.say('NickServ','SET NOGREET ON');
+	cuckoo.say('NickServ','SET NOMEMO ON');
+}
+
+function nickserv_identify() {
+	var buf = 'IDENTIFY '+settings.irc_password;
+	cowgod.logger('Registering with NickServ: '+buf);
+	cuckoo.say('NickServ',buf);
 }
 
 function set_config (item,toggle) {
