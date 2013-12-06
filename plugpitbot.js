@@ -162,7 +162,9 @@ bot.on('djAdvance', function(data) {
 	log_play(data);
 	util.log(util.inspect(data));
 
-	if (data.media.author !== 'undefined') {
+	if (data.media === null) {
+		irc_set_topic('Nothing is playing in the Pit :(');
+	} else {
 		lag_vote();
 		irc_set_topic(data.media.author+' - '+data.media.title+' ('+cowgod.id_to_name(data.currentDJ)+')'+leader_suffix);
 
@@ -233,7 +235,11 @@ function log_curate(data) {
 }
 
 function log_play(data) {
-	if (data.media.author !== 'undefined') {
+	if (data.media !== null) {
+		util.log(util.inspect(data));
+		if (typeof data.media.title === 'undefined') { data.media.title = ''; }
+		if (typeof data.media.author === 'undefined') { data.media.author = ''; }
+
 		cowgod.logger(cowgod.id_to_name(data.currentDJ)+' is playing '+data.media.title+' by '+data.media.author);
 		logger_tsv( [ 'event','djAdvance','plug_user_id',data.currentDJ,'playlistID',data.playlistID,'song',data.media.author,'title',data.media.title,'duration',data.media.duration,'media_id',data.media.id,'media_cid',data.media.cid,'media_format',data.media.format,'leader',data.pitleader ]);
 	}
