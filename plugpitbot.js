@@ -167,8 +167,8 @@ bot.on('djAdvance', function(data) {
 
 	if ('leader' in config && config['leader'] === data.currentDJ) {
 		data.pitleader = true;
-		leader_prefix   = '*** ';
-		leader_suffix   = ' ***';
+		leader_prefix   = '*LEAD SONG* ';
+		leader_suffix   = ' ~***';
 	} else {
 		data.pitleader = false;
 	}
