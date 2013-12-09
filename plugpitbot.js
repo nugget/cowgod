@@ -38,7 +38,7 @@ cowgod.logger('! My Name Is '+myname+' headed for '+settings.plug_room);
 db_loadsettings();
 
 var PlugAPI  = require('plugapi');
-var UPDATECODE = 'fe940d';
+// var UPDATECODE = 'fe940d';
 
 if (typeof settings.log_tsv !== 'undefined') {
 	var log_tsv  = fs.createWriteStream(settings.log_tsv,  {'flags': 'a'});
@@ -93,7 +93,7 @@ if (typeof settings.irc_server !== 'undefined') {
 	});
 }
 
-var bot = new PlugAPI(settings.plug_auth, UPDATECODE);
+var bot = new PlugAPI(settings.plug_auth);
 util.log(util.inspect(bot));
 cowgod.set_active_bot(bot);
 
@@ -101,6 +101,14 @@ cowgod.logger('doing that logging thing, whatever the fuck that is');
 bot.setLogObject(nugget);
 cowgod.logger('connecting to '+settings.plug_room);
 bot.connect(settings.plug_room);
+
+var reconnect = function() {
+	cowgod.logger('Disconnected from Plug.dj, will reconnect momentarily...');
+	waitms = parseInt(Math.random() * 20000)+500;
+	setTimeout(function(){ bot.connect(settings.plug_room); }, waitms);
+}
+bot.on('close', reconnect);
+bot.on('error', reconnect);
 
 cowgod.id_to_name('52499dacc3b97a430c54501d');
 
@@ -424,3 +432,4 @@ function db_loadsettings() {
 		cowgod.logger('- Loaded '+loadcount+' settings from database');
 	}));
 }
+
