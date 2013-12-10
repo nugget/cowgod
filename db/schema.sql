@@ -12,18 +12,114 @@ CREATE OR REPLACE FUNCTION onupdate_changed() RETURNS trigger AS $$
 $$ LANGUAGE plpgsql;
 
 CREATE TABLE settings (
-	id serial NOT NULL,
+	setting_id serial NOT NULL,
 	added timestamp(0) without time zone NOT NULL DEFAULT (current_timestamp at time zone 'utc'),
 	changed timestamp(0) without time zone NOT NULL DEFAULT (current_timestamp at time zone 'utc'),
 	deleted timestamp(0) without time zone,
 	enabled boolean NOT NULL DEFAULT TRUE,
-	bot_id varchar,
+	uid varchar,
 	key varchar NOT NULL,
 	value varchar NOT NULL,
-	PRIMARY KEY(id)
+	PRIMARY KEY(setting_id)
 );
 CREATE TRIGGER onupdate BEFORE UPDATE ON settings FOR EACH ROW EXECUTE PROCEDURE onupdate_changed();
 GRANT SELECT ON settings TO bots;
+
+CREATE TABLE users (
+	user_id serial NOT NULL,
+	added timestamp(0) without time zone NOT NULL DEFAULT (current_timestamp at time zone 'utc'),
+	changed timestamp(0) without time zone NOT NULL DEFAULT (current_timestamp at time zone 'utc'),
+	uid varchar UNIQUE,
+	nickname varchar,
+	password varchar,
+	dj_points integer,
+	listen_points integer,
+	fans integer,
+	avatar varchar,
+	curate_points integer,
+	owner boolean NOT NULL DEFAULT FALSE,
+	admin boolean NOT NULL DEFAULT FALSE,
+	trendsetter boolean NOT NULL DEFAULT FALSE,
+	ignore boolean NOT NULL DEFAULT FALSE,
+	tt_uid varchar UNIQUE,
+	tt_nickname varchar,
+	tt_points integer,
+	tt_avatar integer,
+	PRIMARY KEY(user_id)
+);
+GRANT SELECT,INSERT,UPDATE ON users TO bots;
+CREATE UNIQUE INDEX users_plug_uid ON users(uid) WHERE uid IS NOT NULL;
+CREATE UNIQUE INDEX users_tt_uid ON users(tt_uid) WHERE tt_uid IS NOT NULL;
+CREATE TRIGGER onupdate BEFORE UPDATE ON users FOR EACH ROW EXECUTE PROCEDURE onupdate_changed();
+
+-- insert into users (added,changed,owner,admin,trendsetter,ignore,tt_uid,tt_nickname,tt_points,tt_avatar) SELECT added,changed,owner,admin,trendsetter,ignore,tt_user_id,tt_nickname,tt_points,tt_avatar FROM tt_users ORDER BY added;
+-- update users set uid = '528fc223877b923909b5ff2a', nickname = '-nugget-' where tt_uid = '4e00e4e8a3f75104e10b7359';
+
+CREATE TABLE plug_media (
+	media_id varchar NOT NULL,
+	added timestamp(0) without time zone NOT NULL DEFAULT (current_timestamp at time zone 'utc'),
+	changed timestamp(0) without time zone NOT NULL DEFAULT (current_timestamp at time zone 'utc'),
+	author varchar,
+	title varchar,
+	format varchar,
+	cid varchar,
+	duration integer,
+	PRIMARY KEY(media_id)
+);
+GRANT SELECT,INSERT,UPDATE ON users TO bots;
+
+CREATE TABLE plays (
+	play_id serial NOT NULL,
+	start_time timestamp without time zone NOT NULL DEFAULT (current_timestamp at time zone 'utc'),
+	user_id integer NOT NULL REFERENCES users(user_id),
+	playlist_id varchar,
+	media_id varchar REFERENCES plug_media(media_id),
+	song_id varchar REFERENCES tt_songs(song_id),
+	leader boolean NOT NULL DEFAULT FALSE,
+	site varchar NOT NULL DEFAULT 'plug',
+	PRIMARY KEY(play_id)
+);
+GRANT SELECT,INSERT,UPDATE ON plays TO bots;
+CREATE INDEX plays_user_id ON plays(user_id);
+CREATE INDEX plays_ts ON plays(start_time);
+
+-- insert into plays (play_id,start_time,user_id,song_id,leader,site) SELECT id,ts,user_id,song_id,leader,'tt' FROM tt_plays_expanded ORDER BY ts;
+-- alter sequence plays_play_id_seq restart with 92345;
+
+CREATE TABLE grabs (
+	grab_id serial NOT NULL,
+	play_id integer NOT NULL REFERENCES plays(play_id) DEFAULT currval('plays_play_id_seq'::regclass),
+	ts timestamp(0) without time zone NOT NULL DEFAULT (current_timestamp at time zone 'utc'),
+	user_id integer NOT NULL REFERENCES users(user_id),
+	site varchar NOT NULL DEFAULT 'plug',
+	PRIMARY KEY(grab_id)
+);
+GRANT SELECT,INSERT,UPDATE ON grabs TO bots;
+CREATE INDEX grabs_user_id ON grabs(user_id);
+
+-- insert into grabs (play_id,ts,user_id,site) SELECT play_id,ts,user_id,site FROM tt_snags_expanded ORDER BY ts;
+
+CREATE TABLE chats (
+	chat_id serial NOT NULL,
+	play_id integer NOT NULL REFERENCES plays(play_id) DEFAULT currval('plays_play_id_seq'::regclass),
+	ts timestamp(0) without time zone NOT NULL DEFAULT (current_timestamp at time zone 'utc'),
+	user_id integer NOT NULL REFERENCES users(user_id),
+	text varchar NOT NULL,
+	site varchar NOT NULL DEFAULT 'plug',
+	PRIMARY KEY (chat_id)
+);
+GRANT SELECT,INSERT,UPDATE ON chats TO bots;
+CREATE INDEX chats_user_id ON chats(user_id);
+
+-- insert into chats (ts,user_id,play_id,text,site) SELECT ts,user_id,play_id,text,site FROM tt_chats_expanded ORDER BY ts;
+-- update chats c set play_id = coalesce((SELECT max(p.play_id) FROM plays p WHERE p.start_time <= c.ts),1) WHERE play_id = 1;
+
+
+--
+--
+-- LEGACY TABLES BELOW
+--
+--
 
 CREATE TABLE songs (
 	song_id varchar NOT NULL,
@@ -43,21 +139,6 @@ CREATE TABLE songs (
 );
 GRANT SELECT,INSERT ON songs TO bots;
 CREATE TRIGGER onupdate BEFORE UPDATE ON songs FOR EACH ROW EXECUTE PROCEDURE onupdate_changed();
-
-CREATE TABLE users (
-	user_id varchar NOT NULL,
-	added timestamp(0) without time zone NOT NULL DEFAULT (current_timestamp at time zone 'utc'),
-	changed timestamp(0) without time zone NOT NULL DEFAULT (current_timestamp at time zone 'utc'),
-	nickname varchar NOT NULL,
-	password varchar,
-	owner boolean NOT NULL DEFAULT FALSE,
-	admin boolean NOT NULL DEFAULT FALSE,
-	trendsetter boolean NOT NULL DEFAULT FALSE,
-	ignore boolean NOT NULL DEFAULT FALSE,
-	PRIMARY KEY(user_id)
-);
-GRANT SELECT,INSERT,UPDATE ON users TO bots;
-CREATE TRIGGER onupdate BEFORE UPDATE ON users FOR EACH ROW EXECUTE PROCEDURE onupdate_changed();
 
 CREATE TABLE blacklist (
 	user_id varchar NOT NULL,
@@ -179,8 +260,12 @@ CREATE OR REPLACE FUNCTION nick(varchar) RETURNS varchar AS $$
 	DECLARE
 		nick varchar;
 	BEGIN
-		nick := (SELECT nickname FROM users WHERE user_id = $1 LIMIT 1);
+		nick := (SELECT nickname FROM users WHERE uid = $1 LIMIT 1);
 		
+		IF nick IS NULL THEN
+			nick := (SELECT nickname FROM users WHERE tt_uid = $1 LIMIT 1);
+		END IF;
+
 		IF nick IS NULL THEN
 			nick := $1;
 		END IF;
@@ -201,18 +286,26 @@ CREATE TABLE roulettelog (
 );
 GRANT SELECT,INSERT ON roulettelog TO bots;
 
-DROP VIEW snaglog_expanded, songlog_expanded, joins_expanded, chatlog_expanded;
+DROP VIEW tt_plays_expanded;
+CREATE VIEW tt_plays_expanded AS
+	SELECT l.*, u.user_id,u.tt_nickname, s.artist, s.song, s.length,(l.dj_id=substring(l.stats_djs from 3 for 24))::boolean as leader, 'tt'::varchar as site
+	FROM tt_playlog l LEFT JOIN tt_songs s ON s.song_id = l.song_id LEFT JOIN users u ON u.tt_uid = l.dj_id;
 
-CREATE VIEW songlog_expanded AS
-	SELECT l.*, nick(l.dj_id) as nickname, s.artist, s.song, s.length, s.trip_odometer, age(date_trunc('day',current_timestamp),date_trunc('day',l.ts))::varchar||' ago' as age_text,
-	       extract(epoch from current_timestamp at time zone 'utc' - l.ts)::integer as secs_ago,
-		   (SELECT array_to_string(array_agg(user_id),' ') FROM snaglog WHERE snaglog.play_id = l.id) as snaggers
-	FROM songlog l LEFT JOIN songs s ON s.song_id = l.song_id;
+DROP VIEW tt_snags_expanded;
+CREATE VIEW tt_snags_expanded AS
+	SELECT l.*, u.user_id,u.tt_nickname, 'tt'::varchar as site
+	FROM tt_snags l LEFT JOIN users u ON u.tt_uid = l.tt_uid;
 
-CREATE VIEW snaglog_expanded AS
-	SELECT s.ts,s.play_id,s.user_id,nick(s.user_id) as nickname,l.dj_id, nick(l.dj_id) as dj_nickname,l.song_id,l.artist,l.song, age(date_trunc('day',current_timestamp),date_trunc('day',s.ts))::varchar||' ago' as age_text,
-	       extract(epoch from current_timestamp at time zone 'utc' - s.ts)::integer as secs_ago
-	FROM snaglog s LEFT JOIN songlog_expanded l ON s.play_id = l.id;
+DROP VIEW tt_chats_expanded;
+CREATE VIEW tt_chats_expanded AS
+	SELECT l.*, u.user_id,u.tt_nickname, 'tt'::varchar as site, (SELECT max(p.play_id) FROM plays p WHERE p.start_time <= l.ts) AS play_id
+	FROM tt_chats l LEFT JOIN users u ON u.tt_uid = l.tt_uid;
+
+DROP VIEW tt_chats_expanded;
+CREATE VIEW tt_chats_expanded AS
+	SELECT l.*, u.user_id,u.tt_nickname, 'tt'::varchar as site, 1 as play_id
+	FROM tt_chats l LEFT JOIN users u ON u.tt_uid = l.tt_uid;
+
 
 CREATE VIEW joins_expanded AS
 	SELECT *, age(date_trunc('hour',current_timestamp),date_trunc('day',ts))::varchar||' ago' as age_text,
