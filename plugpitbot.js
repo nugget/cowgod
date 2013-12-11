@@ -37,6 +37,8 @@ cowgod.logger('! My Name Is '+myname+' headed for '+settings.plug_room);
 
 db_loadsettings();
 
+var global = new Object();
+
 var PlugAPI  = require('plugapi');
 // var UPDATECODE = 'fe940d';
 
@@ -115,8 +117,9 @@ cowgod.id_to_name('52499dacc3b97a430c54501d');
 bot.on('roomJoin', function(data) {
 	cowgod.logger('roomJoin');
 	logger_tsv([ 'event','roomJoin','nickname',data.user.profile.username,'plug_user_id',data.user.profile.id,'djPoints',data.user.profile.djPoints,'fans',data.user.profile.fans,'listenerPoints',data.user.profile.listenerPoints,'avatarID',data.user.profile.avatarid ]);
-	util.log(util.inspect(data));
+	// util.log(util.inspect(data));
 	cowgod.remember_user(data.user.profile.id,data.user.profile.username);
+	current_dj(data.room.currentDJ);
 	load_current_userlist(data);
 
 });
@@ -189,6 +192,7 @@ bot.on('djAdvance', function(data) {
 	} else {
 		lag_vote();
 		irc_set_topic(data.media.author+' - '+data.media.title+' ('+cowgod.id_to_name(data.currentDJ)+')'+leader_suffix);
+		current_dj(data.currentDJ);
 
 		if (settings.announce_play) {
 			bot.chat(leader_prefix+data.media.author+' - '+data.media.title+' ('+cowgod.id_to_name(data.currentDJ)+')'+leader_suffix);
@@ -335,6 +339,12 @@ function process_cnc_command(command) {
 			var itemname = argv[1];
 			var toggle   = argv[2];
 
+			switch(toggle) {
+				case 'current_dj':
+					toggle = global['current_dj'];
+					break;
+			}
+
 			if (argv.length == 3) {
 				set_config(itemname,toggle);
 			}
@@ -410,18 +420,26 @@ function load_current_userlist(data) {
 function after(callback) {
     return function(err, queryResult) {
 		if(err) {
-            logger('database '+err+' (code '+err.code+' at pos '+err.position+')');
+            cowgod.logger('database '+err+' (code '+err.code+' at pos '+err.position+')');
 			return;
 		}
 		callback(queryResult);
 	}
 }
 
+function current_dj(djid) {
+	if (djid != null) {
+		global['current_dj'] = djid;
+		cowgod.logger('Current DJ is now '+global['current_dj']);
+	}
+	return global['current_dj'];
+}
+
 function db_loadsettings() {
 	if (!settings.db) { return; }
 
 	loadcount = 0;
-	botdb.query('SELECT * FROM settings WHERE deleted IS NULL AND enabled IS TRUE AND (bot_id IS NULL OR bot_id = $1) ORDER BY bot_id DESC', [
+	botdb.query('SELECT * FROM settings WHERE deleted IS NULL AND enabled IS TRUE AND (uid IS NULL OR uid = $1) ORDER BY uid DESC', [
 		settings.userid
 	], after(function(result) {
 		result.rows.forEach(function(setval) {
