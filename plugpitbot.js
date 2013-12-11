@@ -53,10 +53,6 @@ var PlugAPI  = require('plugapi');
 
 
 var nugget = {
-	//moo: function() {
-	//	console.log('Moo!');
-	//};
-
 	log: function() {
 		cowgod.logger('raw nugget.log');
 		for (var i = 0; i < arguments.length; i++) {
@@ -124,10 +120,10 @@ bot.on('roomJoin', function(data) {
 	cowgod.logger('roomJoin');
 	logger_tsv([ 'event','roomJoin','nickname',data.user.profile.username,'plug_user_id',data.user.profile.id,'djPoints',data.user.profile.djPoints,'fans',data.user.profile.fans,'listenerPoints',data.user.profile.listenerPoints,'avatarID',data.user.profile.avatarid ]);
 	// util.log(util.inspect(data));
-	cowgod.remember_user(data.user.profile.id,data.user.profile.username);
+	update_user(data.user.profile);
 	current_dj(data.room.currentDJ);
 	load_current_userlist(data);
-
+	update_plug_media(data.room.media);
 });
 
 bot.on('chat', function(data) {
@@ -151,6 +147,7 @@ bot.on('error', function(data) {
 });
 
 bot.on('userJoin', function(data) {
+	util.log(util.inspect(data));
 	log_join(data);
 	cowgod.remember_user(data.id,data.username);
 });
@@ -161,7 +158,7 @@ bot.on('userLeave', function(data) {
 
 bot.on('djUpdate', function(data) {
 	log_djupdate(data);
-	// process_waitlist();
+	process_waitlist();
 });
 
 bot.on('curateUpdate', function(data) {
@@ -204,6 +201,8 @@ bot.on('djAdvance', function(data) {
 			bot.chat(leader_prefix+data.media.author+' - '+data.media.title+' ('+cowgod.id_to_name(data.currentDJ)+')'+leader_suffix);
 		}
 	}
+
+	process_waitlist();
 });
 
 function do_vote (vote) {
@@ -231,15 +230,25 @@ function logger_tsv(larray) {
 }
 
 function log_chat(data) {
+	logger_tsv([ 'event','chat','nickname',data.from,'room',data.room,'plug_user_id',data.fromID,'message',data.message,'type',data.type ]);
+
 	if (data.type == 'message') {
 		cowgod.logger('<'+data.from+'> '+data.message);
 	} else if (data.type == 'emote') {
 		cowgod.logger('* '+data.from+' '+data.message);
+		data.message = '/me '+data.message;
 	} else {
 		cowgod.logger('chat (unknown type)');
 		util.log(util.inspect(data));
 	}
-	logger_tsv([ 'event','chat','nickname',data.from,'room',data.room,'plug_user_id',data.fromID,'message',data.message,'type',data.type ]);
+
+	if (config_enabled('db_log_chats')) {
+		botdb.query('INSERT INTO chats (user_id,text) SELECT user_id,$2 FROM users WHERE uid = $1', [
+			data.fromID,data.message
+		], after(function(result) {
+			// cowgod.logger('Logged chat to database');
+		}));
+	}
 }
 
 function log_vote(data) {
@@ -275,7 +284,32 @@ function log_play(data) {
 
 		cowgod.logger(cowgod.id_to_name(data.currentDJ)+' is playing '+data.media.title+' by '+data.media.author);
 		logger_tsv( [ 'event','djAdvance','plug_user_id',data.currentDJ,'playlistID',data.playlistID,'song',data.media.author,'title',data.media.title,'duration',data.media.duration,'media_id',data.media.id,'media_cid',data.media.cid,'media_format',data.media.format,'leader',data.pitleader ]);
+
+		if (config_enabled('db_log_plays')) {
+			
+			update_plug_media(data.media);
+
+			botdb.query('INSERT INTO plays (start_time,user_id,playlist_id,media_id,leader) SELECT $1,user_id,$3,$4,$5 FROM users WHERE uid = $2', [
+				data.mediaStartTime,data.currentDJ,data.playlistID,data.media.id,data.pitleader
+			], after(function(result) {
+				// cowgod.logger('Logged play to database');
+			}));
+		}
 	}
+}
+
+function update_plug_media(media) {
+	if (!config_enabled('db_log_plays')) {
+		return;
+	}
+	botdb.query('INSERT INTO plug_media (media_id,author,title,format,cid,duration) SELECT $2,$3,$4,$5,$6,$7 WHERE 1 NOT IN (SELECT 1 FROM plug_media WHERE media_id = $1)', [
+		media.id,media.id,media.author,media.title,media.format,media.cid,media.duration
+	], after(function(result) {
+		// util.log(util.inspect(result));
+		if (result.rowCount == 1) {
+			cowgod.logger('New plug_media added: '+media.author+' - '+media.title+' ('+media.id+')');
+		}
+	}));
 }
 
 function log_djupdate(data) {
@@ -420,9 +454,7 @@ function irc_set_topic(topic) {
 
 function load_current_userlist(data) {
 	for (var u in data.room.users) {
-		// cowgod.logger('logging a u.user '+u);
-		// util.log(util.inspect(data.room.users[u]));
-		cowgod.remember_user(data.room.users[u].id,data.room.users[u].username);
+		update_user(data.room.users[u]);
 	}
 	
 	
@@ -447,9 +479,11 @@ function current_dj(djid) {
 
 function config_enabled(setting) {
 	if (setting in config) {
-		cowgod.logger('returning setting for '+setting);
-		return(config[setting]);
+		if (config[setting] == 'true' || config[setting] == 'yes' || config[setting] == 1) {
+			return true;
+		}
 	}
+	return false;
 }
 
 function db_loadsettings(callback) {
@@ -509,4 +543,28 @@ function is_leader(djid) {
 	} else {
 		return false;
 	}
+}
+
+function update_user(user) {
+	cowgod.remember_user(user.id,user.username);
+	if (!config_enabled('db_maintain_users')) {
+		return;
+	}
+
+	// util.log(util.inspect(user));
+	botdb.query('INSERT INTO users (uid) SELECT $1 WHERE 1 NOT IN (SELECT 1 FROM users WHERE uid = $2) RETURNING user_id', [
+		user.id,user.id
+	], after(function(insresult) {
+		// util.log(util.inspect(insresult));
+		botdb.query('UPDATE users SET nickname = $2, dj_points = $3, listen_points = $4, fans = $5, avatar = $6, curate_points = $7 WHERE uid = $1 RETURNING user_id', [
+			user.id, user.username, user.djPoints, user.listenerPoints, user.fans, user.avatarID, user.curatorPoints
+		], after(function(updresult) {
+			// util.log(util.inspect(updresult));
+			if (insresult.rowCount == 1) {
+				cowgod.logger('Added new user '+user.username+' ('+user.id+') to database');
+			} else {
+				cowgod.logger('Updated user '+user.username+' ('+user.id+') in database');
+			}
+		}));
+	}));
 }
