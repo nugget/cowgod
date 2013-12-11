@@ -26,7 +26,7 @@ pg_select $::cowgod::db "SELECT * FROM users WHERE [join $boolwhere " OR "] ORDE
 	webout "<td>[::cowgod::dj_link $buf(user_id)]</td>"
 	foreach f $flagfields {
 		if {[string is true -strict $buf($f)]} {
-			set output {<i class="icon-ok-sign"></i>}
+			set output {<i class="glyphicon glyphicon-check"></i>}
 		} else {
 			set output "&nbsp;"
 		}
@@ -36,11 +36,11 @@ pg_select $::cowgod::db "SELECT * FROM users WHERE [join $boolwhere " OR "] ORDE
 	webout "<td>"
 
 	if {$buf(twitter) ne ""} {
-		webout "<a href=\"http://twitter.com/$buf(twitter)\"><i class=\"icon-large icon-twitter\"></i></a>"
+		webout "<a href=\"http://twitter.com/$buf(twitter)\"><i class=\"glyphicon-large glyphicon-twitter\"></i></a>"
 	}
 
 	if {$buf(facebook) ne ""} {
-		webout "<a href=\"https://facebook.com/$buf(facebook)\"><i class=\"icon-large icon-facebook\"></i></a>"
+		webout "<a href=\"https://facebook.com/$buf(facebook)\"><i class=\"glyphicon-large glyphicon-facebook\"></i></a>"
 	}
 
 	webout "</td>"
