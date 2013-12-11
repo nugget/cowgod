@@ -129,6 +129,7 @@ bot.on('roomJoin', function(data) {
 bot.on('chat', function(data) {
 	log_chat(data);
 	cowgod.remember_user(data.fromID,data.from);
+	did_user_get_ninjad(data);
 });
 
 bot.on('emote', function(data) {
@@ -302,6 +303,9 @@ function update_plug_media(media) {
 	if (!config_enabled('db_log_plays')) {
 		return;
 	}
+	if (media == null) {
+		return;
+	}
 	botdb.query('INSERT INTO plug_media (media_id,author,title,format,cid,duration) SELECT $2,$3,$4,$5,$6,$7 WHERE 1 NOT IN (SELECT 1 FROM plug_media WHERE media_id = $1)', [
 		media.id,media.id,media.author,media.title,media.format,media.cid,media.duration
 	], after(function(result) {
@@ -326,10 +330,8 @@ function log_djupdate(data) {
 
 function process_waitlist() {
 	cowgod.logger('calling getWaitList');
-	bot.getWaitList(function(data) {
-		cowgod.logger('I gotWaitList');
-		util.log(util.inspect(data));
-	});
+	var data = bot.getWaitList();
+	util.log(util.inspect(data));
 }
 
 function process_irc_message(from,to,text,message) {
@@ -389,17 +391,24 @@ function process_cnc_command(command) {
 			if (argv.length == 3) {
 				if (itemname in config) {
 					set_config(itemname,toggle);
+					return(itemname+' is currently '+config[itemname]);
 				} else {
 					set_global(itemname,toggle,'comment');
+					return(itemname+' is currently '+global[itemname]);
 				}
 			}
-			return(itemname+' is currently '+config[itemname]);
 			break;
 		case 'nickserv_register':
 			nickserv_register();
 			break;
 		case 'nickserv_identify':
 			nickserv_identify();
+			break;
+		case 'waitlist':
+			process_waitlist();
+			break;
+		case 'ninja':
+			ninja_bump(argv[1]);
 			break;
 		default:
 			return('Unknown command');
@@ -567,4 +576,41 @@ function update_user(user) {
 			}
 		}));
 	}));
+}
+
+function did_user_get_ninjad(data) {
+	if (!config_enabled('manage_waitlist')) {
+		return;
+	}
+
+	if (data.message.toLowerCase().indexOf('ninja') == 0) {
+		bot.chat('ha ha');
+		ninja_bump(data.fromID);
+	}
+}
+
+function ninja_bump(uid) {
+	cowgod.logger('ninja bumping user '+uid);
+	var wl = bot.getWaitList();
+
+	var leader_pos = -1;
+	var target_pos = -1;
+	var ninjad_pos = -1;
+
+	for (var u in wl) {
+		if (is_leader(wl[u].id)) {
+			cowgod.logger('leader is in position '+u);
+			leader_pos = parseInt(u) + 1;
+			target_pos = parseInt(u) + 2;
+		}
+		if (wl[u].id == uid) {
+			cowgod.logger('ninja-ee is in position '+u);
+			ninjad_pos = parseInt(u) + 1;
+		}
+	}		
+	cowgod.logger(leader_pos+' and '+ninjad_pos);
+	if (leader_pos > 0 && ninjad_pos > 0) {
+		cowgod.logger('Need to move pos '+ninjad_pos+' to '+leader_pos);
+		bot.moveDJ(uid,target_pos);
+	}
 }
