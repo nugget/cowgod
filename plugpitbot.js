@@ -6,6 +6,7 @@ var argv = require('optimist').argv;
 var sys = require('sys');
 var exec = require('child_process').exec;
 var argv = require('optimist').argv;
+var sleep = require('sleep');
 
 var cowgod = require('./cowgod.js');
 
@@ -35,16 +36,20 @@ if (settings.dbname) {
 
 cowgod.logger('! My Name Is '+myname+' headed for '+settings.plug_room);
 
-db_loadsettings();
+db_loadsettings(function() {
+	if ('log_tsv' in config) {
+		config['log_filehandle']  = fs.createWriteStream(config['log_tsv'],  {'flags': 'a'});
+		cowgod.logger('Opened '+config['log_tsv']+' for logging');
+	} else {
+		cowgod.logger('Logging is disabled');
+	}
+});
 
 var global = new Object();
 
 var PlugAPI  = require('plugapi');
 // var UPDATECODE = 'fe940d';
 
-if (typeof settings.log_tsv !== 'undefined') {
-	var log_tsv  = fs.createWriteStream(settings.log_tsv,  {'flags': 'a'});
-}
 
 var nugget = {
 	//moo: function() {
@@ -96,7 +101,7 @@ if (typeof settings.irc_server !== 'undefined') {
 }
 
 var bot = new PlugAPI(settings.plug_auth);
-util.log(util.inspect(bot));
+// util.log(util.inspect(bot));
 cowgod.set_active_bot(bot);
 
 cowgod.logger('doing that logging thing, whatever the fuck that is');
@@ -213,13 +218,17 @@ function lag_vote (vote) {
 }
 
 function logger_tsv(larray) {
-	if (typeof log_tsv !== 'undefined') {
+	if ('log_filehandle' in config) {
+		var log_tsv  = config['log_filehandle'];
+		cowgod.logger('logging to '+log_tsv);
 		var d = Math.round(new Date().getTime() / 1000.0);
 
 		log_tsv.write('clock\t'+d);
 		log_tsv.write('\t');
 		log_tsv.write(larray.join('\t'));
 		log_tsv.write('\n');
+	} else {
+		cowgod.logger('logging disabled');
 	}
 }
 
@@ -273,13 +282,13 @@ function log_play(data) {
 
 function log_djupdate(data) {
 	cowgod.logger('djUpdate:');
-	util.log(util.inspect(data));
-	cowgod.logger('--');
-	util.log(util.inspect(data.djs));
-	cowgod.logger('--');
+	// util.log(util.inspect(data));
+	// cowgod.logger('--');
+	// util.log(util.inspect(data.djs));
+	// cowgod.logger('--');
 	for (var u in data.djs) {
-		cowgod.logger('logging a u.user '+u);
-		util.log(util.inspect(data.djs[u]));
+		// cowgod.logger('logging a u.user '+u);
+		// util.log(util.inspect(data.djs[u]));
 	}
 }
 
@@ -435,7 +444,7 @@ function current_dj(djid) {
 	return global['current_dj'];
 }
 
-function db_loadsettings() {
+function db_loadsettings(callback) {
 	if (!settings.db) { return; }
 
 	loadcount = 0;
@@ -448,6 +457,7 @@ function db_loadsettings() {
 			loadcount = loadcount + 1;
 		});
 		cowgod.logger('- Loaded '+loadcount+' settings from database');
+		callback();
 	}));
 }
 
