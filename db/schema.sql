@@ -25,6 +25,18 @@ CREATE TABLE settings (
 CREATE TRIGGER onupdate BEFORE UPDATE ON settings FOR EACH ROW EXECUTE PROCEDURE onupdate_changed();
 GRANT SELECT ON settings TO bots;
 
+CREATE TABLE globals (
+	global_id serial NOT NULL,
+	added timestamp(0) without time zone NOT NULL DEFAULT (current_timestamp at time zone 'utc'),
+	changed timestamp(0) without time zone NOT NULL DEFAULT (current_timestamp at time zone 'utc'),
+	uid varchar NOT NULL,
+	key varchar NOT NULL,
+	value varchar NOT NULL,
+	PRIMARY KEY(global_id)
+);
+CREATE TRIGGER onupdate BEFORE UPDATE ON globals FOR EACH ROW EXECUTE PROCEDURE onupdate_changed();
+GRANT SELECT,INSERT,UPDATE ON globals TO bots;
+
 CREATE TABLE users (
 	user_id serial NOT NULL,
 	added timestamp(0) without time zone NOT NULL DEFAULT (current_timestamp at time zone 'utc'),

@@ -11,6 +11,7 @@ var sleep = require('sleep');
 var cowgod = require('./cowgod.js');
 
 var config = new Object();
+var global = new Object();
 
 if (typeof argv.nick === 'undefined') {
 	console.log('Need a -nick name!');
@@ -45,7 +46,7 @@ db_loadsettings(function() {
 	}
 });
 
-var global = new Object();
+db_loadglobals();
 
 var PlugAPI  = require('plugapi');
 // var UPDATECODE = 'fe940d';
@@ -181,7 +182,7 @@ bot.on('djAdvance', function(data) {
 	var leader_prefix  = '';
 	var leader_suffix  = '';
 
-	if ('leader' in config && config['leader'] === data.currentDJ) {
+	if (is_leader(data.currentDJ)) {
 		data.pitleader = true;
 		leader_prefix   = '*LEAD SONG* ';
 		leader_suffix   = ' ~***';
@@ -199,7 +200,7 @@ bot.on('djAdvance', function(data) {
 		irc_set_topic(data.media.author+' - '+data.media.title+' ('+cowgod.id_to_name(data.currentDJ)+')'+leader_suffix);
 		current_dj(data.currentDJ);
 
-		if (settings.announce_play) {
+		if (config_enabled('announce_play')) {
 			bot.chat(leader_prefix+data.media.author+' - '+data.media.title+' ('+cowgod.id_to_name(data.currentDJ)+')'+leader_suffix);
 		}
 	}
@@ -220,15 +221,12 @@ function lag_vote (vote) {
 function logger_tsv(larray) {
 	if ('log_filehandle' in config) {
 		var log_tsv  = config['log_filehandle'];
-		cowgod.logger('logging to '+log_tsv);
 		var d = Math.round(new Date().getTime() / 1000.0);
 
 		log_tsv.write('clock\t'+d);
 		log_tsv.write('\t');
 		log_tsv.write(larray.join('\t'));
 		log_tsv.write('\n');
-	} else {
-		cowgod.logger('logging disabled');
 	}
 }
 
@@ -355,7 +353,11 @@ function process_cnc_command(command) {
 			}
 
 			if (argv.length == 3) {
-				set_config(itemname,toggle);
+				if (itemname in config) {
+					set_config(itemname,toggle);
+				} else {
+					set_global(itemname,toggle,'comment');
+				}
 			}
 			return(itemname+' is currently '+config[itemname]);
 			break;
@@ -438,22 +440,28 @@ function after(callback) {
 
 function current_dj(djid) {
 	if (djid != null) {
-		global['current_dj'] = djid;
-		cowgod.logger('Current DJ is now '+global['current_dj']);
+		set_global('current_dj',djid);
 	}
 	return global['current_dj'];
+}
+
+function config_enabled(setting) {
+	if (setting in config) {
+		cowgod.logger('returning setting for '+setting);
+		return(config[setting]);
+	}
 }
 
 function db_loadsettings(callback) {
 	if (!settings.db) { return; }
 
-	loadcount = 0;
+	var loadcount = 0;
 	botdb.query('SELECT * FROM settings WHERE deleted IS NULL AND enabled IS TRUE AND (uid IS NULL OR uid = $1) ORDER BY uid DESC', [
 		settings.userid
 	], after(function(result) {
 		result.rows.forEach(function(setval) {
 			config[setval.key] = setval.value;
-			cowgod.logger('- '+setval.key+' set to '+config[setval.key]+' from the database');
+			cowgod.logger('- config '+setval.key+' set to '+config[setval.key]+' from the database');
 			loadcount = loadcount + 1;
 		});
 		cowgod.logger('- Loaded '+loadcount+' settings from database');
@@ -461,3 +469,44 @@ function db_loadsettings(callback) {
 	}));
 }
 
+function set_global(key,value,comments) {
+	if (key in global) {
+		if (global[key] != value) {
+			cowgod.logger('- global['+key+'] changed to '+value);
+			global[key] = value;
+			botdb.query('UPDATE globals SET value = $1, comments = $2 WHERE key = $3 AND uid = $4', [
+				value, comments, key, settings.userid
+			], after(function(result) {} ));
+		}
+	} else {
+		cowgod.logger('- global['+key+'] set to '+value);
+		global[key] = value;
+		botdb.query('INSERT INTO globals (value,comments,key,uid) SELECT $1,$2,$3,$4', [
+			value, comments, key, settings.userid
+		], after(function(result) {} ));
+	}
+}
+
+function db_loadglobals() {
+	if (!settings.db) { return; }
+
+	var loadcount = 0;
+	botdb.query('SELECT * FROM globals WHERE uid = $1 ORDER BY added', [
+		settings.userid
+	], after(function(result) {
+		result.rows.forEach(function(setval) {
+			global[setval.key] = setval.value;
+			cowgod.logger('- global '+setval.key+' set to '+global[setval.key]+' from the database');
+			loadcount = loadcount + 1;
+		});
+		cowgod.logger('- Loaded '+loadcount+' globals settings from database');
+	}));
+}
+
+function is_leader(djid) {
+	if ('leader' in global && global['leader'] === djid) {
+		return true;
+	} else {
+		return false;
+	}
+}
