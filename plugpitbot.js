@@ -114,8 +114,6 @@ var reconnect = function() {
 bot.on('close', reconnect);
 bot.on('error', reconnect);
 
-cowgod.id_to_name('52499dacc3b97a430c54501d');
-
 bot.on('roomJoin', function(data) {
 	cowgod.logger('roomJoin');
 	logger_tsv([ 'event','roomJoin','nickname',data.user.profile.username,'plug_user_id',data.user.profile.id,'djPoints',data.user.profile.djPoints,'fans',data.user.profile.fans,'listenerPoints',data.user.profile.listenerPoints,'avatarID',data.user.profile.avatarid ]);
@@ -584,13 +582,18 @@ function did_user_get_ninjad(data) {
 	}
 
 	if (data.message.toLowerCase().indexOf('ninja') == 0) {
-		bot.chat('ha ha');
+		bot.chat('ha ha!  Removing you from this round!');
 		ninja_bump(data.fromID);
 	}
 }
 
 function ninja_bump(uid) {
 	cowgod.logger('ninja bumping user '+uid);
+
+	if (is_leader(uid)) {
+		bot.chat('You can\'t ninja yourself, silly!');
+		return;
+	}
 	var wl = bot.getWaitList();
 
 	var leader_pos = -1;
