@@ -126,6 +126,15 @@ CREATE INDEX chats_user_id ON chats(user_id);
 -- insert into chats (ts,user_id,play_id,text,site) SELECT ts,user_id,play_id,text,site FROM tt_chats_expanded ORDER BY ts;
 -- update chats c set play_id = coalesce((SELECT max(p.play_id) FROM plays p WHERE p.start_time <= c.ts),1) WHERE play_id = 1;
 
+DROP VIEW plays_expanded;
+CREATE VIEW plays_expanded AS
+	SELECT p.*,coalesce(m.author,s.artist) as author,coalesce(m.title,s.song) as title,m.format,m.duration,u.nickname,'' as snaggers
+	FROM plays p
+	LEFT JOIN users u USING (user_id)
+	LEFT JOIN plug_media m USING (media_id)
+	LEFT JOIN tt_songs s   USING (song_id);
+
+GRANT SELECT ON plays_expanded TO bots;
 
 --
 --
