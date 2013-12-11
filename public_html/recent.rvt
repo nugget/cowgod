@@ -12,29 +12,29 @@ page_header -title "Recent Song Played in the Pit"
 
 set limit 100
 
-set sql "SELECT * FROM songlog_expanded ORDER BY id DESC LIMIT $limit"
+set sql "SELECT * FROM plays_expanded ORDER BY start_time DESC LIMIT $limit"
 
 webout [el_open table -class "table table-striped table-bordered table-centered table-responsive"]
 webout "<tr><th colspan=\"5\">Last $limit songs played in the Pit</th></tr>"
 set last_date ""
 pg_select $::cowgod::db $sql buf {
-	set date [clock format [clock scan $buf(ts)] -format "%A, %d-%b-%Y"]
+	set date [clock format [clock scan [lindex [split $buf(start_time) "."] 0]] -format "%A, %d-%b-%Y"]
 	if {$date ne $last_date} {
 		set last_date $date
 		puts "<tr><th colspan=\"6\" align=\"left\">$date</th></tr>"
 		puts "<tr><th>Time</th><th>Artist</th><th>Song</th><th>DJ</th><th>Snags</th></tr>"
 	}
-	set time [clock format [clock scan $buf(ts)] -format "%H:%M"]
-	if {[string range $buf(stats_djs) 2 25] eq $buf(dj_id)} {
+	set time [clock format [clock scan [lindex [split $buf(start_time) "."] 0]] -format "%H:%M"]
+	if {[string is true -strict $buf(leader)]} {
 		puts "<tr class=\"warning\">"
 	} else {
 		puts "<tr>"
 	}
-	puts "<td align=\"right\"><a href=\"[::cowgod::href play $buf(id)]\">$time</a></td>"
-	puts "<td>$buf(artist)</td>"
-	puts "<td><a href=\"[::cowgod::href song $buf(song_id)]\">$buf(song)</a></td>"
+	puts "<td align=\"right\"><a href=\"[::cowgod::href play $buf(play_id)]\">$time</a></td>"
+	puts "<td>$buf(author)</td>"
+	puts "<td><a href=\"[::cowgod::href song $buf(media_id)]\">$buf(title)</a></td>"
 	puts "<td>"
-	puts "<a href=\"[::cowgod::href dj $buf(dj_id)]\">$buf(nickname)</a>"
+	puts "<a href=\"[::cowgod::href dj $buf(user_id)]\">$buf(nickname)</a>"
 	puts "</td>"
 	puts "<td align=\"right\">[llength $buf(snaggers)]</td>"
 	puts "</tr>"
