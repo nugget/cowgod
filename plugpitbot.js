@@ -582,7 +582,6 @@ function did_user_get_ninjad(data) {
 	}
 
 	if (data.message.toLowerCase().indexOf('ninja') == 0) {
-		bot.chat('ha ha!  Removing you from this round!');
 		ninja_bump(data.fromID);
 	}
 }
@@ -592,6 +591,10 @@ function ninja_bump(uid) {
 
 	if (is_leader(uid)) {
 		bot.chat('You can\'t ninja yourself, silly!');
+		return;
+	}
+	if (is_leader(global['current_dj'])) {
+		bot.chat('You can\'t get ninjad while the leader is playing a song, doofus!  A new round is starting now.');
 		return;
 	}
 	var wl = bot.getWaitList();
@@ -612,8 +615,12 @@ function ninja_bump(uid) {
 		}
 	}		
 	cowgod.logger(leader_pos+' and '+ninjad_pos);
-	if (leader_pos > 0 && ninjad_pos > 0) {
+	if (leader_pos > 0 && ninjad_pos > 0 && target_pos > ninjad_pos) {
 		cowgod.logger('Need to move pos '+ninjad_pos+' to '+leader_pos);
+		bot.chat('ha ha!  Removing you from this round!');
 		bot.moveDJ(uid,target_pos);
+		botdb.query('INSERT INTO ninjas (user_id,dj_id,leader_id) SELECT id_from_uid($1),id_from_uid($2),id_from_uid($3)', [
+			uid,global['current_dj'],global['leader']
+		], after(function(result) {}));
 	}
 }
