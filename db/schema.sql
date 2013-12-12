@@ -111,6 +111,21 @@ CREATE INDEX grabs_user_id ON grabs(user_id);
 
 -- insert into grabs (play_id,ts,user_id,site) SELECT play_id,ts,user_id,site FROM tt_snags_expanded ORDER BY ts;
 
+CREATE TABLE ninjas (
+	ninja_id serial NOT NULL,
+	play_id integer NOT NULL REFERENCES plays(play_id) DEFAULT currval('plays_play_id_seq'::regclass),
+	ts timestamp(0) without time zone NOT NULL DEFAULT (current_timestamp at time zone 'utc'),
+	user_id integer NOT NULL REFERENCES users(user_id),
+	dj_id integer NOT NULL REFERENCES users(user_id),
+	leader_id integer NOT NULL REFERENCES users(user_id),
+	admission varchar,
+	site varchar NOT NULL DEFAULT 'plug',
+	PRIMARY KEY(ninja_id)
+);
+GRANT SELECT,INSERT ON ninjas TO bots;
+GRANT ALL ON ninjas_ninja_id_seq TO bots;
+CREATE INDEX ninjas_user_id ON ninjas(user_id);
+
 CREATE TABLE chats (
 	chat_id serial NOT NULL,
 	play_id integer NOT NULL REFERENCES plays(play_id) DEFAULT currval('plays_play_id_seq'::regclass),
@@ -135,6 +150,14 @@ CREATE VIEW plays_expanded AS
 	LEFT JOIN tt_songs s   USING (song_id);
 
 GRANT SELECT ON plays_expanded TO bots;
+
+CREATE FUNCTION id_from_uid(l_uid varchar) RETURNS integer AS $$
+	DECLARE l_user_id integer;
+	BEGIN
+		SELECT user_id INTO l_user_id FROM users WHERE uid = l_uid OR tt_uid = l_uid ORDER BY uid LIMIT 1;
+		RETURN l_user_id;
+	END;
+$$ LANGUAGE plpgsql;
 
 --
 --
