@@ -13,12 +13,13 @@ page_header -title "The Coveted Bagel \"Diggin' It\" Award"
 unset -nocomplain response
 load_response
 
-set bagel_id "4e1c6fb1a3f75163090bc3ae"
+set bagel_id 3
 
-set sql "SELECT *,(SELECT max(id) FROM songlog s WHERE s.ts < c.ts) as play_id FROM chatlog_expanded c WHERE user_id = [pg_quote $bagel_id] AND text ~ 'diggin.*(this|it)' ORDER BY ts DESC"
+set bagel_avatar 10
+set sql "SELECT * FROM chats_expanded c WHERE user_id = [pg_quote $bagel_id] AND text ~ 'diggin.*(this|it)' ORDER BY ts DESC"
 pg_select $::cowgod::db $sql buf {
 	lappend all [array get buf]
-	set bagel_avatar $buf(live_avatar)
+	#set bagel_avatar $buf(live_avatar)
 	set bagel_nick $buf(nickname)
 }
 
@@ -29,13 +30,13 @@ foreach hash $all {
 	unset -nocomplain play buf
 	array set buf $hash
 
-	pg_select $::cowgod::db "SELECT * FROM songlog_expanded WHERE id = $buf(play_id)" tbuf {
+	pg_select $::cowgod::db "SELECT * FROM plays_expanded WHERE play_id = $buf(play_id)" tbuf {
 		array set play [array get tbuf]
-		set phashes($play(id)) [array get tbuf]
-		incr dcount($play(dj_id))
+		set phashes($play(play_id)) [array get tbuf]
+		incr dcount($play(user_id))
 
-		if {$dcount($play(dj_id)) > $leader(count)} {
-			set leader(count)		$dcount($play(dj_id))
+		if {$dcount($play(user_id)) > $leader(count)} {
+			set leader(count)		$dcount($play(user_id))
 			set leader(nickname)	$play(nickname)
 		}
 	}
@@ -67,12 +68,12 @@ foreach hash $all {
 	array set buf $hash
 	array set play $phashes($buf(play_id))
 
-	if {[info exists play(id)]} {
+	if {[info exists play(play_id)]} {
 		webout "<tr>"
 		set date [clock format [clock scan $buf(ts)] -format "%A, %d-%b-%Y"]
-		webout "<td align=\"right\" nowrap=\"nowrap\">[el_open a -href [::cowgod::href play $play(id)]]$date[el_close a]</td>"
-		webout "<td>[el_open a -href [::cowgod::href dj $play(dj_id)]]$play(nickname)[el_close a]</td>"
-		webout "<td align=\"right\">[el_open a -href [::cowgod::href song $play(song_id)]]$play(song) by $play(artist)[el_close a]</td>"
+		webout "<td align=\"right\" nowrap=\"nowrap\">[el_open a -href [::cowgod::href play $play(play_id)]]$date[el_close a]</td>"
+		webout "<td>[el_open a -href [::cowgod::href dj $play(user_id)]]$play(nickname)[el_close a]</td>"
+		webout "<td align=\"right\">[el_open a -href [::cowgod::href song $play(song_id)]]$play(author) - $play(title)[el_close a]</td>"
 		webout "<td><small><strong>$buf(nickname)</strong> $buf(text)</small></td>"
 		webout "</tr>"
 	}

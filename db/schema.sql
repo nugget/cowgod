@@ -143,13 +143,20 @@ CREATE INDEX chats_user_id ON chats(user_id);
 
 DROP VIEW plays_expanded;
 CREATE VIEW plays_expanded AS
-	SELECT p.*,coalesce(m.author,s.artist) as author,coalesce(m.title,s.song) as title,m.format,m.duration,u.nickname,'' as snaggers
+	SELECT p.*,coalesce(m.author,s.artist) as author,coalesce(m.title,s.song) as title,m.format,m.duration,coalesce(u.nickname,u.tt_nickname) as nickname,''::varchar as snaggers
 	FROM plays p
 	LEFT JOIN users u USING (user_id)
 	LEFT JOIN plug_media m USING (media_id)
 	LEFT JOIN tt_songs s   USING (song_id);
-
 GRANT SELECT ON plays_expanded TO bots;
+
+DROP VIEW chats_expanded;
+CREATE VIEW chats_expanded AS
+	SELECT c.*,coalesce(u.nickname,u.tt_nickname) as nickname
+	FROM chats c
+    LEFT JOIN users u USING (user_id);
+GRANT SELECT ON chats_expanded TO bots;
+
 
 CREATE FUNCTION id_from_uid(l_uid varchar) RETURNS integer AS $$
 	DECLARE l_user_id integer;
