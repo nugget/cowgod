@@ -333,12 +333,12 @@ function process_waitlist() {
 	var wl = bot.getWaitList();
 
 	if (config_enabled('db_maintain_users')) {
-		var wlbuf = new Array();
+		var wlbuf = ''
 
 		for (var u in wl) {
-			wlbuf.push(wl[u].id);
+			wlbuf = wlbuf+' '+wl[u].id;
 		}
-		set_global('waitlist',wlbuf,'Updated by getWaitList');
+		set_global('waitlist',wlbuf.trim(),'Updated by getWaitList');
 		cowgod.logger('Updated waitlist global cache');
 	}
 	// util.log(util.inspect(data));
@@ -528,7 +528,8 @@ function db_loadsettings(callback) {
 function set_global(key,value,comments) {
 	if (key in global) {
 		if (global[key] != value) {
-			cowgod.logger('- global['+key+'] changed to '+value);
+			cowgod.logger('- global['+key+'] changed from '+global[key]);
+			cowgod.logger('- global['+key+'] changed to   '+value);
 			global[key] = value;
 			botdb.query('UPDATE globals SET value = $1, comments = $2 WHERE key = $3 AND uid = $4', [
 				value, comments, key, settings.userid
