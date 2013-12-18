@@ -149,6 +149,7 @@ bot.on('error', function(data) {
 bot.on('userJoin', function(data) {
 	util.log(util.inspect(data));
 	log_join(data);
+	update_user(data);
 	cowgod.remember_user(data.id,data.username);
 	process_waitlist();
 });
