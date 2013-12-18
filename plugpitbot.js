@@ -349,15 +349,18 @@ function process_waitlist(event) {
 		wlbuf = wlbuf.trim();
 
 		if (wlbuf.length > global['waitlist'].length) {
-			cowgod.logger('waitlist grew');
+			// cowgod.logger('waitlist grew');
 			if (config_enabled('manage_waitlist')) {
-				cowgod.logger('and i manage the waitlist');
+				// cowgod.logger('and i manage the waitlist');
 				if (event == 'djUpdate') {
-					cowgod.logger('and this was a new song djAdvance');
+					// cowgod.logger('and this was a new song djAdvance');
 					new_dj(global['waitlist'],wlbuf);
 				}
 			}
 		} 
+		if (wlbuf.length > global['waitlist'].length) {
+			lost_dj(global['waitlist'],wlbuf);
+		}
 
 		set_global('waitlist',wlbuf,'Updated by getWaitList');
 		cowgod.logger('Updated waitlist global cache');
@@ -369,16 +372,27 @@ function new_dj(s_old_wl,s_new_wl) {
 	var old_wl = s_old_wl.split(' ');
 	var new_wl = s_new_wl.split(' ');
 
-	cowgod.logger('old_wl');
-	util.log(util.inspect(old_wl));
-	cowgod.logger('new_wl');
-	util.log(util.inspect(new_wl));
+	// cowgod.logger('old_wl');
+	// util.log(util.inspect(old_wl));
+	// cowgod.logger('new_wl');
+	// util.log(util.inspect(new_wl));
 
 	for (u in new_wl) {
 		if (old_wl.indexOf(new_wl[u]) == -1) {
-			cowgod.logger('first time I\'ve seen uid '+new_wl[u]);
+			cowgod.logger(codgod.id_to_name(new_w[u])+' joined the waitlist');
 			move_to_end_of_round(new_wl[u]);
 			bot.chat('Welcome to the Pit, @'+cowgod.id_to_name(new_wl[u])+'!  The lead song is '+global['lead_song']+' // https://macnugget.org/cowgod/waitlist');
+		}
+	}
+}
+
+function lost_dj(s_old_wl,s_new_wl) {
+	var old_wl = s_old_wl.split(' ');
+	var new_wl = s_new_wl.split(' ');
+
+	for (u in old_wl) {
+		if (new_wl.indexOf(old_wl[u]) == -1) {
+			cowgod.logger(codgod.id_to_name(new_w[u])+' left the waitlist');
 		}
 	}
 }
@@ -588,7 +602,7 @@ function db_loadsettings(callback) {
 function set_global(key,value,comments) {
 	if (key in global) {
 		if (global[key] != value) {
-			cowgod.logger('- global['+key+'] changed from '+global[key]);
+			// cowgod.logger('- global['+key+'] changed from '+global[key]);
 			cowgod.logger('- global['+key+'] changed to   '+value);
 			global[key] = value;
 			botdb.query('UPDATE globals SET value = $1, comments = $2 WHERE key = $3 AND uid = $4', [
