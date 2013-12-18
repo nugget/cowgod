@@ -160,7 +160,7 @@ bot.on('userLeave', function(data) {
 
 bot.on('djUpdate', function(data) {
 	log_djupdate(data);
-	process_waitlist();
+	process_waitlist('djUpdate');
 });
 
 bot.on('curateUpdate', function(data) {
@@ -185,27 +185,34 @@ bot.on('djAdvance', function(data) {
 		data.pitleader = true;
 		leader_prefix   = '*LEAD SONG* ';
 		leader_suffix   = ' ~***';
+
+		set_global('lead_song',song_string(data.media));
 	} else {
 		data.pitleader = false;
 	}
 
 	log_play(data);
-	util.log(util.inspect(data));
+	// util.log(util.inspect(data));
 
 	if (data.media === null) {
+		current_dj(null);
 		irc_set_topic('Nothing is playing in the Pit :(');
 	} else {
 		lag_vote();
-		irc_set_topic(data.media.author+' - '+data.media.title+' ('+cowgod.id_to_name(data.currentDJ)+')'+leader_suffix);
+		irc_set_topic(song_string(data.media)+' ('+cowgod.id_to_name(data.currentDJ)+')'+leader_suffix);
 		current_dj(data.currentDJ);
 
 		if (config_enabled('announce_play')) {
-			bot.chat(leader_prefix+data.media.author+' - '+data.media.title+' ('+cowgod.id_to_name(data.currentDJ)+')'+leader_suffix);
+			bot.chat(leader_prefix+song_string(data.media)+' ('+cowgod.id_to_name(data.currentDJ)+')'+leader_suffix);
 		}
 	}
 
-	process_waitlist();
+	process_waitlist('djAdvance');
 });
+
+function song_string(media) {
+	return media.author+' - '+media.title;
+}
 
 function do_vote (vote) {
 	// bot.chat('Woot!');
@@ -308,7 +315,7 @@ function update_plug_media(media) {
 		return;
 	}
 	botdb.query('INSERT INTO plug_media (media_id,author,title,format,cid,duration) SELECT $2,$3,$4,$5,$6,$7 WHERE 1 NOT IN (SELECT 1 FROM plug_media WHERE media_id = $1)', [
-		media.id,media.id,media.author,media.title,media.format,media.cid,media.duration
+		media.id,media.id,media.author,media.title,media.format,media.cid,Math.floor(media.duration)
 	], after(function(result) {
 		// util.log(util.inspect(result));
 		if (result.rowCount == 1) {
@@ -329,7 +336,7 @@ function log_djupdate(data) {
 	}
 }
 
-function process_waitlist() {
+function process_waitlist(event) {
 	var wl = bot.getWaitList();
 
 	if (config_enabled('db_maintain_users')) {
@@ -338,10 +345,62 @@ function process_waitlist() {
 		for (var u in wl) {
 			wlbuf = wlbuf+' '+wl[u].id;
 		}
-		set_global('waitlist',wlbuf.trim(),'Updated by getWaitList');
+		wlbuf = wlbuf.trim();
+
+		if (wlbuf.length > global['waitlist'].length) {
+			cowgod.logger('waitlist grew');
+			if (config_enabled('manage_waitlist')) {
+				cowgod.logger('and i manage the waitlist');
+				if (event == 'djUpdate') {
+					cowgod.logger('and this was a new song djAdvance');
+					new_dj(global['waitlist'],wlbuf);
+				}
+			}
+		} 
+
+		set_global('waitlist',wlbuf,'Updated by getWaitList');
 		cowgod.logger('Updated waitlist global cache');
 	}
 	// util.log(util.inspect(data));
+}
+
+function new_dj(s_old_wl,s_new_wl) {
+	var old_wl = s_old_wl.split(' ');
+	var new_wl = s_new_wl.split(' ');
+
+	cowgod.logger('old_wl');
+	util.log(util.inspect(old_wl));
+	cowgod.logger('new_wl');
+	util.log(util.inspect(new_wl));
+
+	for (u in new_wl) {
+		if (old_wl.indexOf(new_wl[u]) == -1) {
+			cowgod.logger('first time I\'ve seen uid '+new_wl[u]);
+			move_to_end_of_round(new_wl[u]);
+			bot.chat('Welcome to the Pit, @'+cowgod.id_to_name(new_wl[u])+'!  The lead song is '+global['lead_song']+' // https://macnugget.org/cowgod/waitlist');
+		}
+	}
+}
+
+function move_to_end_of_round(uid) {
+	if (global['current_dj'] == global['leader']) {
+		cowgod.logger('No need to move new DJ since the round just started');
+		return;
+	}
+
+	var wl = bot.getWaitList();
+	var uidlist = new Array();
+
+	for (var u in wl) {
+		uidlist.push(wl[u].id);
+	}
+
+	var leader_pos = uidlist.indexOf(global['leader']);
+	var target_pos = uidlist.indexOf(uid);
+
+	if (target_pos > leader_pos) {
+		bot.moveDJ(uid,leader_pos+1);
+	}
 }
 
 function process_irc_message(from,to,text,message) {
