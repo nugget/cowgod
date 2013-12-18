@@ -1,0 +1,118 @@
+<?
+
+package require macnugget
+package require cowgod
+
+page_init
+opt header 0
+page_header -title "Leader and Waitlist"
+
+::cowgod::dbconnect
+::cowgod::buttonbar
+
+set limit 100
+
+proc wl_row {uid class} {
+	global start_time user_id author title nickname
+
+	set trclass(leader)  "success"
+	set trclass(playing) "warning"
+
+	set outbuf ""
+
+	if {![info exists nickname($uid)]} {
+		pg_select $::cowgod::db "SELECT * FROM users WHERE uid = [pg_quote $uid]" buf {
+			set nickname($uid) $buf(nickname)
+			set author($uid) "Unknown"
+			set title($uid) "Unknown"
+		}
+	}
+
+	if {[info exists trclass($class)]} {
+		append outbuf [el_open tr -class $trclass($class)]
+	} else {
+		append outbuf [el_open tr]
+	}
+	append outbuf "<td>$class</td>"
+	append outbuf "<td>$nickname($uid)</td>"
+
+	if {$class eq "waiting"} {
+		append outbuf "<td>&nbsp;</td>"
+	} else {
+		append outbuf "<td>$author($uid) - $title($uid)</td>"
+	}
+
+	append outbuf "</tr>"
+
+	return $outbuf
+}
+
+pg_select $::cowgod::db "SELECT key,value FROM globals WHERE key IN ('current_dj','waitlist','leader') ORDER BY changed" buf {
+	set $buf(key) $buf(value)
+}
+
+pg_select $::cowgod::db "SELECT * FROM plays_expanded ORDER BY play_id DESC LIMIT 51" buf {
+	set uid $buf(uid)
+
+	if {![info exists nickname($uid)]} {
+		foreach f {start_time user_id author title nickname} {
+			global ${f}
+			set ${f}($uid) $buf($f)
+		}
+	}
+}
+
+if {![info exists current_dj]} {
+	webout "<h1>Nothing is playing in the Pit</h1>"
+} elseif {![info exists waitlist]} {
+	webout "<h1>There is no waitlist in the Pit</h1>"
+} elseif {![info exists leader]} {
+	webout "<h1>There is no leader in the Pit</h1>"
+} else {
+	set djlist [concat $current_dj [split $waitlist]]
+
+	set lpos [lsearch -exact $djlist $leader]
+
+	if {$lpos == -1} {
+		webout "<h1>The leader is not playing music in the Pit</h1>"
+	} else {
+		set played_max [expr $lpos + 1]
+		set waiting_max [expr $lpos -1 ]
+
+		webout [el_open table -class "table table-striped table-bordered table-centered table-responsive"]
+		webout "<tr><th colspan=\"5\">Current Round in the Pit</th></tr>"
+
+		webout [wl_row $leader leader]
+
+		if {$lpos == 0} {
+			#
+			# Brand new round, the whole list is waiting
+			#
+			foreach uid [lrange $djlist 1 end] {
+				webout [wl_row $uid waiting]
+			}
+		} else {
+			#
+			# leader is in the middle of the waitlist, round is in progress
+			#
+			foreach uid [lrange $djlist [expr $lpos + 1] end] {
+				webout [wl_row $uid played]
+			}
+			foreach uid [lrange $djlist 0 [expr $lpos - 1]] {
+				if {$uid eq $current_dj} {
+					webout [wl_row $uid playing]
+				} else {
+					webout [wl_row $uid waiting]
+				}
+			}
+		}
+
+		webout [el_close table]
+	}
+}
+
+::cowgod::dbdisconnect
+page_footer
+page_term
+
+?>

@@ -77,7 +77,7 @@ namespace eval ::cowgod {
 		webout [el_open div -class col-md-12]
 		webout [el_open div -class "btn-group btn-group-sm"]
 		webout "[el_open a -href "/cowgod/"][el_open button -class "btn btn-default"][el_oc img -style "height: 1em; vertical-align: text-top;" -src [::cowgod::avatar_href 15 headfront]] The Pit[el_close button][el_close a]"
-		foreach {href title} {djstats "DJ Stats" recent "Recent Plays" bagel "CBDIA" peak "Peak Users"} {
+		foreach {href title} {djstats "DJ Stats" waitlist "Wait List" recent "Recent Plays" bagel "CBDIA" peak "Peak Users"} {
 			webout "[el_open a -href "/cowgod/$href"][el_open button -class "btn btn-default"]$title[el_close button][el_close a]"
 		}
 		if {[::macnugget::acl_check cowgod_admin]} {

@@ -143,7 +143,7 @@ CREATE INDEX chats_user_id ON chats(user_id);
 
 DROP VIEW plays_expanded;
 CREATE VIEW plays_expanded AS
-	SELECT p.*,coalesce(m.author,s.artist) as author,coalesce(m.title,s.song) as title,m.format,m.duration,coalesce(u.nickname,u.tt_nickname) as nickname,''::varchar as snaggers
+	SELECT p.*,coalesce(m.author,s.artist) as author,coalesce(m.title,s.song) as title,m.format,m.duration,coalesce(u.nickname,u.tt_nickname) as nickname,u.uid,''::varchar as snaggers
 	FROM plays p
 	LEFT JOIN users u USING (user_id)
 	LEFT JOIN plug_media m USING (media_id)
