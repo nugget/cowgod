@@ -122,6 +122,7 @@ bot.on('roomJoin', function(data) {
 	current_dj(data.room.currentDJ);
 	load_current_userlist(data);
 	update_plug_media(data.room.media);
+	process_waitlist();
 });
 
 bot.on('chat', function(data) {
@@ -149,10 +150,12 @@ bot.on('userJoin', function(data) {
 	util.log(util.inspect(data));
 	log_join(data);
 	cowgod.remember_user(data.id,data.username);
+	process_waitlist();
 });
 
 bot.on('userLeave', function(data) {
 	log_part(data);
+	process_waitlist();
 });
 
 bot.on('djUpdate', function(data) {
@@ -316,7 +319,7 @@ function update_plug_media(media) {
 
 function log_djupdate(data) {
 	cowgod.logger('djUpdate:');
-	// util.log(util.inspect(data));
+	util.log(util.inspect(data));
 	// cowgod.logger('--');
 	// util.log(util.inspect(data.djs));
 	// cowgod.logger('--');
@@ -327,9 +330,18 @@ function log_djupdate(data) {
 }
 
 function process_waitlist() {
-	cowgod.logger('calling getWaitList');
-	var data = bot.getWaitList();
-	util.log(util.inspect(data));
+	var wl = bot.getWaitList();
+
+	if (config_enabled('db_maintain_users')) {
+		var wlbuf = new Array();
+
+		for (var u in wl) {
+			wlbuf.push(wl[u].id);
+		}
+		set_global('waitlist',wlbuf,'Updated by getWaitList');
+		cowgod.logger('Updated waitlist global cache');
+	}
+	// util.log(util.inspect(data));
 }
 
 function process_irc_message(from,to,text,message) {
@@ -407,6 +419,9 @@ function process_cnc_command(command) {
 			break;
 		case 'ninja':
 			ninja_bump(argv[1]);
+			break;
+		case 'avatar':
+			bot.set_avatar(argv[1]);
 			break;
 		default:
 			return('Unknown command');
