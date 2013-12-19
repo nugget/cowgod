@@ -349,16 +349,17 @@ function process_waitlist(event) {
 		wlbuf = wlbuf.trim();
 
 		if (wlbuf.length > global['waitlist'].length) {
-			// cowgod.logger('waitlist grew');
+			cowgod.logger('waitlist grew');
 			if (config_enabled('manage_waitlist')) {
-				// cowgod.logger('and i manage the waitlist');
+				cowgod.logger('and i manage the waitlist');
 				if (event == 'djUpdate') {
-					// cowgod.logger('and this was a new song djAdvance');
+					cowgod.logger('and this was a new song djAdvance');
 					new_dj(global['waitlist'],wlbuf);
 				}
 			}
 		} 
-		if (wlbuf.length > global['waitlist'].length) {
+		if (wlbuf.length < global['waitlist'].length) {
+			cowgod.logger('waitlist shrunk');
 			lost_dj(global['waitlist'],wlbuf);
 		}
 
@@ -379,7 +380,7 @@ function new_dj(s_old_wl,s_new_wl) {
 
 	for (u in new_wl) {
 		if (old_wl.indexOf(new_wl[u]) == -1) {
-			cowgod.logger(cowgod.id_to_name(new_w[u])+' joined the waitlist');
+			cowgod.logger(cowgod.id_to_name(new_wl[u])+' joined the waitlist');
 			move_to_end_of_round(new_wl[u]);
 			bot.chat('Welcome to the Pit, @'+cowgod.id_to_name(new_wl[u])+'!  The lead song is '+global['lead_song']+' // https://macnugget.org/cowgod/waitlist');
 		}
@@ -392,7 +393,12 @@ function lost_dj(s_old_wl,s_new_wl) {
 
 	for (u in old_wl) {
 		if (new_wl.indexOf(old_wl[u]) == -1) {
-			cowgod.logger(cowgod.id_to_name(new_w[u])+' left the waitlist');
+			cowgod.logger(cowgod.id_to_name(old_wl[u])+' left the waitlist');
+
+			if (old_wl[u] == global['leader']) {
+				cowgod.logger('Ack, we need a new leader!');
+				set_global('leader',new_wl[u],'Battlefield promotion from lost_dj');
+			}
 		}
 	}
 }
@@ -602,9 +608,14 @@ function db_loadsettings(callback) {
 function set_global(key,value,comments) {
 	if (key in global) {
 		if (global[key] != value) {
-			// cowgod.logger('- global['+key+'] changed from '+global[key]);
+			cowgod.logger('- global['+key+'] changed from '+global[key]);
 			cowgod.logger('- global['+key+'] changed to   '+value);
 			global[key] = value;
+
+			if (key == 'leader') {
+				bot.chat('*** The leader is now '+cowgod.id_to_name(value));
+			}
+			
 			botdb.query('UPDATE globals SET value = $1, comments = $2 WHERE key = $3 AND uid = $4', [
 				value, comments, key, settings.userid
 			], after(function(result) {} ));
