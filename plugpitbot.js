@@ -379,7 +379,7 @@ function new_dj(s_old_wl,s_new_wl) {
 
 	for (u in new_wl) {
 		if (old_wl.indexOf(new_wl[u]) == -1) {
-			cowgod.logger(codgod.id_to_name(new_w[u])+' joined the waitlist');
+			cowgod.logger(cowgod.id_to_name(new_w[u])+' joined the waitlist');
 			move_to_end_of_round(new_wl[u]);
 			bot.chat('Welcome to the Pit, @'+cowgod.id_to_name(new_wl[u])+'!  The lead song is '+global['lead_song']+' // https://macnugget.org/cowgod/waitlist');
 		}
@@ -392,7 +392,7 @@ function lost_dj(s_old_wl,s_new_wl) {
 
 	for (u in old_wl) {
 		if (new_wl.indexOf(old_wl[u]) == -1) {
-			cowgod.logger(codgod.id_to_name(new_w[u])+' left the waitlist');
+			cowgod.logger(cowgod.id_to_name(new_w[u])+' left the waitlist');
 		}
 	}
 }
