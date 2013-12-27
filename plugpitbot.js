@@ -13,6 +13,11 @@ var cowgod = require('./cowgod.js');
 var config = new Object();
 var global = new Object();
 
+var admins = new Array();
+var trendsetters = new Array();
+var bots = new Array();
+var outcasts = new Array();
+
 if (typeof argv.nick === 'undefined') {
 	console.log('Need a -nick name!');
 	process.exit(1);
@@ -47,6 +52,7 @@ db_loadsettings(function() {
 });
 
 db_loadglobals();
+db_loadusers();
 
 var PlugAPI  = require('plugapi');
 // var UPDATECODE = 'fe940d';
@@ -199,7 +205,9 @@ bot.on('djAdvance', function(data) {
 		current_dj(null);
 		irc_set_topic('Nothing is playing in the Pit :(');
 	} else {
-		lag_vote();
+		if (config_enabled('autobop') || is_trendsetter(data.currentDJ)) {
+			lag_vote();
+		}
 		irc_set_topic(song_string(data.media)+' ('+cowgod.id_to_name(data.currentDJ)+')'+leader_suffix);
 		current_dj(data.currentDJ);
 
@@ -605,6 +613,42 @@ function db_loadsettings(callback) {
 	}));
 }
 
+function db_loadusers() {
+	if (!settings.db) { return; }
+
+	admins.length = 0;
+	botdb.query('SELECT uid FROM users WHERE owner IS TRUE OR admin IS TRUE ORDER BY nickname',after(function(result) {
+		result.rows.forEach(function(user) {
+			admins.push(user.uid);
+		});
+		cowgod.logger('- Loaded '+admins.length+' admins from database');
+	}));
+
+	trendsetters.length = 0;
+	botdb.query('SELECT uid FROM users WHERE trendsetter IS TRUE ORDER BY nickname',after(function(result) {
+		result.rows.forEach(function(user) {
+			trendsetters.push(user.uid);
+		});
+		cowgod.logger('- Loaded '+trendsetters.length+' trendsetters from database');
+	}));
+
+	bots.length = 0;
+	botdb.query('SELECT uid FROM users WHERE bot IS TRUE ORDER BY nickname',after(function(result) {
+		result.rows.forEach(function(user) {
+			bots.push(user.uid);
+		});
+		cowgod.logger('- Loaded '+bots.length+' trendsetters from database');
+	}));
+
+	outcasts.length = 0;
+	botdb.query('SELECT uid FROM users WHERE ignore IS TRUE ORDER BY nickname',after(function(result) {
+		result.rows.forEach(function(user) {
+			outcasts.push(user.uid);
+		});
+		cowgod.logger('- Loaded '+outcasts.length+' trendsetters from database');
+	}));
+}
+
 function set_global(key,value,comments) {
 	if (key in global) {
 		if (global[key] != value) {
@@ -724,4 +768,21 @@ function ninja_bump(uid) {
 			uid,global['current_dj'],global['leader']
 		], after(function(result) {}));
 	}
+}
+
+
+function is_admin(userid) {
+    return (admins.indexOf(userid) != -1);
+}
+
+function is_owner(userid) {
+    return (owners.indexOf(userid) != -1);
+}
+
+function is_bot(userid) {
+    return (bots.indexOf(userid) != -1);
+}
+
+function is_trendsetter(userid) {
+    return (trendsetters.indexOf(userid) != -1);
 }
