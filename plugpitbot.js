@@ -272,6 +272,9 @@ function log_chat(data) {
 function log_vote(data) {
 	if (data.vote == 1) {
 		cowgod.logger(cowgod.id_to_name(data.id)+' wooted');
+		if(is_trendsetter(data.id)) {
+			lag_vote();
+		}
 	} else {
 		cowgod.logger('vote (unknown type)');
 		util.log(util.inspect(data));
