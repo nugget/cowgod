@@ -12,6 +12,7 @@ var cowgod = require('./cowgod.js');
 
 var config = new Object();
 var global = new Object();
+var localv = new Object();
 
 var admins = new Array();
 var trendsetters = new Array();
@@ -122,6 +123,7 @@ bot.on('error', reconnect);
 
 bot.on('roomJoin', function(data) {
 	cowgod.logger('roomJoin');
+	localv['voted'] = false;
 	logger_tsv([ 'event','roomJoin','nickname',data.user.profile.username,'plug_user_id',data.user.profile.id,'djPoints',data.user.profile.djPoints,'fans',data.user.profile.fans,'listenerPoints',data.user.profile.listenerPoints,'avatarID',data.user.profile.avatarid ]);
 	// util.log(util.inspect(data));
 	update_user(data.user.profile);
@@ -185,6 +187,8 @@ bot.on('userUpdate', function(data) {
 });
 
 bot.on('djAdvance', function(data) {
+	localv['voted'] = false;
+
 	var leader_prefix  = '';
 	var leader_suffix  = '';
 
@@ -205,8 +209,11 @@ bot.on('djAdvance', function(data) {
 		current_dj(null);
 		irc_set_topic('Nothing is playing in the Pit :(');
 	} else {
-		if (config_enabled('autobop') || is_trendsetter(data.currentDJ)) {
-			lag_vote();
+		if (config_enabled('autobop') || (config_enabled('woot_leaders') && is_trendsetter(data.currentDJ))) {
+			if (!localv['voted']) {
+				localv['voted'] = true;
+				lag_vote(1);
+			}
 		}
 		irc_set_topic(song_string(data.media)+' ('+cowgod.id_to_name(data.currentDJ)+')'+leader_suffix);
 		current_dj(data.currentDJ);
@@ -217,6 +224,7 @@ bot.on('djAdvance', function(data) {
 	}
 
 	process_waitlist('djAdvance');
+	db_loadsettings(function() {});
 });
 
 function song_string(media) {
@@ -224,9 +232,11 @@ function song_string(media) {
 }
 
 function do_vote (vote) {
-	// bot.chat('Woot!');
-	cowgod.logger(' I am wooting');
-	bot.woot();
+	if (typeof vote == undefined) {
+		vote = 1;
+	}
+	cowgod.logger(' I am voting '+vote);
+	bot.woot(vote);
 }
 
 function lag_vote (vote) {
@@ -272,8 +282,12 @@ function log_chat(data) {
 function log_vote(data) {
 	if (data.vote == 1) {
 		cowgod.logger(cowgod.id_to_name(data.id)+' wooted');
-		if(is_trendsetter(data.id)) {
-			lag_vote();
+		if (config_enabled('follow_trends') && is_trendsetter(data.id)) {
+			if (!localv['voted']) {
+				localv['voted'] = true;
+				cowgod.logger('Following trendsetter '+cowgod.id_to_name(data.id)+'\'s vote ('+data.vote+')');
+				lag_vote(data.vote);
+			}
 		}
 	} else {
 		cowgod.logger('vote (unknown type)');
@@ -408,13 +422,22 @@ function lost_dj(s_old_wl,s_new_wl) {
 	var old_wl = s_old_wl.split(' ');
 	var new_wl = s_new_wl.split(' ');
 
+	cowgod.logger('old_wl');
+	util.log(util.inspect(old_wl));
+	cowgod.logger('new_wl');
+	util.log(util.inspect(new_wl));
+
 	for (u in old_wl) {
 		if (new_wl.indexOf(old_wl[u]) == -1) {
-			cowgod.logger(cowgod.id_to_name(old_wl[u])+' left the waitlist');
+			if (old_wl[u] == global['current_dj']) {
+				cowgod.logger('Confused, it looked like '+cowgod.id_to_name(old_wl[u])+' left the waitlist, but that is the current DJ');
+			} else {
+				cowgod.logger(cowgod.id_to_name(old_wl[u])+' left the waitlist');
 
-			if (old_wl[u] == global['leader']) {
-				cowgod.logger('Ack, we need a new leader!');
-				set_global('leader',new_wl[u],'Battlefield promotion from lost_dj');
+				if (old_wl[u] == global['leader']) {
+					cowgod.logger('Ack, we need a new leader!');
+					set_global('leader',new_wl[u],'Battlefield promotion from lost_dj');
+				}
 			}
 		}
 	}
@@ -520,6 +543,9 @@ function process_cnc_command(command) {
 		case 'avatar':
 			bot.set_avatar(argv[1]);
 			break;
+		case 'reload':
+			db_loadsettings(function() {});
+			break;
 		default:
 			return('Unknown command');
 	}
@@ -613,11 +639,21 @@ function db_loadsettings(callback) {
 		settings.userid
 	], after(function(result) {
 		result.rows.forEach(function(setval) {
-			config[setval.key] = setval.value;
-			cowgod.logger('- config '+setval.key+' set to '+config[setval.key]+' from the database');
-			loadcount = loadcount + 1;
+			if (setval.key in config) {
+				if (config[setval.key] != setval.value) {
+					config[setval.key] = setval.value;
+					cowgod.logger('- config '+setval.key+' changed to '+config[setval.key]+' from the database');
+					loadcount = loadcount + 1;
+				}
+			} else {
+				config[setval.key] = setval.value;
+				cowgod.logger('- config '+setval.key+' set to '+config[setval.key]+' from the database');
+				loadcount = loadcount + 1;
+			}
 		});
-		cowgod.logger('- Loaded '+loadcount+' settings from database');
+		if (loadcount > 0) {
+			cowgod.logger('- Loaded '+loadcount+' settings from database');
+		}
 		callback();
 	}));
 }
@@ -646,7 +682,7 @@ function db_loadusers() {
 		result.rows.forEach(function(user) {
 			bots.push(user.uid);
 		});
-		cowgod.logger('- Loaded '+bots.length+' trendsetters from database');
+		cowgod.logger('- Loaded '+bots.length+' bots from database');
 	}));
 
 	outcasts.length = 0;
@@ -654,7 +690,7 @@ function db_loadusers() {
 		result.rows.forEach(function(user) {
 			outcasts.push(user.uid);
 		});
-		cowgod.logger('- Loaded '+outcasts.length+' trendsetters from database');
+		cowgod.logger('- Loaded '+outcasts.length+' outcasts from database');
 	}));
 }
 
