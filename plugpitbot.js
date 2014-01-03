@@ -438,6 +438,9 @@ function lost_dj(s_old_wl,s_new_wl) {
 				if (old_wl[u] == global['leader']) {
 					cowgod.logger('Ack, we need a new leader!');
 					var new_guy = new_wl[u];
+					if (new_guy == '') {
+						new_guy = global['current_dj'];
+					}
 					set_global('leader',new_guy,'Battlefield promotion from lost_dj');
 				}
 			}
