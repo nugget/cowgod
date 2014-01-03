@@ -207,6 +207,7 @@ bot.on('djAdvance', function(data) {
 
 	if (data.media === null) {
 		current_dj(null);
+		set_global('leader','','Nothing is playing');
 		irc_set_topic('Nothing is playing in the Pit :(');
 	} else {
 		if (config_enabled('autobop') || (config_enabled('woot_leaders') && is_trendsetter(data.currentDJ))) {
@@ -436,7 +437,8 @@ function lost_dj(s_old_wl,s_new_wl) {
 
 				if (old_wl[u] == global['leader']) {
 					cowgod.logger('Ack, we need a new leader!');
-					set_global('leader',new_wl[u],'Battlefield promotion from lost_dj');
+					var new_guy = new_wl[u];
+					set_global('leader',new_guy,'Battlefield promotion from lost_dj');
 				}
 			}
 		}
@@ -513,6 +515,9 @@ function process_cnc_command(command) {
 			var toggle   = argv[2];
 
 			switch(toggle) {
+				case 'none':
+					toggle = '';
+					break;
 				case 'current_dj':
 					toggle = global['current_dj'];
 					break;
@@ -702,7 +707,11 @@ function set_global(key,value,comments) {
 			global[key] = value;
 
 			if (key == 'leader') {
-				bot.chat('*** The leader is now '+cowgod.id_to_name(value));
+				if (value != '') {
+					bot.chat('*** The leader is now '+cowgod.id_to_name(value));
+				} else {
+					bot.chat('*** There is no leader, let anarchy reign! (RICSAS)');
+				}
 			}
 			
 			botdb.query('UPDATE globals SET value = $1, comments = $2 WHERE key = $3 AND uid = $4', [
