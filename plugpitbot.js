@@ -154,40 +154,62 @@ var nuglog = {
 db_loadglobals();
 db_loadusers();
 
-if (typeof settings.irc_server !== 'undefined') {
-	var irc = require('irc');
-	cowgod.logger('Connecting to IRC '+settings.irc_server+' as '+settings.irc_nick);
-	cuckoo = new irc.Client(settings.irc_server, settings.irc_nick, {
-		selfSigned: true,
-		certExpired: true,
-		channels: [settings.irc_channel],
-		userName: myname,
-		realName: 'Plug.dj bot',
-		debug: true,
-		showErrors: true
-	});
+cowgod.logger('getUpdateCode('+settings.plug_auth+','+settings.plug_room+')');
+PlugAPI.getUpdateCode(settings.plug_auth, settings.plug_room, function(error, updateCode) {
+	if (error === false) {
+		cowgod.logger('Learned update code from plug site');
+	} else {
+		cowgod.logger('Error: '+error);
+		cowgod.logger('Unable to learn updateCode, falling back on database value');
+		updateCode = settings.update_code;
+	}
 
-	cuckoo.addListener('message',function(from,to,text,message) {
-		cowgod.logger('IRC <'+from+'> '+text);
-		if (to == settings.irc_nick) {
-			var response = process_irc_message(from,to,text,message);
-			if (response != null) {
-				cowgod.logger('irc send '+response);
-				cuckoo.say(from, response);
-			}
-		}
-	});
+	cowgod.logger('Current updateCode is "'+updateCode+'"');
+		
+	var bot = new PlugAPI(settings.plug_auth,updateCode);
+	// util.log(util.inspect(bot));
+	cowgod.set_active_bot(bot);
 
-	cuckoo.addListener('notice',function(from,to,text,message) {
-		cowgod.logger('IRC <'+from+'> '+text);
-		if (to == settings.irc_nick) {
-			var response = process_irc_message(from,to,text,message);
-			if (response != null) {
-				cowgod.logger('irc send '+response);
-				cuckoo.say(from, response);
+	cowgod.logger('doing that logging thing, whatever the fuck that is');
+	bot.setLogObject(nuglog);
+	cowgod.logger('connecting to '+settings.plug_room);
+	bot.connect(settings.plug_room);
+
+	if (typeof settings.irc_server !== 'undefined') {
+		var irc = require('irc');
+		cowgod.logger('Connecting to IRC '+settings.irc_server+' as '+settings.irc_nick);
+		cuckoo = new irc.Client(settings.irc_server, settings.irc_nick, {
+			selfSigned: true,
+			certExpired: true,
+			channels: [settings.irc_channel],
+			userName: myname,
+			realName: 'Plug.dj bot',
+			debug: true,
+			showErrors: true
+		});
+
+		cuckoo.addListener('message',function(from,to,text,message) {
+			cowgod.logger('IRC <'+from+'> '+text);
+			if (to == settings.irc_nick) {
+				var response = process_irc_message(from,to,text,message);
+				if (response != null) {
+					cowgod.logger('irc send '+response);
+					cuckoo.say(from, response);
+				}
 			}
-		}
-	});
+		});
+
+		cuckoo.addListener('notice',function(from,to,text,message) {
+			cowgod.logger('IRC <'+from+'> '+text);
+			if (to == settings.irc_nick) {
+				var response = process_irc_message(from,to,text,message);
+				if (response != null) {
+					cowgod.logger('irc send '+response);
+					cuckoo.say(from, response);
+				}
+			}
+		});
+	}
 
 	function process_irc_message(from,to,text,message) {
 		if(text.substr(0,1) == '/') {
@@ -219,29 +241,6 @@ if (typeof settings.irc_server !== 'undefined') {
 		cowgod.logger('Registering with NickServ: '+buf);
 		cuckoo.say('NickServ',buf);
 	}
-
-}
-
-cowgod.logger('getUpdateCode('+settings.plug_auth+','+settings.plug_room+')');
-PlugAPI.getUpdateCode(settings.plug_auth, settings.plug_room, function(error, updateCode) {
-	if (error === false) {
-		cowgod.logger('Learned update code from plug site');
-	} else {
-		cowgod.logger('Error: '+error);
-		cowgod.logger('Unable to learn updateCode, falling back on database value');
-		updateCode = settings.update_code;
-	}
-
-	cowgod.logger('Current updateCode is "'+updateCode+'"');
-		
-	var bot = new PlugAPI(settings.plug_auth,updateCode);
-	// util.log(util.inspect(bot));
-	cowgod.set_active_bot(bot);
-
-	cowgod.logger('doing that logging thing, whatever the fuck that is');
-	bot.setLogObject(nuglog);
-	cowgod.logger('connecting to '+settings.plug_room);
-	bot.connect(settings.plug_room);
 
 	var reconnect = function() {
 		cowgod.logger('Disconnected from Plug.dj, will reconnect momentarily...');
