@@ -557,7 +557,7 @@ PlugAPI.getUpdateCode(settings.plug_auth, settings.plug_room, function(error, up
 					if (old_wl[u] == global['leader']) {
 						cowgod.logger('Ack, we need a new leader!');
 						var new_guy = new_wl[u];
-						if (new_guy == '') {
+						if (new_guy === 'undefined' || new_guy == '') {
 							new_guy = global['current_dj'];
 						}
 						set_global('leader',new_guy,'Battlefield promotion from lost_dj');
