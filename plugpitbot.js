@@ -280,6 +280,13 @@ PlugAPI.getUpdateCode(settings.plug_auth, settings.plug_room, function(error, up
 		update_user(data);
 		cowgod.remember_user(data.id,data.username);
 		process_waitlist();
+
+		if (config_enabled('greet_bagel')) {
+			if (data.id == '528fd28d96fba53b814046b4' ) {
+				lag_say('http://31.media.tumblr.com/98a0849910642e43808a144b01fae784/tumblr_mvvfp4fZ3Y1s373hwo1_500.gif');
+			}
+		};
+
 	});
 
 	bot.on('userLeave', function(data) {
@@ -365,6 +372,12 @@ PlugAPI.getUpdateCode(settings.plug_auth, settings.plug_room, function(error, up
 		cowgod.logger('- will vote '+vote+' in '+waitms+' ms');
 		setTimeout(function(){ do_vote(vote); }, waitms);
 	}
+
+	function lag_say (text) {
+		waitms = parseInt(Math.random() * 5000)+500;
+		setTimeout(function(){ bot.chat(text); }, waitms);
+	}
+
 
 	function logger_tsv(larray) {
 		if ('log_filehandle' in config) {
