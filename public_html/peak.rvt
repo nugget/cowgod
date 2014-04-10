@@ -15,12 +15,12 @@ load_response
 
 set toplimit 10
 
-set sql "SELECT * FROM songlog_expanded WHERE stats_listeners IS NOT NULL ORDER BY stats_listeners DESC, id LIMIT 1"
+set sql "SELECT * FROM plays_expanded WHERE stats_listeners IS NOT NULL ORDER BY stats_listeners DESC, id LIMIT 1"
 pg_select $::cowgod::db $sql buf {
 	array set play [array get buf]
 }
 
-set sql "SELECT count(*) as plays, count(DISTINCT dj_id) as djs FROM songlog_expanded where artist ilike [pg_quote $play(artist)] AND song ilike [pg_quote $play(song)]"
+set sql "SELECT count(*) as plays, count(DISTINCT dj_id) as djs FROM plays_expanded where artist ilike [pg_quote $play(artist)] AND song ilike [pg_quote $play(song)]"
 pg_select $::cowgod::db $sql buf {
 	array set stats [array get buf]
 }
