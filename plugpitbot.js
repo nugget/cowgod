@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-var PlugAPI  = require('plugapi');
+var PlugAPI  = require('./plugapi');
 var fs = require('fs');
 var util = require('util');
 var argv = require('optimist').argv;
@@ -162,6 +162,7 @@ PlugAPI.getUpdateCode(settings.plug_auth, settings.plug_room, function(error, up
 		cowgod.logger('Error: '+error);
 		cowgod.logger('Unable to learn updateCode, falling back on database value');
 		updateCode = settings.update_code;
+		updateCode = 'h90';
 	}
 
 	cowgod.logger('Current updateCode is "'+updateCode+'"');
@@ -243,6 +244,8 @@ PlugAPI.getUpdateCode(settings.plug_auth, settings.plug_room, function(error, up
 	}
 
 	var reconnect = function() {
+		cowgod.logger('Disconnected from Plug.dj');
+		process.exit(1);
 		cowgod.logger('Disconnected from Plug.dj, will reconnect momentarily...');
 		waitms = parseInt(Math.random() * 20000)+500;
 		setTimeout(function(){ bot.connect(settings.plug_room); }, waitms);
@@ -559,6 +562,22 @@ PlugAPI.getUpdateCode(settings.plug_auth, settings.plug_room, function(error, up
 		util.log(util.inspect(old_wl));
 		cowgod.logger('new_wl');
 		util.log(util.inspect(new_wl));
+
+		cowgod.logger('new_wl.length is '+new_wl.length);
+		cowgod.logger('old_wl.length is '+old_wl.length);
+
+		if (new_wl.length ==1) {
+			cowgod.logger('new_wl.length is 1 and it contains '+new_wl[0]);
+			if (new_wl[0] == '') {
+				cowgod.logger('that is bogus');
+				// bot.chat('Plug.dj just tried to trick me, but I am too smart for that.');
+				return;
+			}
+		} else if (new_wl.length == 0 && old_wl.length != 1) {
+			cowgod.logger('Ignoring bogus zero-length waitlist because the old waitlist was not just 1 person');
+			// bot.chat('Plug.dj just tried to trick me, but I am too smart for that.');
+			return;
+		}
 	
 		for (u in old_wl) {
 			if (new_wl.indexOf(old_wl[u]) == -1) {
