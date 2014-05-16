@@ -289,6 +289,11 @@ PlugAPI.getUpdateCode(settings.plug_auth, settings.plug_room, function(error, up
 				lag_say('http://31.media.tumblr.com/98a0849910642e43808a144b01fae784/tumblr_mvvfp4fZ3Y1s373hwo1_500.gif');
 			}
 		};
+		if (config_enabled('greet_pink')) {
+			if (data.id == '528fc8e73e083e7018dff9ab' ) {
+				lag_say('hhttp://i.imgur.com/TggQP.gif');
+			}
+		};
 
 	});
 
