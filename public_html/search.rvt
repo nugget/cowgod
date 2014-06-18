@@ -16,8 +16,8 @@ load_response
 set limit 20
 
 set ilike "ilike '%'||[pg_quote $response(q)]||'%'"
-set search(Songs)	"SELECT lower(title) as item, min(song_id) as item_id, count(*) as plays FROM plays_expanded WHERE lower(title) $ilike GROUP BY 1 ORDER BY 3 DESC LIMIT $limit"
-set search(Artists)	"SELECT lower(author) as item, min(song_id) as item_id, count(*) as plays FROM plays_expanded WHERE lower(title) $ilike GROUP BY 1 ORDER BY 3 DESC LIMIT $limit"
+set search(Songs)	"SELECT lower(title) as item, min(media_id) as item_id, count(*) as plays FROM plays_expanded WHERE lower(title) $ilike GROUP BY 1 ORDER BY 3 DESC LIMIT $limit"
+set search(Artists)	"SELECT lower(author) as item, min(media_id) as item_id, count(*) as plays FROM plays_expanded WHERE lower(title) $ilike GROUP BY 1 ORDER BY 3 DESC LIMIT $limit"
 set search(DJs)		"SELECT nickname as item, user_id as item_id, count(*) as plays FROM plays_expanded WHERE nickname $ilike GROUP BY 1,2 ORDER BY 3 DESC LIMIT $limit"
 
 webout [el_open div -class row]
