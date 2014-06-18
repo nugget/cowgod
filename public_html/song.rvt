@@ -14,26 +14,20 @@ load_response
 set id $response(id)
 
 if {[info exists id]} {
-	set sql "SELECT * FROM songs WHERE song_id = [pg_quote $id]"
+	set sql "SELECT * FROM plug_media WHERE media_id = [pg_quote $id]"
 	pg_select $::cowgod::db $sql buf {
 		array set song [array get buf]
 	}
 
 	if {[array exists song]} {
-		page_header -title "$song(song) by $song(artist)"
+		page_header -title "$song(title) by $song(author)"
 		::cowgod::buttonbar
 
 		webout [el_open div -class row]
 
-	    webout [el_open div -class col-md-2]
-	    if {[info exists song(coverart)] && $song(coverart) ne "" && $song(coverart) ne "undefined"} {
-	        webout "<img class=\"img-rounded\" src=\"$song(coverart)\" />"
-	    }
-	    webout [el_close div]
-
 		webout [el_open div -class col-md-8]
-		webout "<h3>$song(song)</h3>"
-		webout "<h4>$song(artist)<br/>$song(album)</h4>"
+		webout "<h3>$song(title)</h3>"
+		webout "<h4>$song(author)</h4>"
 		webout [el_close div]
 
 		webout [el_close div]
@@ -41,24 +35,22 @@ if {[info exists id]} {
 		webout "<hr />"
 
 		unset -nocomplain idlist
-		set sql "SELECT song_id FROM songs WHERE song ilike [pg_quote $song(song)] and artist ilike [pg_quote $song(artist)]"
+		set sql "SELECT media_id FROM plug_media WHERE title ilike [pg_quote $song(title)] and author ilike [pg_quote $song(author)]"
 		pg_select $::cowgod::db $sql buf {
-			lappend idlist $buf(song_id)
+			lappend idlist $buf(media_id)
 		}
 
 	    webout [el_open div -class row]
 	    webout [el_open div -class col-md-12]
-		set sql "SELECT * FROM songlog_expanded WHERE song_id IN ('[join $idlist "','"]') ORDER BY ts DESC LIMIT 10"
+		set sql "SELECT * FROM plays_expanded WHERE media_id IN ('[join $idlist "','"]') ORDER BY start_time DESC LIMIT 10"
 		webout [el_open table -class "table table-striped table-bordered"]
 		webout "<tr><th colspan=\"4\">Play Log</th></tr>"
-		webout "<tr><th>When</th><th>DJ</th><th>DJs</th><th>Listeners</th><th>Snagged By</th></tr>"
+		webout "<tr><th>When</th><th>DJ</th><th>Snagged By</th></tr>"
 		pg_select $::cowgod::db $sql play {
-		    set date [clock format [clock scan $play(ts)] -format "%A, %d-%b-%Y @ %H:%M"]
+		    set date [clock format [clock scan [lindex [split $play(start_time) "."] 0]] -format "%A, %d-%b-%Y @ %H:%M"]
 			webout "<tr>"
-			webout "<td>[el_open a -href [::cowgod::href play $play(id)]]$date[el_close a]</td>"
-			webout "<td>[el_open a -href [::cowgod::href dj $play(dj_id)]]$play(nickname)[el_close a]</td>"
-			webout "<td style=\"text-align: right;\">$play(stats_djcount)</td>"
-			webout "<td style=\"text-align: right;\">$play(stats_listeners)</td>"
+			webout "<td>[el_open a -href [::cowgod::href play $play(play_id)]]$date[el_close a]</td>"
+			webout "<td>[el_open a -href [::cowgod::href dj $play(user_id)]]$play(nickname)[el_close a]</td>"
 			if {![info exists play(snaggers)] || $play(snaggers) eq ""} {
 				webout "<td>&nbsp;</td>"
 			} else {
