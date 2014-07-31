@@ -560,18 +560,18 @@ PlugBotAPI.getAuth({
 		var old_wl = s_old_wl.split(' ');
 		var new_wl = s_new_wl.split(' ');
 	
-		cowgod.logger('old_wl');
-		util.log(util.inspect(old_wl));
-		cowgod.logger('new_wl');
-		util.log(util.inspect(new_wl));
+		// cowgod.logger('old_wl');
+		// util.log(util.inspect(old_wl));
+		// cowgod.logger('new_wl');
+		// util.log(util.inspect(new_wl));
 
-		cowgod.logger('new_wl.length is '+new_wl.length);
-		cowgod.logger('old_wl.length is '+old_wl.length);
+		// cowgod.logger('new_wl.length is '+new_wl.length);
+		// cowgod.logger('old_wl.length is '+old_wl.length);
 
 		if (new_wl.length ==1) {
 			cowgod.logger('new_wl.length is 1 and it contains '+new_wl[0]);
 			if (new_wl[0] == '') {
-				cowgod.logger('that is bogus');
+				// cowgod.logger('that is bogus');
 				// bot.chat('Plug.dj just tried to trick me, but I am too smart for that.');
 				return;
 			}
