@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-var PlugAPI  = require('./plugapi');
+var PlugBotAPI  = require('plugbotapi');
 var fs = require('fs');
 var util = require('util');
 var argv = require('optimist').argv;
@@ -131,7 +131,6 @@ function db_loadusers() {
 	}));
 }
 
-cowgod.logger('! My Name Is '+myname+' headed for '+settings.plug_room);
 
 db_loadsettings(function() {
 	if ('log_tsv' in config) {
@@ -142,37 +141,22 @@ db_loadsettings(function() {
 	}
 });
 
-var nuglog = {
-	log: function() {
-		cowgod.logger('raw nugget.log');
-		for (var i = 0; i < arguments.length; i++) {
-			console.log(arguments[i]);
-		}
-	}
-}
-
 db_loadglobals();
 db_loadusers();
 
-cowgod.logger('getUpdateCode('+settings.plug_auth+','+settings.plug_room+')');
-PlugAPI.getUpdateCode(settings.plug_auth, settings.plug_room, function(error, updateCode) {
-	if (error === false) {
-		cowgod.logger('Learned update code from plug site');
-	} else {
-		cowgod.logger('Error: '+error);
-		cowgod.logger('Unable to learn updateCode, falling back on database value');
-		updateCode = settings.update_code;
-		updateCode = 'h90';
-	}
+PlugBotAPI.getAuth({
+	username: 'flightaware', // twitter username
+	password: 'WFz4wed7zJ' // twitter password
+}, function(err, auth) {
+	cowgod.logger('! My Name Is '+myname+' headed for '+settings.plug_room);
 
-	cowgod.logger('Current updateCode is "'+updateCode+'"');
-		
-	var bot = new PlugAPI(settings.plug_auth,updateCode);
-	// util.log(util.inspect(bot));
+	cowgod.logger('db auth code is '+settings.plug_auth);
+	cowgod.logger('ga auth code is '+auth);
+
+	var bot = new PlugBotAPI(settings.plug_auth);
+	util.log(util.inspect(bot));
 	cowgod.set_active_bot(bot);
 
-	cowgod.logger('doing that logging thing, whatever the fuck that is');
-	bot.setLogObject(nuglog);
 	cowgod.logger('connecting to '+settings.plug_room);
 	bot.connect(settings.plug_room);
 
@@ -254,16 +238,11 @@ PlugAPI.getUpdateCode(settings.plug_auth, settings.plug_room, function(error, up
 	bot.on('close', reconnect);
 	bot.on('error', reconnect);
 
-	bot.on('roomJoin', function(data) {
+	bot.on('roomJoin', function() {
 		cowgod.logger('roomJoin');
 		localv['voted'] = false;
-		logger_tsv([ 'event','roomJoin','nickname',data.user.profile.username,'plug_user_id',data.user.profile.id,'djPoints',data.user.profile.djPoints,'fans',data.user.profile.fans,'listenerPoints',data.user.profile.listenerPoints,'avatarID',data.user.profile.avatarid ]);
-		// util.log(util.inspect(data));
-		update_user(data.user.profile);
-		current_dj(data.room.currentDJ);
-		load_current_userlist(data);
-		update_plug_media(data.room.media);
 		process_waitlist();
+		process_userlist();
 	});
 
 	bot.on('chat', function(data) {
@@ -503,6 +482,14 @@ PlugAPI.getUpdateCode(settings.plug_auth, settings.plug_room, function(error, up
 		}
 	}
 
+	function process_userlist() {
+		bot.getUsers( function(users) {
+			util.log(util.inspect(users));
+			for (var u in users) {
+				update_user(users[u]);
+			}
+		});
+	}
 	function process_waitlist(event) {
 		var wl = bot.getWaitList();
 	
@@ -733,13 +720,6 @@ PlugAPI.getUpdateCode(settings.plug_auth, settings.plug_room, function(error, up
 		}
 	}
 
-	function load_current_userlist(data) {
-		for (var u in data.room.users) {
-			update_user(data.room.users[u]);
-		}
-		
-		
-	}
 
 	function current_dj(djid) {
 		if (djid != null) {
