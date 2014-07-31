@@ -458,8 +458,7 @@ PlugBotAPI.getAuth({
 				botdb.query('INSERT INTO plays (user_id,playlist_id,media_id,leader) SELECT user_id,$2,$3,$4 FROM users WHERE uid = $1', [
 					data.dj.id,data.playlistID,data.media.id,data.pitleader
 				], after(function(result) {
-					util.log(util.inspect(result));
-					cowgod.logger('Logged play to database');
+					// cowgod.logger('Logged play to database');
 				}));
 			}
 		}
@@ -502,35 +501,35 @@ PlugBotAPI.getAuth({
 		});
 	}
 	function process_waitlist(event) {
-		var wl = bot.getWaitList();
-	
 		if (config_enabled('db_maintain_users')) {
-			var wlbuf = ''
-	
-			for (var u in wl) {
-				wlbuf = wlbuf+' '+wl[u].id;
-			}
-			wlbuf = wlbuf.trim();
-	
-			if (wlbuf.length > global['waitlist'].length) {
-				cowgod.logger('waitlist grew');
-				if (config_enabled('manage_waitlist')) {
-					cowgod.logger('and i manage the waitlist');
-					if (event == 'djUpdate') {
-						cowgod.logger('and this was a new song djAdvance');
-						new_dj(global['waitlist'],wlbuf);
-					}
+			bot.getWaitList( function(wl) {
+				var wlbuf = ''
+		
+				for (var u in wl) {
+					wlbuf = wlbuf+' '+wl[u].id;
 				}
-			} 
-			if (wlbuf.length < global['waitlist'].length) {
-				cowgod.logger('waitlist shrunk');
-				lost_dj(global['waitlist'],wlbuf);
-			}
-	
-			set_global('waitlist',wlbuf,'Updated by getWaitList');
-			cowgod.logger('Updated waitlist global cache');
+				wlbuf = wlbuf.trim();
+
+				if (wlbuf.length > global['waitlist'].length) {
+					cowgod.logger('waitlist grew');
+					if (config_enabled('manage_waitlist')) {
+						cowgod.logger('and i manage the waitlist');
+						if (event == 'djUpdate') {
+							cowgod.logger('and this was a new song djAdvance');
+							new_dj(global['waitlist'],wlbuf);
+						}
+					}
+				} 
+				if (wlbuf.length < global['waitlist'].length) {
+					cowgod.logger('waitlist shrunk');
+					lost_dj(global['waitlist'],wlbuf);
+				}
+		
+				set_global('waitlist',wlbuf,'Updated by getWaitList');
+				cowgod.logger('Updated waitlist global cache');
+				// util.log(util.inspect(data));
+			});
 		}
-		// util.log(util.inspect(data));
 	}
 
 	function new_dj(s_old_wl,s_new_wl) {
