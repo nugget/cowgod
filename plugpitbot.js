@@ -252,11 +252,14 @@ PlugBotAPI.getAuth({
 	});
 
 	bot.on('emote', function(data) {
+		cowgod.logger('emote event');
+		util.log(util.inspect(data));
 		log_chat(data);
 		cowgod.remember_user(data.fromID,data.from);
 	});
 
 	bot.on('userJoin', function(data) {
+		cowgod.logger('join event');
 		util.log(util.inspect(data));
 		log_join(data);
 		update_user(data);
@@ -277,16 +280,22 @@ PlugBotAPI.getAuth({
 	});
 
 	bot.on('userLeave', function(data) {
+		cowgod.logger('leave event');
+		util.log(util.inspect(data));
 		log_part(data);
 		process_waitlist();
 	});
 
 	bot.on('djUpdate', function(data) {
+		cowgod.logger('djupdate event');
+		util.log(util.inspect(data));
 		log_djupdate(data);
 		process_waitlist('djUpdate');
 	});
 
 	bot.on('curateUpdate', function(data) {
+		cowgod.logger('curate event');
+		util.log(util.inspect(data));
 		// this is like a TT snag
 		log_curate(data);
 	});
@@ -301,12 +310,14 @@ PlugBotAPI.getAuth({
 	});
 
 	bot.on('djAdvance', function(data) {
+		cowgod.logger('djAdvance event');
+		util.log(util.inspect(data));
 		localv['voted'] = false;
 	
 		var leader_prefix  = '';
 		var leader_suffix  = '';
 	
-		if (is_leader(data.currentDJ)) {
+		if (is_leader(data.dj.id)) {
 			data.pitleader = true;
 			leader_prefix   = '*LEAD SONG* ';
 			leader_suffix   = ' ~***';
@@ -317,24 +328,23 @@ PlugBotAPI.getAuth({
 		}
 	
 		log_play(data);
-		// util.log(util.inspect(data));
 	
 		if (data.media === null) {
 			current_dj(null);
 			set_global('leader','','Nothing is playing');
 			irc_set_topic('Nothing is playing in the Pit :(');
 		} else {
-			if (config_enabled('autobop') || (config_enabled('woot_leaders') && is_trendsetter(data.currentDJ))) {
+			if (config_enabled('autobop') || (config_enabled('woot_leaders') && is_trendsetter(data.dj.id))) {
 				if (!localv['voted']) {
 					localv['voted'] = true;
 					lag_vote(1);
 				}
 			}
-			irc_set_topic(song_string(data.media)+' ('+cowgod.id_to_name(data.currentDJ)+')'+leader_suffix);
-			current_dj(data.currentDJ);
+			irc_set_topic(song_string(data.media)+' ('+cowgod.id_to_name(data.dj.id)+')'+leader_suffix);
+			current_dj(data.dj.id);
 	
 			if (config_enabled('announce_play')) {
-				bot.chat(leader_prefix+song_string(data.media)+' ('+cowgod.id_to_name(data.currentDJ)+')'+leader_suffix);
+				bot.chat(leader_prefix+song_string(data.media)+' ('+cowgod.id_to_name(data.dj.id)+')'+leader_suffix);
 			}
 		}
 	
@@ -402,11 +412,11 @@ PlugBotAPI.getAuth({
 
 	function log_vote(data) {
 		if (data.vote == 1) {
-			cowgod.logger(cowgod.id_to_name(data.id)+' wooted');
-			if (config_enabled('follow_trends') && is_trendsetter(data.id)) {
+			cowgod.logger(cowgod.id_to_name(data.user.id)+' wooted');
+			if (config_enabled('follow_trends') && is_trendsetter(data.user.id)) {
 				if (!localv['voted']) {
 					localv['voted'] = true;
-					cowgod.logger('Following trendsetter '+cowgod.id_to_name(data.id)+'\'s vote ('+data.vote+')');
+					cowgod.logger('Following trendsetter '+cowgod.id_to_name(data.user.id)+'\'s vote ('+data.vote+')');
 					lag_vote(data.vote);
 				}
 			}
@@ -434,20 +444,22 @@ PlugBotAPI.getAuth({
 
 	function log_play(data) {
 		if (data.media !== null) {
+			cowgod.logger('log_play!');
 			util.log(util.inspect(data));
 			if (typeof data.media.title === 'undefined') { data.media.title = ''; }
 			if (typeof data.media.author === 'undefined') { data.media.author = ''; }
 	
-			cowgod.logger(cowgod.id_to_name(data.currentDJ)+' is playing '+data.media.title+' by '+data.media.author);
-			logger_tsv( [ 'event','djAdvance','plug_user_id',data.currentDJ,'playlistID',data.playlistID,'song',data.media.author,'title',data.media.title,'duration',data.media.duration,'media_id',data.media.id,'media_cid',data.media.cid,'media_format',data.media.format,'leader',data.pitleader ]);
+			cowgod.logger(cowgod.id_to_name(data.dj.id)+' is playing '+data.media.title+' by '+data.media.author);
+			logger_tsv( [ 'event','djAdvance','plug_user_id',data.dj.id,'playlistID',data.playlistID,'song',data.media.author,'title',data.media.title,'duration',data.media.duration,'media_id',data.media.id,'media_cid',data.media.cid,'media_format',data.media.format,'leader',data.pitleader ]);
 
 			if (config_enabled('db_log_plays')) {
 				update_plug_media(data.media);
 
-				botdb.query('INSERT INTO plays (start_time,user_id,playlist_id,media_id,leader) SELECT $1,user_id,$3,$4,$5 FROM users WHERE uid = $2', [
-					data.mediaStartTime,data.currentDJ,data.playlistID,data.media.id,data.pitleader
+				botdb.query('INSERT INTO plays (user_id,playlist_id,media_id,leader) SELECT user_id,$2,$3,$4 FROM users WHERE uid = $1', [
+					data.dj.id,data.playlistID,data.media.id,data.pitleader
 				], after(function(result) {
-					// cowgod.logger('Logged play to database');
+					util.log(util.inspect(result));
+					cowgod.logger('Logged play to database');
 				}));
 			}
 		}
@@ -484,7 +496,6 @@ PlugBotAPI.getAuth({
 
 	function process_userlist() {
 		bot.getUsers( function(users) {
-			util.log(util.inspect(users));
 			for (var u in users) {
 				update_user(users[u]);
 			}
