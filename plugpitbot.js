@@ -169,7 +169,7 @@ PlugBotAPI.getAuth({
 			channels: [settings.irc_channel],
 			userName: myname,
 			realName: 'Plug.dj bot',
-			debug: true,
+			debug: false,
 			showErrors: true
 		});
 
