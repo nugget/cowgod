@@ -438,8 +438,8 @@ PlugBotAPI.getAuth({
 	}
 
 	function log_curate(data) {
-		cowgod.logger(cowgod.id_to_name(data.id)+' snagged this song');
-		logger_tsv([ 'event','snag','plug_user_id',data.id ]);
+		cowgod.logger(cowgod.id_to_name(data.user.id)+' snagged this song');
+		logger_tsv([ 'event','snag','plug_user_id',data.user.id ]);
 	}
 
 	function log_play(data) {
