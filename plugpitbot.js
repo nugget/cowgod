@@ -246,8 +246,8 @@ PlugBotAPI.getAuth({
 	});
 
 	bot.on('chat', function(data) {
-		log_chat(data);
-		cowgod.remember_user(data.fromID,data.from);
+		util.log(util.inspect(data));
+		cowgod.remember_user(data.fid,data.from);
 		did_user_get_ninjad(data);
 	});
 
@@ -255,7 +255,7 @@ PlugBotAPI.getAuth({
 		cowgod.logger('emote event');
 		util.log(util.inspect(data));
 		log_chat(data);
-		cowgod.remember_user(data.fromID,data.from);
+		cowgod.remember_user(data.fid,data.from);
 	});
 
 	bot.on('userJoin', function(data) {
@@ -287,8 +287,9 @@ PlugBotAPI.getAuth({
 	});
 
 	bot.on('djUpdate', function(data) {
-		cowgod.logger('djupdate event');
-		util.log(util.inspect(data));
+		// cowgod.logger('djupdate event');
+		// util.log(util.inspect(data));
+		cowgod.logger(cowgod.id_to_name(data.dj.id)+' in the booth');
 		log_djupdate(data);
 		process_waitlist('djUpdate');
 	});
@@ -310,8 +311,8 @@ PlugBotAPI.getAuth({
 	});
 
 	bot.on('djAdvance', function(data) {
-		cowgod.logger('djAdvance event');
-		util.log(util.inspect(data));
+		// cowgod.logger('djAdvance event');
+		// util.log(util.inspect(data));
 		localv['voted'] = false;
 	
 		var leader_prefix  = '';
@@ -389,7 +390,7 @@ PlugBotAPI.getAuth({
 	}
 
 	function log_chat(data) {
-		logger_tsv([ 'event','chat','nickname',data.from,'room',data.room,'plug_user_id',data.fromID,'message',data.message,'type',data.type ]);
+		logger_tsv([ 'event','chat','nickname',data.from,'room',data.room,'plug_user_id',data.fid,'message',data.message,'type',data.type ]);
 	
 		if (data.type == 'message') {
 			cowgod.logger('<'+data.from+'> '+data.message);
@@ -403,7 +404,7 @@ PlugBotAPI.getAuth({
 
 		if (config_enabled('db_log_chats')) {
 			botdb.query('INSERT INTO chats (user_id,text) SELECT user_id,$2 FROM users WHERE uid = $1', [
-				data.fromID,data.message
+				data.fid,data.message
 			], after(function(result) {
 				// cowgod.logger('Logged chat to database');
 			}));
@@ -444,8 +445,7 @@ PlugBotAPI.getAuth({
 
 	function log_play(data) {
 		if (data.media !== null) {
-			cowgod.logger('log_play!');
-			util.log(util.inspect(data));
+			// util.log(util.inspect(data));
 			if (typeof data.media.title === 'undefined') { data.media.title = ''; }
 			if (typeof data.media.author === 'undefined') { data.media.author = ''; }
 	
@@ -484,9 +484,6 @@ PlugBotAPI.getAuth({
 	function log_djupdate(data) {
 		cowgod.logger('djUpdate:');
 		util.log(util.inspect(data));
-		// cowgod.logger('--');
-		// util.log(util.inspect(data.djs));
-		// cowgod.logger('--');
 		for (var u in data.djs) {
 			// cowgod.logger('logging a u.user '+u);
 			// util.log(util.inspect(data.djs[u]));
@@ -608,20 +605,24 @@ PlugBotAPI.getAuth({
 			cowgod.logger('No need to move new DJ since the round just started');
 			return;
 		}
+
+		cowgod.logger('I need to move '+uid+' to the end of the waitlist');
+		cowgod.logger('current_dj is '+global['current_dj']);
 	
-		var wl = bot.getWaitList();
-		var uidlist = new Array();
+		bot.getWaitList( function(wl) {
+			var uidlist = new Array();
 	
-		for (var u in wl) {
-			uidlist.push(wl[u].id);
-		}
+			for (var u in wl) {
+				uidlist.push(wl[u].id);
+			}
 	
-		var leader_pos = uidlist.indexOf(global['leader']);
-		var target_pos = uidlist.indexOf(uid);
+			var leader_pos = uidlist.indexOf(global['leader']);
+			var target_pos = uidlist.indexOf(uid);
 	
-		if (target_pos > leader_pos) {
-			bot.moveDJ(uid,leader_pos+1);
-		}
+			if (target_pos > leader_pos) {
+				bot.moveDJ(uid,leader_pos+1);
+			}
+		});
 	}
 	
 	
@@ -816,7 +817,7 @@ PlugBotAPI.getAuth({
 		}
 
 		if (data.message.toLowerCase().indexOf('ninja') == 0) {
-			ninja_bump(data.fromID);
+			ninja_bump(data.fid);
 		}
 	}
 
@@ -831,32 +832,32 @@ PlugBotAPI.getAuth({
 			bot.chat('You can\'t get ninjad while the leader is playing a song, doofus!  A new round is starting now.');
 			return;
 		}
-		var wl = bot.getWaitList();
+		bot.getWaitList( function(wl) {
+			var leader_pos = -1;
+			var target_pos = -1;
+			var ninjad_pos = -1;
 
-		var leader_pos = -1;
-		var target_pos = -1;
-		var ninjad_pos = -1;
-
-		for (var u in wl) {
-			if (is_leader(wl[u].id)) {
-				cowgod.logger('leader is in position '+u);
-				leader_pos = parseInt(u) + 1;
-				target_pos = parseInt(u) + 2;
+			for (var u in wl) {
+				if (is_leader(wl[u].id)) {
+					cowgod.logger('leader is in position '+u);
+					leader_pos = parseInt(u) + 1;
+					target_pos = parseInt(u) + 2;
+				}
+				if (wl[u].id == uid) {
+					cowgod.logger('ninja-ee is in position '+u);
+					ninjad_pos = parseInt(u) + 1;
+				}
+			}		
+			cowgod.logger(leader_pos+' and '+ninjad_pos);
+			if (leader_pos > 0 && ninjad_pos > 0 && target_pos > ninjad_pos) {
+				cowgod.logger('Need to move pos '+ninjad_pos+' to '+leader_pos);
+				bot.chat('ha ha!  Removing you from this round!');
+				bot.moveDJ(uid,target_pos);
+				botdb.query('INSERT INTO ninjas (user_id,dj_id,leader_id) SELECT id_from_uid($1),id_from_uid($2),id_from_uid($3)', [
+					uid,global['current_dj'],global['leader']
+				], after(function(result) {}));
 			}
-			if (wl[u].id == uid) {
-				cowgod.logger('ninja-ee is in position '+u);
-				ninjad_pos = parseInt(u) + 1;
-			}
-		}		
-		cowgod.logger(leader_pos+' and '+ninjad_pos);
-		if (leader_pos > 0 && ninjad_pos > 0 && target_pos > ninjad_pos) {
-			cowgod.logger('Need to move pos '+ninjad_pos+' to '+leader_pos);
-			bot.chat('ha ha!  Removing you from this round!');
-			bot.moveDJ(uid,target_pos);
-			botdb.query('INSERT INTO ninjas (user_id,dj_id,leader_id) SELECT id_from_uid($1),id_from_uid($2),id_from_uid($3)', [
-				uid,global['current_dj'],global['leader']
-			], after(function(result) {}));
-		}
+		});
 	}
 
 
