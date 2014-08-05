@@ -246,14 +246,12 @@ PlugBotAPI.getAuth({
 	});
 
 	bot.on('chat', function(data) {
-		util.log(util.inspect(data));
+		log_chat(data);
 		cowgod.remember_user(data.fid,data.from);
 		did_user_get_ninjad(data);
 	});
 
 	bot.on('emote', function(data) {
-		cowgod.logger('emote event');
-		util.log(util.inspect(data));
 		log_chat(data);
 		cowgod.remember_user(data.fid,data.from);
 	});
