@@ -257,8 +257,8 @@ PlugBotAPI.getAuth({
 	});
 
 	bot.on('userJoin', function(data) {
-		cowgod.logger('join event');
-		util.log(util.inspect(data));
+		//cowgod.logger('join event');
+		//util.log(util.inspect(data));
 		log_join(data);
 		update_user(data);
 		cowgod.remember_user(data.id,data.username);
