@@ -278,8 +278,8 @@ PlugBotAPI.getAuth({
 	});
 
 	bot.on('userLeave', function(data) {
-		cowgod.logger('leave event');
-		util.log(util.inspect(data));
+		// cowgod.logger('leave event');
+		// util.log(util.inspect(data));
 		log_part(data);
 		process_waitlist();
 	});
