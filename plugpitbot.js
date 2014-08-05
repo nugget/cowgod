@@ -287,7 +287,7 @@ PlugBotAPI.getAuth({
 	bot.on('djUpdate', function(data) {
 		// cowgod.logger('djupdate event');
 		// util.log(util.inspect(data));
-		cowgod.logger(cowgod.id_to_name(data.dj.id)+' in the booth');
+		// cowgod.logger(cowgod.id_to_name(data.dj.id)+' in the booth');
 		log_djupdate(data);
 		process_waitlist('djUpdate');
 	});
@@ -480,8 +480,8 @@ PlugBotAPI.getAuth({
 	}
 
 	function log_djupdate(data) {
-		cowgod.logger('djUpdate:');
-		util.log(util.inspect(data));
+		//cowgod.logger('djUpdate:');
+		//util.log(util.inspect(data));
 		for (var u in data.djs) {
 			// cowgod.logger('logging a u.user '+u);
 			// util.log(util.inspect(data.djs[u]));
@@ -618,7 +618,7 @@ PlugBotAPI.getAuth({
 			var target_pos = uidlist.indexOf(uid);
 	
 			if (target_pos > leader_pos) {
-				bot.moveDJ(uid,leader_pos+1);
+				bot.moderateMoveDJ(uid,leader_pos+1);
 			}
 		});
 	}
@@ -850,7 +850,7 @@ PlugBotAPI.getAuth({
 			if (leader_pos > 0 && ninjad_pos > 0 && target_pos > ninjad_pos) {
 				cowgod.logger('Need to move pos '+ninjad_pos+' to '+leader_pos);
 				bot.chat('ha ha!  Removing you from this round!');
-				bot.moveDJ(uid,target_pos);
+				bot.moderateMoveDJ(uid,target_pos);
 				botdb.query('INSERT INTO ninjas (user_id,dj_id,leader_id) SELECT id_from_uid($1),id_from_uid($2),id_from_uid($3)', [
 					uid,global['current_dj'],global['leader']
 				], after(function(result) {}));
