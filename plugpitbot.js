@@ -499,6 +499,25 @@ PlugBotAPI.getAuth({
 		if (config_enabled('db_maintain_users')) {
 			bot.getWaitList( function(wl) {
 				var wlbuf = ''
+
+				cowgod.logger('The waitlist has '+wl.length+' DJs');
+				cowgod.logger('current_dj is '+global['current_dj']);
+
+				var moo = bot.getDJ(function(current_dj) {
+					if (current_dj === undefined || current_dj === null) {
+						// cowgod.logger('Process waitlist saw no current_dj');
+					} else {
+						// There is an active DJ 
+						if (wl.length == 0) {
+							// And there is nobody else playing
+							// util.log(util.inspect(current_dj));
+							if (global['leader'] != current_dj.id) {
+								cowgod.logger(cowgod.id_to_name(current_dj.id)+' is the only DJ, promoting to leader');
+								set_global('leader',current_dj.id,'Only DJ playing');
+							}
+						}
+					}
+				});
 		
 				for (var u in wl) {
 					wlbuf = wlbuf+' '+wl[u].id;
