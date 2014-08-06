@@ -323,8 +323,12 @@ PlugBotAPI.getAuth({
 		} else {
 			if (is_leader(data.dj.id)) {
 				data.pitleader = true;
-				leader_prefix   = '*LEAD SONG* ';
-				leader_suffix   = ' ~***';
+
+				if (global['waitlist'] != '') {
+					cowgod.logger('wl is '+global['waitlist']);
+					leader_prefix   = '*LEAD SONG* ';
+					leader_suffix   = ' ~***';
+				}
 	
 				set_global('lead_song',song_string(data.media));
 			} else {
@@ -776,7 +780,11 @@ PlugBotAPI.getAuth({
 
 				if (key == 'leader') {
 					if (value != '') {
-						bot.chat('*** The leader is now '+cowgod.id_to_name(value));
+						if (global['waitlist'] != '') {
+							bot.chat('*** The leader is now '+cowgod.id_to_name(value));
+						} else {
+							cowgod.logger('*** The leader is now '+cowgod.id_to_name(value));
+						}
 					} else {
 						bot.chat('*** There is no leader, let anarchy reign! (RICSAS)');
 					}
