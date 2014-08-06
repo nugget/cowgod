@@ -315,24 +315,24 @@ PlugBotAPI.getAuth({
 	
 		var leader_prefix  = '';
 		var leader_suffix  = '';
-	
-		if (is_leader(data.dj.id)) {
-			data.pitleader = true;
-			leader_prefix   = '*LEAD SONG* ';
-			leader_suffix   = ' ~***';
-	
-			set_global('lead_song',song_string(data.media));
-		} else {
-			data.pitleader = false;
-		}
-	
-		log_play(data);
-	
-		if (data.media === null) {
+
+		if (data.media === null || data.media === undefined) {
 			current_dj(null);
 			set_global('leader','','Nothing is playing');
 			irc_set_topic('Nothing is playing in the Pit :(');
 		} else {
+			if (is_leader(data.dj.id)) {
+				data.pitleader = true;
+				leader_prefix   = '*LEAD SONG* ';
+				leader_suffix   = ' ~***';
+	
+				set_global('lead_song',song_string(data.media));
+			} else {
+				data.pitleader = false;
+			}
+
+			log_play(data);
+
 			if (config_enabled('autobop') || (config_enabled('woot_leaders') && is_trendsetter(data.dj.id))) {
 				if (!localv['voted']) {
 					localv['voted'] = true;
