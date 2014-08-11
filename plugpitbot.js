@@ -423,6 +423,8 @@ PlugBotAPI.getAuth({
 					lag_vote(data.vote);
 				}
 			}
+		} else if (data.vote == -1) {
+			cowgod.logger(cowgod.id_to_name(data.user.id)+' voted meh');
 		} else {
 			cowgod.logger('vote (unknown type)');
 			util.log(util.inspect(data));
