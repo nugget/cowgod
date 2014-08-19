@@ -911,6 +911,6 @@ PlugBotAPI.getAuth({
 	}
 
 	function is_outcast(userid) {
-		return (outcast.indexOf(userid) != -1);
+		return (outcasts.indexOf(userid) != -1);
 	}
 });
