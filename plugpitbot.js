@@ -245,7 +245,7 @@ var creds = {
 	});
 
 	bot.on('chat', function(data) {
-		util.log(util.inspect(data));
+		//util.log(util.inspect(data));
 		log_chat(data);
 		cowgod.remember_user(data.uid,data.un);
 		did_user_get_ninjad(data);
@@ -253,7 +253,7 @@ var creds = {
 
 	bot.on('emote', function(data) {
 		log_chat(data);
-		cowgod.remember_user(data.fid,data.from);
+		cowgod.remember_user(data.fromID,data.from);
 	});
 
 	bot.on('userJoin', function(data) {
@@ -293,7 +293,7 @@ var creds = {
 		process_waitlist('djUpdate');
 	});
 
-	bot.on('curateUpdate', function(data) {
+	bot.on('grabUpdate', function(data) {
 		cowgod.logger('curate event');
 		util.log(util.inspect(data));
 		// this is like a TT snag
@@ -301,6 +301,8 @@ var creds = {
 	});
 
 	bot.on('voteUpdate', function(data) {
+		//cowgod.logger('voteUpdate event');
+		//util.log(util.inspect(data));
 		log_vote(data);
 	});
 	
@@ -411,7 +413,7 @@ var creds = {
 
 		if (config_enabled('db_log_chats')) {
 			botdb.query('INSERT INTO chats (user_id,text) SELECT user_id,$2 FROM users WHERE uid = $1', [
-				data.fid,data.message
+				data.fromID,data.message
 			], after(function(result) {
 				// cowgod.logger('Logged chat to database');
 			}));
@@ -435,7 +437,7 @@ var creds = {
 			cowgod.logger('vote (unknown type)');
 			util.log(util.inspect(data));
 		}
-		logger_tsv([ 'event','vote','vote',data.vote,'plug_user_id',data.id ]);
+		logger_tsv([ 'event','vote','vote',data.vote,'plug_user_id',data.user.id ]);
 	}
 
 	function log_join(data) {
@@ -502,7 +504,7 @@ var creds = {
 
 	function process_userlist() {
 		bot.getUsers( function(users) {
-			util.log(util.inspect(users));
+			// util.log(util.inspect(users));
 			for (var u in users) {
 				update_user(users[u]);
 			}
@@ -851,7 +853,7 @@ var creds = {
 		}
 
 		if (data.message.toLowerCase().indexOf('ninja') == 0) {
-			ninja_bump(data.fid);
+			ninja_bump(data.fromID);
 		}
 	}
 
