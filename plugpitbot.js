@@ -99,7 +99,7 @@ function db_loadusers() {
 	if (!settings.db) { return; }
 
 	admins.length = 0;
-	botdb.query('SELECT uid FROM users WHERE owner IS TRUE OR admin IS TRUE ORDER BY nickname',after(function(result) {
+	botdb.query('SELECT uid FROM users WHERE uid IS NOT NULL AND (owner IS TRUE OR admin IS TRUE) ORDER BY nickname',after(function(result) {
 		result.rows.forEach(function(user) {
 			admins.push(user.uid);
 		});
@@ -107,7 +107,7 @@ function db_loadusers() {
 	}));
 
 	trendsetters.length = 0;
-	botdb.query('SELECT uid FROM users WHERE trendsetter IS TRUE ORDER BY nickname',after(function(result) {
+	botdb.query('SELECT uid FROM users WHERE uid IS NOT NULL AND (trendsetter IS TRUE) ORDER BY nickname',after(function(result) {
 		result.rows.forEach(function(user) {
 			trendsetters.push(user.uid);
 		});
@@ -115,7 +115,7 @@ function db_loadusers() {
 	}));
 
 	bots.length = 0;
-	botdb.query('SELECT uid FROM users WHERE bot IS TRUE ORDER BY nickname',after(function(result) {
+	botdb.query('SELECT uid FROM users WHERE uid IS NOT NULL AND (bot IS TRUE) ORDER BY nickname',after(function(result) {
 		result.rows.forEach(function(user) {
 			bots.push(user.uid);
 		});
@@ -123,7 +123,7 @@ function db_loadusers() {
 	}));
 
 	outcasts.length = 0;
-	botdb.query('SELECT uid FROM users WHERE ignore IS TRUE ORDER BY nickname',after(function(result) {
+	botdb.query('SELECT uid FROM users WHERE uid IS NOT NULL AND (ignore IS TRUE) ORDER BY nickname',after(function(result) {
 		result.rows.forEach(function(user) {
 			outcasts.push(user.uid);
 		});
@@ -571,7 +571,7 @@ var creds = {
 		// util.log(util.inspect(new_wl));
 	
 		for (u in new_wl) {
-			if (old_wl.indexOf(new_wl[u]) == -1) {
+			if (old_wl.indexOf(new_wl[u].toString()) == -1) {
 				cowgod.logger(cowgod.id_to_name(new_wl[u])+' joined the waitlist');
 				cowgod.logger('leader is -'+global['leader']+'-');
 				if (global['leader'] == '') {
@@ -611,7 +611,7 @@ var creds = {
 		}
 	
 		for (u in old_wl) {
-			if (new_wl.indexOf(old_wl[u]) == -1) {
+			if (new_wl.indexOf(old_wl[u].toString()) == -1) {
 				if (old_wl[u] == global['current_dj']) {
 					cowgod.logger('Confused, it looked like '+cowgod.id_to_name(old_wl[u])+' left the waitlist, but that is the current DJ');
 				} else {
@@ -649,7 +649,7 @@ var creds = {
 			}
 	
 			var leader_pos = uidlist.indexOf(global['leader']);
-			var target_pos = uidlist.indexOf(uid);
+			var target_pos = uidlist.indexOf(uid.toString());
 	
 			if (target_pos > leader_pos) {
 				bot.moderateMoveDJ(uid,leader_pos+1);
@@ -898,21 +898,21 @@ var creds = {
 
 
 	function is_admin(userid) {
-		return (admins.indexOf(userid) != -1);
+		return (admins.indexOf(userid.toString()) != -1);
 	}
 
 	function is_owner(userid) {
-		return (owners.indexOf(userid) != -1);
+		return (owners.indexOf(userid.toString()) != -1);
 	}
 
 	function is_bot(userid) {
-		return (bots.indexOf(userid) != -1);
+		return (bots.indexOf(userid.toString()) != -1);
 	}
 
 	function is_trendsetter(userid) {
-		return (trendsetters.indexOf(userid) != -1);
+		return (trendsetters.indexOf(userid.toString()) != -1);
 	}
 
 	function is_outcast(userid) {
-		return (outcasts.indexOf(userid) != -1);
+		return (outcasts.indexOf(userid.toString()) != -1);
 	}
