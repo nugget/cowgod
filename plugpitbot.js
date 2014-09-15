@@ -312,7 +312,7 @@ var creds = {
 	});
 
 	bot.on('advance', function(data) {
-		cowgod.logger('advance event');
+		//cowgod.logger('advance event');
 		//util.log(util.inspect(data));
 		localv['voted'] = false;
 	
@@ -816,7 +816,7 @@ var creds = {
 
 
 	function is_leader(djid) {
-		if ('leader' in global && global['leader'] === djid) {
+		if ('leader' in global && global['leader'] === djid.toString()) {
 			return true;
 		} else {
 			return false;
