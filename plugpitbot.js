@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-var PlugBotAPI  = require('plugbotapi');
+var PlugBotAPI  = require('./plugbotapi');
 var fs = require('fs');
 var util = require('util');
 var argv = require('optimist').argv;
@@ -144,16 +144,15 @@ db_loadsettings(function() {
 db_loadglobals();
 db_loadusers();
 
-PlugBotAPI.getAuth({
-	username: 'flightaware', // twitter username
-	password: 'WFz4wed7zJ' // twitter password
-}, function(err, auth) {
+var creds = {
+	email: settings.email,
+	password: settings.password
+};
+
 	cowgod.logger('! My Name Is '+myname+' headed for '+settings.plug_room);
 
-	cowgod.logger('db auth code is '+settings.plug_auth);
-	cowgod.logger('ga auth code is '+auth);
+	var bot = new PlugBotAPI(creds);
 
-	var bot = new PlugBotAPI(settings.plug_auth);
 	util.log(util.inspect(bot));
 	cowgod.set_active_bot(bot);
 
@@ -246,8 +245,9 @@ PlugBotAPI.getAuth({
 	});
 
 	bot.on('chat', function(data) {
+		util.log(util.inspect(data));
 		log_chat(data);
-		cowgod.remember_user(data.fid,data.from);
+		cowgod.remember_user(data.uid,data.un);
 		did_user_get_ninjad(data);
 	});
 
@@ -309,9 +309,9 @@ PlugBotAPI.getAuth({
 		util.log(util.inspect(data));
 	});
 
-	bot.on('djAdvance', function(data) {
-		// cowgod.logger('djAdvance event');
-		// util.log(util.inspect(data));
+	bot.on('advance', function(data) {
+		cowgod.logger('advance event');
+		util.log(util.inspect(data));
 		localv['voted'] = false;
 	
 		var leader_prefix  = '';
@@ -397,12 +397,12 @@ PlugBotAPI.getAuth({
 	}
 
 	function log_chat(data) {
-		logger_tsv([ 'event','chat','nickname',data.from,'room',data.room,'plug_user_id',data.fid,'message',data.message,'type',data.type ]);
+		logger_tsv([ 'event','chat','nickname',data.un,'plug_user_id',data.fromID,'message',data.message,'type',data.type,'chat_id',data.chatID ]);
 	
 		if (data.type == 'message') {
-			cowgod.logger('<'+data.from+'> '+data.message);
+			cowgod.logger('<'+data.un+'> '+data.message);
 		} else if (data.type == 'emote') {
-			cowgod.logger('* '+data.from+' '+data.message);
+			cowgod.logger('* '+data.un+' '+data.message);
 			data.message = '/me '+data.message;
 		} else {
 			cowgod.logger('chat (unknown type)');
@@ -502,6 +502,7 @@ PlugBotAPI.getAuth({
 
 	function process_userlist() {
 		bot.getUsers( function(users) {
+			util.log(util.inspect(users));
 			for (var u in users) {
 				update_user(users[u]);
 			}
@@ -913,4 +914,3 @@ PlugBotAPI.getAuth({
 	function is_outcast(userid) {
 		return (outcasts.indexOf(userid) != -1);
 	}
-});
