@@ -285,11 +285,9 @@ var creds = {
 		process_waitlist();
 	});
 
-	bot.on('djUpdate', function(data) {
-		// cowgod.logger('djupdate event');
-		// util.log(util.inspect(data));
-		// cowgod.logger(cowgod.id_to_name(data.dj.id)+' in the booth');
-		log_djupdate(data);
+	bot.on('waitListUpdate', function(data) {
+		//cowgod.logger('waitListUpdate event');
+		//util.log(util.inspect(data));
 		process_waitlist('djUpdate');
 	});
 
