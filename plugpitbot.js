@@ -313,7 +313,7 @@ var creds = {
 
 	bot.on('advance', function(data) {
 		cowgod.logger('advance event');
-		util.log(util.inspect(data));
+		//util.log(util.inspect(data));
 		localv['voted'] = false;
 	
 		var leader_prefix  = '';
