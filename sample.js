@@ -7,36 +7,15 @@ var creds = {
 	password: 'BivvUm9Xh(t)n2JW'
 };
 
-console.log('connecting to plug');
-var plugbotapi = new PlugBotAPI(creds);
-var room = 'pit-of-no-shame';
+var bot = new PlugBotAPI(creds);
 
-console.log('joinging community');
-plugbotapi.connect(room);
+bot.connect('pit-of-no-shame'); 
 
-plugbotapi.on('roomJoin', function() {
-	console.log("Connected!");
+var cookies = bot.cookies;
+// then set the cookies before connecting:
+//bot.cookies = loadCookies(); // or something - just set the same cookies you accessed above here
+//bot.connect(.....);
 
-	plugbotapi.chat('Hello World');
-
-	plugbotapi.getUsers(function(users) {
-      console.log("Number of users in the room: " + users.length);
-    });
-
-    plugbotapi.hasPermission('52a648c496fba57878e8f809', 'API.ROLE.NONE', function(result) {
-      console.log("permission: ", result);
-    });
-});
-
-// A few sample events
-plugbotapi.on('chat', function(data) {
+bot.on('chat', function(data) {
 	console.log("got chat: ", data);
-});
-
-plugbotapi.on('djAdvance', function(data) {
-	console.log("dj advance: ", data);
-});
-
-plugbotapi.on('voteUpdate', function(data) {
-	console.log("vote update: ", data);
 });
