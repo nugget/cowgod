@@ -406,6 +406,8 @@ var creds = {
 		} else if (data.type == 'emote') {
 			cowgod.logger('* '+data.un+' '+data.message);
 			data.message = '/me '+data.message;
+		} else  if (data.type == 'mention') {
+			cowgod.logger('<'+data.un+'> '+data.message);
 		} else {
 			cowgod.logger('chat (unknown type)');
 			util.log(util.inspect(data));
