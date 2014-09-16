@@ -266,8 +266,8 @@ var creds = {
 
 		if (config_enabled('greet_bagel')) {
 			if (data.id === 3664680) {
-				lag_say('https://i.chzbgr.com/maxW500/8282054144/hEFDE7F7B/.gif');
-				// lag_say('http://31.media.tumblr.com/98a0849910642e43808a144b01fae784/tumblr_mvvfp4fZ3Y1s373hwo1_500.gif');
+				// lag_say('https://i.chzbgr.com/maxW500/8282054144/hEFDE7F7B/.gif');
+				lag_say('http://31.media.tumblr.com/98a0849910642e43808a144b01fae784/tumblr_mvvfp4fZ3Y1s373hwo1_500.gif');
 			}
 		};
 		if (config_enabled('greet_pink')) {
