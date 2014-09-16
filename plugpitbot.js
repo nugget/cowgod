@@ -310,8 +310,8 @@ var creds = {
 	});
 
 	bot.on('advance', function(data) {
-		//cowgod.logger('advance event');
-		//util.log(util.inspect(data));
+		cowgod.logger('advance event');
+		// util.log(util.inspect(data));
 		localv['voted'] = false;
 	
 		var leader_prefix  = '';
@@ -323,6 +323,7 @@ var creds = {
 			irc_set_topic('Nothing is playing in the Pit :(');
 		} else {
 			if (is_leader(data.dj.id)) {
+				cowgod.logger('this dj is the leader');
 				data.pitleader = true;
 
 				if (global['waitlist'] != '') {
@@ -330,9 +331,10 @@ var creds = {
 					leader_prefix   = '*LEAD SONG* ';
 					leader_suffix   = ' ~***';
 				}
-	
+
 				set_global('lead_song',song_string(data.media));
 			} else {
+				cowgod.logger('this dj is not the leader');
 				data.pitleader = false;
 			}
 
@@ -515,13 +517,16 @@ var creds = {
 
 				cowgod.logger('The waitlist has '+wl.length+' DJs');
 				cowgod.logger('current_dj is '+global['current_dj']);
+				cowgod.logger('our leader is '+global['leader']);
 
 				var moo = bot.getDJ(function(current_dj) {
 					if (current_dj === undefined || current_dj === null) {
 						// cowgod.logger('Process waitlist saw no current_dj');
 					} else {
 						// There is an active DJ 
+						cowgod.logger('pw there is an active dj and the wl length is '+wl.length);
 						if (wl.length == 0) {
+							cowgod.logger('and nobody else playing! leader is '+global['leader']);
 							// And there is nobody else playing
 							// util.log(util.inspect(current_dj));
 							if (global['leader'] != current_dj.id) {
@@ -645,11 +650,16 @@ var creds = {
 			for (var u in wl) {
 				uidlist.push(wl[u].id);
 			}
+
+			cowgod.logger('uidlist length is '+uidlist.length);
 	
-			var leader_pos = uidlist.indexOf(global['leader']);
-			var target_pos = uidlist.indexOf(uid.toString());
+			var leader_pos = uidlist.indexOf(parseInt(global['leader'], 10))
+			var target_pos = uidlist.indexOf(parseInt(uid, 10))
+
+			cowgod.logger('leader_pos '+leader_pos+' and target_pos '+target_pos);
 	
 			if (target_pos > leader_pos) {
+				cowgod.logger('attempting move');
 				bot.moderateMoveDJ(uid,leader_pos+1);
 			}
 		});
@@ -781,6 +791,7 @@ var creds = {
 
 
 	function set_global(key,value,comments) {
+		cowgod.logger('set_global: '+key+','+value+','+comments);
 		if (key in global) {
 			if (global[key] != value) {
 				cowgod.logger('- global['+key+'] changed from '+global[key]);
@@ -814,6 +825,8 @@ var creds = {
 
 
 	function is_leader(djid) {
+		cowgod.logger('looking to see if '+djid+' is the leader');
+		cowgod.logger('global leader is '+global['leader']);
 		if ('leader' in global && global['leader'] === djid.toString()) {
 			return true;
 		} else {
