@@ -257,21 +257,21 @@ var creds = {
 	});
 
 	bot.on('userJoin', function(data) {
-		//cowgod.logger('join event');
-		//util.log(util.inspect(data));
+		// cowgod.logger('join event');
+		// util.log(util.inspect(data));
 		log_join(data);
 		update_user(data);
 		cowgod.remember_user(data.id,data.username);
 		process_waitlist();
 
 		if (config_enabled('greet_bagel')) {
-			if (data.id == '528fd28d96fba53b814046b4' ) {
+			if (data.id === 3664680) {
 				lag_say('https://i.chzbgr.com/maxW500/8282054144/hEFDE7F7B/.gif');
 				// lag_say('http://31.media.tumblr.com/98a0849910642e43808a144b01fae784/tumblr_mvvfp4fZ3Y1s373hwo1_500.gif');
 			}
 		};
 		if (config_enabled('greet_pink')) {
-			if (data.id == '528fc8e73e083e7018dff9ab' ) {
+			if (data.id === 4104272 ) {
 				lag_say('hhttp://i.imgur.com/TggQP.gif');
 			}
 		};
@@ -408,6 +408,7 @@ var creds = {
 			data.message = '/me '+data.message;
 		} else  if (data.type == 'mention') {
 			cowgod.logger('<'+data.un+'> '+data.message);
+			process_room_command(data);
 		} else {
 			cowgod.logger('chat (unknown type)');
 			util.log(util.inspect(data));
@@ -667,7 +668,26 @@ var creds = {
 		});
 	}
 	
-	
+	function process_room_command(data) {
+		var command = data.message.toLowerCase();
+
+		if (data.message.toLowerCase().indexOf('how many points') >= 0) {
+			report_points();
+		}
+	}
+
+	function numberWithCommas(x) {
+		return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+	}
+
+	function report_points() {
+		cowgod.logger('reporting points to room');
+		bot.getUser(settings.userid, function(me) {
+			//util.log(util.inspect(me));
+			lag_say('I currently have '+numberWithCommas(me.xp)+' xp and '+numberWithCommas(me.ep)+' plug points!');
+		});
+	}
+
 	function process_cnc_command(command) {
 		var argv = command.replace(/\s+/g,' ').split(' ');
 		var command = argv[0].substr(1).toLowerCase();
@@ -735,6 +755,9 @@ var creds = {
 				break;
 			case 'reload':
 				db_loadsettings(function() {});
+				break;
+			case 'report_points':
+				report_points();
 				break;
 			default:
 				return('Unknown command');
