@@ -265,13 +265,13 @@ var creds = {
 		process_waitlist();
 
 		if (config_enabled('greet_bagel')) {
-			if (data.id === 3664680) {
+			if (data.id == 3664680) {
 				// lag_say('https://i.chzbgr.com/maxW500/8282054144/hEFDE7F7B/.gif');
 				lag_say('http://31.media.tumblr.com/98a0849910642e43808a144b01fae784/tumblr_mvvfp4fZ3Y1s373hwo1_500.gif');
 			}
 		};
 		if (config_enabled('greet_pink')) {
-			if (data.id === 4104272 ) {
+			if (data.id == 4104272 ) {
 				lag_say('hhttp://i.imgur.com/TggQP.gif');
 			}
 		};
@@ -332,6 +332,7 @@ var creds = {
 					leader_suffix   = ' ~***';
 				}
 
+				cowgod.logger('setting a new lead song');
 				set_global('lead_song',song_string(data.media));
 			} else {
 				cowgod.logger('this dj is not the leader');
@@ -409,6 +410,8 @@ var creds = {
 		} else  if (data.type == 'mention') {
 			cowgod.logger('<'+data.un+'> '+data.message);
 			process_room_command(data);
+		} else  if (data.type == 'skip') {
+			cowgod.logger('# '+data.message);
 		} else {
 			cowgod.logger('chat (unknown type)');
 			util.log(util.inspect(data));
@@ -461,8 +464,8 @@ var creds = {
 	function log_play(data) {
 		if (data.media !== null) {
 			// util.log(util.inspect(data));
-			if (typeof data.media.title === 'undefined') { data.media.title = ''; }
-			if (typeof data.media.author === 'undefined') { data.media.author = ''; }
+			if (typeof data.media.title == 'undefined') { data.media.title = ''; }
+			if (typeof data.media.author == 'undefined') { data.media.author = ''; }
 	
 			cowgod.logger(cowgod.id_to_name(data.dj.id)+' is playing '+data.media.title+' by '+data.media.author);
 			logger_tsv( [ 'event','djAdvance','plug_user_id',data.dj.id,'playlistID',data.playlistID,'song',data.media.author,'title',data.media.title,'duration',data.media.duration,'media_id',data.media.id,'media_cid',data.media.cid,'media_format',data.media.format,'leader',data.pitleader ]);
@@ -852,7 +855,7 @@ var creds = {
 	function is_leader(djid) {
 		cowgod.logger('looking to see if '+djid+' is the leader');
 		cowgod.logger('global leader is '+global['leader']);
-		if ('leader' in global && global['leader'] === djid.toString()) {
+		if ('leader' in global && global['leader'] == djid.toString()) {
 			return true;
 		} else {
 			return false;
