@@ -357,6 +357,7 @@ var creds = {
 	
 		process_waitlist('djAdvance');
 		db_loadsettings(function() {});
+		check_my_level();
 	});
 
 	function song_string(media) {
@@ -516,6 +517,7 @@ var creds = {
 			}
 		});
 	}
+
 	function process_waitlist(event) {
 		if (config_enabled('db_maintain_users')) {
 			bot.getWaitList( function(wl) {
@@ -691,6 +693,21 @@ var creds = {
 		});
 	}
 
+	function check_my_level() {
+		bot.getUser(settings.userid, function(me) {
+			// util.log(util.inspect(me));
+			if ('level' in global) {
+				if (me.level == global['level']) {
+					cowgod.logger('check_my_level: I am still level '+me.level+' ('+numberWithCommas(me.xp)+')');
+				} else {
+					cowgod.logger('check_my_level: I am level '+me.level+' ('+numberWithCommas(me.xp)+')!');
+					lag_say('Ding level '+me.level+'!');
+				}
+			}
+			set_global('level',me.level,'check_my_level()');
+		});
+	}
+
 	function process_cnc_command(command) {
 		var argv = command.replace(/\s+/g,' ').split(' ');
 		var command = argv[0].substr(1).toLowerCase();
@@ -761,6 +778,9 @@ var creds = {
 				break;
 			case 'report_points':
 				report_points();
+				break;
+			case 'level_check':
+				check_my_level();
 				break;
 			default:
 				return('Unknown command');
