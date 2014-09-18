@@ -849,7 +849,7 @@ var creds = {
 				if (key == 'leader') {
 					if (value != '') {
 						if (global['waitlist'] != '') {
-							bot.chat('*** The leader is now '+cowgod.id_to_name(value));
+							bot.chat('*** The leader is now @'+cowgod.id_to_name(value));
 						} else {
 							cowgod.logger('*** The leader is now '+cowgod.id_to_name(value));
 						}
