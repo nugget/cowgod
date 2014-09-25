@@ -365,7 +365,6 @@ var creds = {
 	
 		process_waitlist('djAdvance');
 		db_loadsettings(function() {});
-		check_my_level();
 	});
 
 	function song_string(media) {
@@ -700,22 +699,7 @@ var creds = {
 			lag_say('I currently have '+numberWithCommas(me.xp)+' xp and '+numberWithCommas(me.ep)+' plug points!');
 		});
 	}
-
-	function check_my_level() {
-		bot.getUser(settings.userid, function(me) {
-			// util.log(util.inspect(me));
-			if ('level' in global) {
-				if (me.level == global['level']) {
-					cowgod.logger('check_my_level: I am still level '+me.level+' ('+numberWithCommas(me.xp)+')');
-				} else {
-					cowgod.logger('check_my_level: I am level '+me.level+' ('+numberWithCommas(me.xp)+')!');
-					lag_say('Ding level '+me.level+'!');
-				}
-			}
-			set_global('level',me.level,'check_my_level()');
-		});
-	}
-
+	
 	function process_cnc_command(command) {
 		var argv = command.replace(/\s+/g,' ').split(' ');
 		var command = argv[0].substr(1).toLowerCase();
@@ -786,9 +770,6 @@ var creds = {
 				break;
 			case 'report_points':
 				report_points();
-				break;
-			case 'level_check':
-				check_my_level();
 				break;
 			default:
 				return('Unknown command');
@@ -896,20 +877,60 @@ var creds = {
 			return;
 		}
 
-		util.log(util.inspect(user));
+		//util.log(util.inspect(user));
+
 		botdb.query('INSERT INTO users (uid) SELECT $1 WHERE 1 NOT IN (SELECT 1 FROM users WHERE uid = $2) RETURNING user_id', [
 			user.id,user.id
 		], after(function(insresult) {
-			// util.log(util.inspect(insresult));
-			botdb.query('UPDATE users SET nickname = $2, dj_points = $3, listen_points = $4, fans = $5, avatar = $6, curate_points = $7 WHERE uid = $1 RETURNING user_id', [
-				user.id, user.username, user.djPoints, user.listenerPoints, user.fans, user.avatarID, user.curatorPoints
-			], after(function(updresult) {
-				util.log(util.inspect(updresult));
-				if (insresult.rowCount == 1) {
-					cowgod.logger('Added new user '+user.username+' ('+user.id+') to database');
-				} else {
-					cowgod.logger('Updated user '+user.username+' ('+user.id+') in database');
-				}
+			if (insresult.rowCount == 1) {
+				cowgod.logger('Added new user '+user.username+' ('+user.id+') to database');
+			}
+
+			botdb.query('SELECT * FROM users WHERE uid = $1', [ user.id ], after(function(result) {
+				result.rows.forEach(function(dbuser) {
+					//util.log(util.inspect(dbuser));
+
+					var update_needed = false;
+	
+					if (dbuser.level != user.level) {
+						update_needed = true;
+
+						cowgod.logger(cowgod.id_to_name(user.id)+' is now level '+user.level+' up from '+dbuser.level);
+		
+						if (dbuser.level > 0) {
+							cowgod.logger('announcing level up');
+							if (user.id == settings.userid) {
+								lag_say('Woot!  I just hit level '+user.level+'!');
+							} else {
+								lag_say('Congratulations on reaching level '+user.level+' @'+cowgod.id_to_name(user.id));
+							}
+						}
+					}
+
+					if(dbuser.nickname != user.username) {
+						update_needed = true;
+						cowgod.logger(cowgod.id_to_name(user.id)+' is now nickname '+user.username+' changed from '+dbuser.nickname);
+					}
+
+					if(dbuser.avatar != user.avatarID) {
+						update_needed = true;
+						cowgod.logger(cowgod.id_to_name(user.id)+' is now avatar '+user.avatarID+' changed from '+dbuser.avatar);
+
+						if (dbuser.avatar != 'undefined') {
+							lag_say('Spiffy new avatar, @'+cowgod.id_to_name(user.id));
+						}
+					}
+
+					if (update_needed) {
+						logger_tsv([ 'event','userinfo','nickname',user.username,'plug_user_id',user.id,'level',user.level,'avatar',user.avatarID]);
+						botdb.query('UPDATE users SET level = $2, nickname = $3, avatar = $4 WHERE uid = $1', [
+							user.id, user.level, user.username, user.avatarID
+						], after(function(updresult) {
+							cowgod.logger('Updated '+cowgod.id_to_name(user.id)+' in the database');
+							util.log(util.inspect(updresult));
+						}));
+					}
+				});
 			}));
 		}));
 	}
