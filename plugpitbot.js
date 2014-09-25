@@ -161,6 +161,13 @@ var creds = {
 
 	if (typeof settings.irc_server !== 'undefined') {
 		var irc = require('irc');
+	}
+
+	function connect_to_irc() {
+		if (typeof settings.irc_server == 'undefined') {
+			return;
+		}
+
 		cowgod.logger('Connecting to IRC '+settings.irc_server+' as '+settings.irc_nick);
 		cuckoo = new irc.Client(settings.irc_server, settings.irc_nick, {
 			selfSigned: true,
@@ -242,6 +249,7 @@ var creds = {
 		localv['voted'] = false;
 		process_waitlist();
 		process_userlist();
+		connect_to_irc();
 	});
 
 	bot.on('chat', function(data) {
@@ -888,7 +896,7 @@ var creds = {
 			return;
 		}
 
-		// util.log(util.inspect(user));
+		util.log(util.inspect(user));
 		botdb.query('INSERT INTO users (uid) SELECT $1 WHERE 1 NOT IN (SELECT 1 FROM users WHERE uid = $2) RETURNING user_id', [
 			user.id,user.id
 		], after(function(insresult) {
@@ -896,7 +904,7 @@ var creds = {
 			botdb.query('UPDATE users SET nickname = $2, dj_points = $3, listen_points = $4, fans = $5, avatar = $6, curate_points = $7 WHERE uid = $1 RETURNING user_id', [
 				user.id, user.username, user.djPoints, user.listenerPoints, user.fans, user.avatarID, user.curatorPoints
 			], after(function(updresult) {
-				// util.log(util.inspect(updresult));
+				util.log(util.inspect(updresult));
 				if (insresult.rowCount == 1) {
 					cowgod.logger('Added new user '+user.username+' ('+user.id+') to database');
 				} else {
