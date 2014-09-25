@@ -1,4 +1,5 @@
 #!/bin/sh
+rm -f /tmp/*.dmp
 
 while [ 1 ]; do
 	./plugpitbot.js --nick $1
