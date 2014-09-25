@@ -340,7 +340,7 @@ var creds = {
 			irc_set_topic('Nothing is playing in the Pit :(');
 		} else {
 			if (is_leader(data.dj.id)) {
-				cowgod.logger('this dj is the leader');
+				// cowgod.logger('this dj is the leader');
 				data.pitleader = true;
 
 				if (global['waitlist'] != '') {
@@ -395,7 +395,7 @@ var creds = {
 	
 	function lag_vote (vote) {
 		waitms = parseInt(Math.random() * 20000)+500;
-		cowgod.logger('- will vote '+vote+' in '+waitms+' ms');
+		// cowgod.logger('- will vote '+vote+' in '+waitms+' ms');
 		setTimeout(function(){ do_vote(vote); }, waitms);
 	}
 
@@ -549,9 +549,8 @@ var creds = {
 						// cowgod.logger('Process waitlist saw no current_dj');
 					} else {
 						// There is an active DJ 
-						cowgod.logger('pw there is an active dj and the wl length is '+wl.length);
+						// cowgod.logger('process_waitlist: there is an active dj and the wl length is '+wl.length);
 						if (wl.length == 0) {
-							cowgod.logger('and nobody else playing! leader is '+global['leader']);
 							// And there is nobody else playing
 							// util.log(util.inspect(current_dj));
 							if (global['leader'] != current_dj.id) {
@@ -840,7 +839,7 @@ var creds = {
 	function set_global(key,value,comments) {
 		if (key in global) {
 			if (global[key] != value) {
-				// cowgod.logger('- global['+key+'] changed '+global[key]+' -> '+value);
+				cowgod.logger('- global['+key+'] changed from "'+global[key]+'" to "'+value+'"');
 				global[key] = value;
 
 				if (key == 'leader') {
@@ -870,8 +869,8 @@ var creds = {
 
 
 	function is_leader(djid) {
-		cowgod.logger('looking to see if '+djid+' is the leader');
-		cowgod.logger('global leader is '+global['leader']);
+		// cowgod.logger('looking to see if '+djid+' is the leader');
+		// cowgod.logger('global leader is '+global['leader']);
 		if ('leader' in global && global['leader'] == djid.toString()) {
 			return true;
 		} else {
