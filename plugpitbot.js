@@ -884,6 +884,7 @@ var creds = {
 		], after(function(insresult) {
 			if (insresult.rowCount == 1) {
 				cowgod.logger('Added new user '+user.username+' ('+user.id+') to database');
+				lag_say('Hey! Welcome to the Pit, @'+user.username);
 			}
 
 			botdb.query('SELECT * FROM users WHERE uid = $1', [ user.id ], after(function(result) {
@@ -897,7 +898,7 @@ var creds = {
 
 						cowgod.logger(cowgod.id_to_name(user.id)+' is now level '+user.level+' up from '+dbuser.level);
 		
-						if (dbuser.level > 0) {
+						if (dbuser.level !== null) {
 							cowgod.logger('announcing level up');
 							if (user.id == settings.userid) {
 								lag_say('Woot!  I just hit level '+user.level+'!');
