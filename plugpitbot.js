@@ -56,20 +56,29 @@ function db_loadsettings(callback) {
 	if (!settings.db) { return; }
 
 	var loadcount = 0;
-	botdb.query('SELECT * FROM settings WHERE deleted IS NULL AND enabled IS TRUE AND (uid IS NULL OR uid = $1) ORDER BY uid DESC', [
+	var seen = new Array();
+
+	botdb.query('SELECT * FROM settings WHERE deleted IS NULL AND enabled IS TRUE AND (uid IS NULL OR uid = $1) ORDER BY uid', [
 		settings.userid
 	], after(function(result) {
+
 		result.rows.forEach(function(setval) {
-			if (setval.key in config) {
-				if (config[setval.key] != setval.value) {
+			if (seen.indexOf(setval.key) != -1) {
+				// cowgod.logger('- skipping setting '+setval.key+' for uid '+setval.uid+' because it is a duplicate');
+			} else {
+				seen.push(setval.key);
+
+				if (setval.key in config) {
+					if (config[setval.key] != setval.value) {
+						config[setval.key] = setval.value;
+						cowgod.logger('- config '+setval.key+' changed to '+config[setval.key]+' from the database (uid '+setval.uid+')');
+						loadcount = loadcount + 1;
+					}
+				} else {
 					config[setval.key] = setval.value;
-					cowgod.logger('- config '+setval.key+' changed to '+config[setval.key]+' from the database');
+					cowgod.logger('- config '+setval.key+' set to '+config[setval.key]+' from the database (uid '+setval.uid+')');
 					loadcount = loadcount + 1;
 				}
-			} else {
-				config[setval.key] = setval.value;
-				cowgod.logger('- config '+setval.key+' set to '+config[setval.key]+' from the database');
-				loadcount = loadcount + 1;
 			}
 		});
 		if (loadcount > 0) {
@@ -340,7 +349,7 @@ var creds = {
 					leader_suffix   = ' ~***';
 				}
 
-				cowgod.logger('setting a new lead song');
+				// cowgod.logger('setting a new lead song');
 				set_global('lead_song',song_string(data.media));
 			} else {
 				cowgod.logger('this dj is not the leader');
@@ -364,6 +373,7 @@ var creds = {
 		}
 	
 		process_waitlist('djAdvance');
+		process_userlist();
 		db_loadsettings(function() {});
 	});
 
@@ -530,9 +540,9 @@ var creds = {
 			bot.getWaitList( function(wl) {
 				var wlbuf = ''
 
-				cowgod.logger('The waitlist has '+wl.length+' DJs');
-				cowgod.logger('current_dj is '+global['current_dj']);
-				cowgod.logger('our leader is '+global['leader']);
+				// cowgod.logger('The waitlist has '+wl.length+' DJs');
+				// cowgod.logger('current_dj is '+global['current_dj']);
+				// cowgod.logger('our leader is '+global['leader']);
 
 				var moo = bot.getDJ(function(current_dj) {
 					if (current_dj === undefined || current_dj === null) {
@@ -573,7 +583,7 @@ var creds = {
 				}
 		
 				set_global('waitlist',wlbuf,'Updated by getWaitList');
-				cowgod.logger('Updated waitlist global cache');
+				// cowgod.logger('Updated waitlist global cache');
 				// util.log(util.inspect(data));
 			});
 		}
@@ -828,11 +838,9 @@ var creds = {
 
 
 	function set_global(key,value,comments) {
-		cowgod.logger('set_global: '+key+','+value+','+comments);
 		if (key in global) {
 			if (global[key] != value) {
-				cowgod.logger('- global['+key+'] changed from '+global[key]);
-				cowgod.logger('- global['+key+'] changed to   '+value);
+				// cowgod.logger('- global['+key+'] changed '+global[key]+' -> '+value);
 				global[key] = value;
 
 				if (key == 'leader') {
@@ -878,7 +886,10 @@ var creds = {
 		}
 
 		//util.log(util.inspect(user));
-
+		if (user.xp != null || user.ep != null) {
+			cowgod.logger(user.username+' has '+numberWithCommas(user.xp)+' xp and '+numberWithCommas(user.ep)+' plug points!');
+		}
+		
 		botdb.query('INSERT INTO users (uid) SELECT $1 WHERE 1 NOT IN (SELECT 1 FROM users WHERE uid = $2) RETURNING user_id', [
 			user.id,user.id
 		], after(function(insresult) {
