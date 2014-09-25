@@ -153,7 +153,7 @@ var creds = {
 
 	var bot = new PlugBotAPI(creds);
 
-	util.log(util.inspect(bot));
+	//util.log(util.inspect(bot));
 	cowgod.set_active_bot(bot);
 
 	cowgod.logger('connecting to '+settings.plug_room);
@@ -301,7 +301,7 @@ var creds = {
 
 	bot.on('grabUpdate', function(data) {
 		cowgod.logger('curate event');
-		util.log(util.inspect(data));
+		//util.log(util.inspect(data));
 		// this is like a TT snag
 		log_curate(data);
 	});
@@ -927,7 +927,7 @@ var creds = {
 							user.id, user.level, user.username, user.avatarID
 						], after(function(updresult) {
 							cowgod.logger('Updated '+cowgod.id_to_name(user.id)+' in the database');
-							util.log(util.inspect(updresult));
+							//util.log(util.inspect(updresult));
 						}));
 					}
 				});
