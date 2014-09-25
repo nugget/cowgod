@@ -916,7 +916,7 @@ var creds = {
 						update_needed = true;
 						cowgod.logger(cowgod.id_to_name(user.id)+' is now avatar '+user.avatarID+' changed from '+dbuser.avatar);
 
-						if (dbuser.avatar != 'undefined') {
+						if (dbuser.avatar !== null) {
 							lag_say('Spiffy new avatar, @'+cowgod.id_to_name(user.id));
 						}
 					}
