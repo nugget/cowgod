@@ -884,6 +884,8 @@ var creds = {
 			return;
 		}
 
+		//cowgod.logger('update_user '+user.username);
+
 		//util.log(util.inspect(user));
 		if (user.xp != null || user.ep != null) {
 			cowgod.logger(user.username+' has '+numberWithCommas(user.xp)+' xp and '+numberWithCommas(user.ep)+' plug points!');
@@ -902,6 +904,8 @@ var creds = {
 					//util.log(util.inspect(dbuser));
 
 					var update_needed = false;
+
+					//cowgod.logger('comparing '+dbuser.level+' and '+user.level+' for '+user.username);
 	
 					if (dbuser.level != user.level) {
 						update_needed = true;
