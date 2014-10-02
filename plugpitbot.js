@@ -878,6 +878,8 @@ var creds = {
 					}
 				} else if (key == 'waitlist') {
 					cowgod.logger('The waitlist is now: '+pretty_waitlist(value.split(' ')));
+				} else if (key == 'current_dj') {
+					// No need to announce this
 				} else {
 					cowgod.logger('- global['+key+'] changed from "'+global[key]+'" to "'+value+'"');
 				}
