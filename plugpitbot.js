@@ -518,7 +518,7 @@ var creds = {
 		], after(function(result) {
 			// util.log(util.inspect(result));
 			if (result.rowCount == 1) {
-				cowgod.logger('New plug_media added: '+media.author+' - '+media.title+' ('+media.id+')');
+				//cowgod.logger('New plug_media added: '+media.author+' - '+media.title+' ('+media.id+')');
 			}
 		}));
 	}
