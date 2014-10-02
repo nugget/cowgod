@@ -556,7 +556,10 @@ var creds = {
 	
 				var gwl_raw = global['waitlist'].split(' ');
 				for (var u in gwl_raw) {
-					gwl.push(parseInt(gwl_raw[u],10));
+					var uid = parseInt(gwl_raw[u],10);
+					if (!isNaN(uid)) {
+						gwl.push(parseInt(gwl_raw[u],10));
+					}
 				}
 
 				//cowgod.logger('pwl:         raw: '+pretty_waitlist(wl));
@@ -672,7 +675,7 @@ var creds = {
 					if (old_wl[u] == global['leader']) {
 						cowgod.logger('Ack, we need a new leader!');
 						var new_guy = new_wl[u];
-						cowgod.logger('new_guy is '+new_guy+' and comes from position '+u+' in new_wl list');
+						// cowgod.logger('new_guy is '+new_guy+' and comes from position '+u+' in new_wl list');
 						if (typeof new_guy  === 'undefined' || new_guy == '') {
 							cowgod.logger('That will not do, we will use current_dj for the new leader: '+global['current_dj']);
 							new_guy = global['current_dj'];
