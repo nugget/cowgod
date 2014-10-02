@@ -452,7 +452,7 @@ var creds = {
 
 	function log_vote(data) {
 		if (data.vote == 1) {
-			cowgod.logger(cowgod.id_to_name(data.user.id)+' wooted');
+			cowgod.logger(pretty_user(data.user.id)+' wooted');
 			if (config_enabled('follow_trends') && is_trendsetter(data.user.id)) {
 				if (!localv['voted']) {
 					localv['voted'] = true;
@@ -462,26 +462,26 @@ var creds = {
 				}
 			}
 		} else if (data.vote == -1) {
-			cowgod.logger(cowgod.id_to_name(data.user.id)+' voted meh');
+			cowgod.logger(pretty_user(data.user.id)+' voted meh');
 		} else {
-			cowgod.logger('vote (unknown type)');
+			cowgod.logger('vote (unknown type: '+data.vote+')');
 			util.log(util.inspect(data));
 		}
 		logger_tsv([ 'event','vote','vote',data.vote,'plug_user_id',data.user.id ]);
 	}
 
 	function log_join(data) {
-		cowgod.logger(data.username+' joined the room');
+		cowgod.logger(pretty_user(data.id)+' joined the room');
 		logger_tsv([ 'event','join','nickname',data.username,'plug_user_id',data.id,'status',data.status,'fans',data.fans,'listenerPoints',data.listenerPoints,'avatarID',data.avatarID,'djPoints',data.djPoints,'permission',data.permission ]);
 	}
 	
 	function log_part(data) {
-		cowgod.logger(cowgod.id_to_name(data.id)+' left the room');
+		cowgod.logger(pretty_user(data.id)+' left the room');
 		logger_tsv([ 'event','part','plug_user_id',data.id ]);
 	}
 
 	function log_curate(data) {
-		cowgod.logger(cowgod.id_to_name(data.user.id)+' snagged this song');
+		cowgod.logger(pretty_user(data.user.id)+' snagged this song');
 		logger_tsv([ 'event','snag','plug_user_id',data.user.id ]);
 	}
 
@@ -491,7 +491,7 @@ var creds = {
 			if (typeof data.media.title == 'undefined') { data.media.title = ''; }
 			if (typeof data.media.author == 'undefined') { data.media.author = ''; }
 	
-			cowgod.logger(cowgod.id_to_name(data.dj.id)+' is playing '+data.media.title+' by '+data.media.author);
+			cowgod.logger(pretty_user(data.dj.id)+' is playing '+data.media.title+' by '+data.media.author);
 			logger_tsv( [ 'event','djAdvance','plug_user_id',data.dj.id,'playlistID',data.playlistID,'song',data.media.author,'title',data.media.title,'duration',data.media.duration,'media_id',data.media.id,'media_cid',data.media.cid,'media_format',data.media.format,'leader',data.pitleader ]);
 
 			if (config_enabled('db_log_plays')) {
@@ -544,6 +544,7 @@ var creds = {
 	function process_waitlist(event) {
 		if (config_enabled('db_maintain_users')) {
 			bot.getWaitList( function(wl) {
+				var gwl = new Array();
 				var nwl = new Array();
 
 				var wlbuf = '';
@@ -552,35 +553,18 @@ var creds = {
 					nwl.push(wl[u].id);
 				}
 				wlbuf = wlbuf.trim();
-
-				cowgod.logger('pwl: current_dj is '+global['current_dj']);
-				cowgod.logger('pwl: our leader is '+global['leader']);
-
-				var moo = bot.getDJ(function(current_dj) {
-					if (current_dj === undefined || current_dj === null) {
-						// cowgod.logger('Process waitlist saw no current_dj');
-					} else {
-						// There is an active DJ 
-						// cowgod.logger('process_waitlist: there is an active dj and the wl length is '+wl.length);
-						if (wl.length == 0) {
-							// And there is nobody else playing
-							// util.log(util.inspect(current_dj));
-							if (global['leader'] != current_dj.id) {
-								cowgod.logger(cowgod.id_to_name(current_dj.id)+' is the only DJ, promoting to leader');
-								set_global('leader',current_dj.id,'Only DJ playing');
-							}
-						}
-					}
-				});
 	
-				var gwl = global['waitlist'].split(' ');
+				var gwl_raw = global['waitlist'].split(' ');
+				for (var u in gwl_raw) {
+					gwl.push(parseInt(gwl_raw[u],10));
+				}
 
-				cowgod.logger('pwl:         raw: '+pretty_waitlist(wl));
-				cowgod.logger('pwl:         nwl: '+nwl);
-				cowgod.logger('pwl: getWaitList: '+pretty_waitlist(nwl));
-				cowgod.logger('pwl:         gwl: '+gwl);
-				cowgod.logger('pwl:      global: '+pretty_waitlist(gwl));
-				cowgod.logger('pwl:       wlbuf: '+wlbuf);
+				//cowgod.logger('pwl:         raw: '+pretty_waitlist(wl));
+				//cowgod.logger('pwl:         nwl: '+nwl);
+				//cowgod.logger('pwl: getWaitList: '+pretty_waitlist(nwl));
+				//cowgod.logger('pwl:         gwl: '+gwl);
+				//cowgod.logger('pwl:      global: '+pretty_waitlist(gwl));
+				//cowgod.logger('pwl:       wlbuf: '+wlbuf);
 
 				if (nwl.length > gwl.length) {
 					cowgod.logger('waitlist grew');
@@ -594,18 +578,34 @@ var creds = {
 				} 
 				if (nwl.length < gwl.length) {
 					var sizediff = gwl.length - nwl.length;
-					cowgod.logger('waitlist shrunk by '+sizediff+' spots');
 					if (sizediff != 1 && nwl.length == 0) {
 						cowgod.logger('waitlist shrunk by '+sizediff+' spots and is empty now, that is too suspicious.  Ignoring');
 						return;
 					} 
-					cowgod.logger('waitlist shrunk');
+					cowgod.logger('waitlist shrunk by '+sizediff+' spots');
 					lost_dj(gwl,nwl);
 				}
 		
 				set_global('waitlist',wlbuf,'Updated by getWaitList');
 				// cowgod.logger('Updated waitlist global cache');
 				// util.log(util.inspect(data));
+				//
+				var moo = bot.getDJ(function(current_dj) {
+					if (current_dj === undefined || current_dj === null) {
+						// cowgod.logger('Process waitlist saw no current_dj');
+					} else {
+						// There is an active DJ 
+						// cowgod.logger('process_waitlist: there is an active dj and the wl length is '+wl.length);
+						if (wl.length == 0) {
+							// And there is nobody else playing
+							// util.log(util.inspect(current_dj));
+							if (global['leader'] != current_dj.id) {
+								cowgod.logger(pretty_user(current_dj.id)+' is the only DJ, promoting to leader');
+								set_global('leader',current_dj.id,'Only DJ playing');
+							}
+						}
+					}
+				});
 			});
 		}
 	}
@@ -617,22 +617,23 @@ var creds = {
 			if (uid === undefined) {
 				uid = wl[u];
 			}
-			buf = buf+cowgod.id_to_name(uid)+'/'+uid+' ';
+			buf = buf+pretty_user(uid)+' ';
 		}
 		return buf+'(size '+wl.length+')';
 	}
 
+	function pretty_user(uid) {
+		return cowgod.id_to_name(uid)+'/'+uid;
+	}
+
 	function new_dj(old_wl,new_wl) {
-	
-		// cowgod.logger('old_wl');
-		// util.log(util.inspect(old_wl));
-		// cowgod.logger('new_wl');
-		// util.log(util.inspect(new_wl));
+		//cowgod.logger('ndj: old: '+pretty_waitlist(old_wl));
+		//cowgod.logger('ndj: new: '+pretty_waitlist(new_wl));
 	
 		for (u in new_wl) {
-			if (old_wl.indexOf(new_wl[u].toString()) == -1) {
-				cowgod.logger(cowgod.id_to_name(new_wl[u])+' joined the waitlist');
-				cowgod.logger('leader is -'+global['leader']+'-');
+			if (old_wl.indexOf(new_wl[u]) == -1) {
+				cowgod.logger(pretty_user(new_wl[u])+' joined the waitlist');
+				cowgod.logger('leader is -'+pretty_user(global['leader'])+'-');
 				if (global['leader'] == '') {
 					cowgod.logger('No Leader, No Announce)');
 				} else {
@@ -645,15 +646,10 @@ var creds = {
 	}
 
 	function lost_dj(old_wl,new_wl) {
-		// cowgod.logger('old_wl');
-		// util.log(util.inspect(old_wl));
-		// cowgod.logger('new_wl');
-		// util.log(util.inspect(new_wl));
+		//cowgod.logger('ldj: old: '+pretty_waitlist(old_wl));
+		//cowgod.logger('ldj: new: '+pretty_waitlist(new_wl));
 
-		// cowgod.logger('new_wl.length is '+new_wl.length);
-		// cowgod.logger('old_wl.length is '+old_wl.length);
-
-		if (new_wl.length ==1) {
+		if (new_wl.length == 1) {
 			cowgod.logger('new_wl.length is 1 and it contains '+new_wl[0]);
 			if (new_wl[0] == '') {
 				// cowgod.logger('that is bogus');
@@ -667,11 +663,11 @@ var creds = {
 		}
 	
 		for (u in old_wl) {
-			if (new_wl.indexOf(old_wl[u].toString()) == -1) {
+			if (new_wl.indexOf(old_wl[u]) == -1) {
 				if (old_wl[u] == global['current_dj']) {
-					cowgod.logger('Confused, it looked like '+cowgod.id_to_name(old_wl[u])+' left the waitlist, but that is the current DJ');
+					cowgod.logger('Confused, it looked like '+pretty_user(old_wl[u])+' left the waitlist, but that is the current DJ');
 				} else {
-					cowgod.logger(cowgod.id_to_name(old_wl[u])+' left the waitlist');
+					cowgod.logger(pretty_user(old_wl[u])+' left the waitlist');
 	
 					if (old_wl[u] == global['leader']) {
 						cowgod.logger('Ack, we need a new leader!');
@@ -694,8 +690,8 @@ var creds = {
 			return;
 		}
 
-		cowgod.logger('I need to move '+uid+' to the end of the waitlist');
-		cowgod.logger('current_dj is '+global['current_dj']);
+		cowgod.logger('I need to move '+pretty_user(uid)+' to the end of the waitlist');
+		cowgod.logger('current_dj is '+pretty_user(global['current_dj']));
 	
 		bot.getWaitList( function(wl) {
 			var uidlist = new Array();
@@ -704,7 +700,7 @@ var creds = {
 				uidlist.push(wl[u].id);
 			}
 
-			cowgod.logger('uidlist length is '+uidlist.length);
+			cowgod.logger('move_to_end waitlist is '+pretty_waitlist(wl));
 	
 			var leader_pos = uidlist.indexOf(parseInt(global['leader'], 10))
 			var target_pos = uidlist.indexOf(parseInt(uid, 10))
@@ -868,7 +864,6 @@ var creds = {
 	function set_global(key,value,comments) {
 		if (key in global) {
 			if (global[key] != value) {
-				cowgod.logger('- global['+key+'] changed from "'+global[key]+'" to "'+value+'"');
 				global[key] = value;
 
 				if (key == 'leader') {
@@ -876,11 +871,15 @@ var creds = {
 						if (global['waitlist'] != '') {
 							bot.chat('*** The leader is now @'+cowgod.id_to_name(value));
 						} else {
-							cowgod.logger('*** The leader is now '+cowgod.id_to_name(value));
+							cowgod.logger('*** The leader is now '+pretty_user(value));
 						}
 					} else {
 						bot.chat('*** There is no leader, let anarchy reign! (RICSAS)');
 					}
+				} else if (key == 'waitlist') {
+					cowgod.logger('The waitlist is now: '+pretty_waitlist(value.split(' ')));
+				} else {
+					cowgod.logger('- global['+key+'] changed from "'+global[key]+'" to "'+value+'"');
 				}
 				
 				botdb.query('UPDATE globals SET value = $1, comments = $2 WHERE key = $3 AND uid = $4', [
@@ -940,7 +939,7 @@ var creds = {
 					if (dbuser.level != user.level) {
 						update_needed = true;
 
-						cowgod.logger(cowgod.id_to_name(user.id)+' is now level '+user.level+' up from '+dbuser.level);
+						cowgod.logger(pretty_user(user.id)+' is now level '+user.level+' up from '+dbuser.level);
 		
 						if (dbuser.level !== null) {
 							cowgod.logger('announcing level up');
@@ -954,12 +953,12 @@ var creds = {
 
 					if(dbuser.nickname != user.username) {
 						update_needed = true;
-						cowgod.logger(cowgod.id_to_name(user.id)+' is now nickname '+user.username+' changed from '+dbuser.nickname);
+						cowgod.logger(pretty_user(user.id)+' is now nickname '+user.username+' changed from '+dbuser.nickname);
 					}
 
 					if(dbuser.avatar != user.avatarID) {
 						update_needed = true;
-						cowgod.logger(cowgod.id_to_name(user.id)+' is now avatar '+user.avatarID+' changed from '+dbuser.avatar);
+						cowgod.logger(pretty_user(user.id)+' is now avatar '+user.avatarID+' changed from '+dbuser.avatar);
 
 						if (dbuser.avatar !== null) {
 							lag_say('Spiffy new avatar, @'+cowgod.id_to_name(user.id));
@@ -971,7 +970,7 @@ var creds = {
 						botdb.query('UPDATE users SET level = $2, nickname = $3, avatar = $4 WHERE uid = $1', [
 							user.id, user.level, user.username, user.avatarID
 						], after(function(updresult) {
-							cowgod.logger('Updated '+cowgod.id_to_name(user.id)+' in the database');
+							cowgod.logger('Updated '+pretty_user(user.id)+' in the database');
 							//util.log(util.inspect(updresult));
 						}));
 					}
