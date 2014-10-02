@@ -433,8 +433,10 @@ var creds = {
 			process_room_command(data);
 		} else  if (data.type == 'skip') {
 			cowgod.logger('# '+data.message);
+		} else  if (data.type == 'welcome') {
+			cowgod.logger('# '+data.message);
 		} else {
-			cowgod.logger('chat (unknown type)');
+			cowgod.logger('chat (unknown type: '+data.type+')');
 			util.log(util.inspect(data));
 		}
 
@@ -580,6 +582,11 @@ var creds = {
 					}
 				} 
 				if (wlbuf.length < global['waitlist'].length) {
+					var sizediff = global['waitlist'].length - wlbuf.length;
+					if (sizediff != 1 && wlbuf.length == 0) {
+						cowgod.logger('waitlist shrunk by '+sizediff+' spots and is empty now, that is too suspicious.  Ignoring');
+						return;
+					} 
 					cowgod.logger('waitlist shrunk');
 					lost_dj(global['waitlist'],wlbuf);
 				}
