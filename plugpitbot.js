@@ -331,7 +331,7 @@ var creds = {
 	});
 
 	bot.on('advance', function(data) {
-		cowgod.logger('advance event');
+		// cowgod.logger('advance event');
 		// util.log(util.inspect(data));
 		localv['voted'] = false;
 	
@@ -356,7 +356,7 @@ var creds = {
 				// cowgod.logger('setting a new lead song');
 				set_global('lead_song',song_string(data.media));
 			} else {
-				cowgod.logger('this dj is not the leader');
+				// cowgod.logger('this dj is not the leader');
 				data.pitleader = false;
 			}
 
@@ -376,8 +376,8 @@ var creds = {
 			}
 		}
 	
-		process_waitlist('djAdvance');
 		process_userlist();
+		process_waitlist('djAdvance');
 		db_loadsettings(function() {});
 	});
 
