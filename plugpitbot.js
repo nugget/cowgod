@@ -87,6 +87,7 @@ function db_loadsettings(callback) {
 		if (loadcount > 0) {
 			cowgod.logger('- Loaded '+loadcount+' settings from database');
 		}
+
 		callback();
 	}));
 }
@@ -259,8 +260,8 @@ var creds = {
 	bot.on('roomJoin', function() {
 		cowgod.logger('roomJoin');
 		localv['voted'] = false;
-		process_waitlist();
 		process_userlist();
+		process_waitlist();
 		connect_to_irc();
 	});
 
@@ -392,7 +393,7 @@ var creds = {
 		if (typeof vote == undefined) {
 			vote = 1;
 		}
-		cowgod.logger(' I am voting '+vote);
+		// cowgod.logger(' I am voting '+vote);
 		bot.woot(vote);
 	}
 	
@@ -543,11 +544,17 @@ var creds = {
 	function process_waitlist(event) {
 		if (config_enabled('db_maintain_users')) {
 			bot.getWaitList( function(wl) {
-				var wlbuf = ''
+				var nwl = new Array();
 
-				// cowgod.logger('The waitlist has '+wl.length+' DJs');
-				// cowgod.logger('current_dj is '+global['current_dj']);
-				// cowgod.logger('our leader is '+global['leader']);
+				var wlbuf = '';
+				for (var u in wl) {
+					wlbuf = wlbuf+' '+wl[u].id;
+					nwl.push(wl[u].id);
+				}
+				wlbuf = wlbuf.trim();
+
+				cowgod.logger('pwl: current_dj is '+global['current_dj']);
+				cowgod.logger('pwl: our leader is '+global['leader']);
 
 				var moo = bot.getDJ(function(current_dj) {
 					if (current_dj === undefined || current_dj === null) {
@@ -565,30 +572,35 @@ var creds = {
 						}
 					}
 				});
-		
-				for (var u in wl) {
-					wlbuf = wlbuf+' '+wl[u].id;
-				}
-				wlbuf = wlbuf.trim();
+	
+				var gwl = global['waitlist'].split(' ');
 
-				if (wlbuf.length > global['waitlist'].length) {
+				cowgod.logger('pwl:         raw: '+pretty_waitlist(wl));
+				cowgod.logger('pwl:         nwl: '+nwl);
+				cowgod.logger('pwl: getWaitList: '+pretty_waitlist(nwl));
+				cowgod.logger('pwl:         gwl: '+gwl);
+				cowgod.logger('pwl:      global: '+pretty_waitlist(gwl));
+				cowgod.logger('pwl:       wlbuf: '+wlbuf);
+
+				if (nwl.length > gwl.length) {
 					cowgod.logger('waitlist grew');
 					if (config_enabled('manage_waitlist')) {
 						cowgod.logger('and i manage the waitlist');
 						if (event == 'djUpdate') {
 							cowgod.logger('and this was a new song djAdvance');
-							new_dj(global['waitlist'],wlbuf);
+							new_dj(gwl,nwl);
 						}
 					}
 				} 
-				if (wlbuf.length < global['waitlist'].length) {
-					var sizediff = global['waitlist'].length - wlbuf.length;
-					if (sizediff != 1 && wlbuf.length == 0) {
+				if (nwl.length < gwl.length) {
+					var sizediff = gwl.length - nwl.length;
+					cowgod.logger('waitlist shrunk by '+sizediff+' spots');
+					if (sizediff != 1 && nwl.length == 0) {
 						cowgod.logger('waitlist shrunk by '+sizediff+' spots and is empty now, that is too suspicious.  Ignoring');
 						return;
 					} 
 					cowgod.logger('waitlist shrunk');
-					lost_dj(global['waitlist'],wlbuf);
+					lost_dj(gwl,nwl);
 				}
 		
 				set_global('waitlist',wlbuf,'Updated by getWaitList');
@@ -598,9 +610,19 @@ var creds = {
 		}
 	}
 
-	function new_dj(s_old_wl,s_new_wl) {
-		var old_wl = s_old_wl.split(' ');
-		var new_wl = s_new_wl.split(' ');
+	function pretty_waitlist(wl) {
+		var buf = '';
+		for (var u in wl) {
+			var uid = wl[u].id;
+			if (uid === undefined) {
+				uid = wl[u];
+			}
+			buf = buf+cowgod.id_to_name(uid)+'/'+uid+' ';
+		}
+		return buf+'(size '+wl.length+')';
+	}
+
+	function new_dj(old_wl,new_wl) {
 	
 		// cowgod.logger('old_wl');
 		// util.log(util.inspect(old_wl));
@@ -622,10 +644,7 @@ var creds = {
 		}
 	}
 
-	function lost_dj(s_old_wl,s_new_wl) {
-		var old_wl = s_old_wl.split(' ');
-		var new_wl = s_new_wl.split(' ');
-	
+	function lost_dj(old_wl,new_wl) {
 		// cowgod.logger('old_wl');
 		// util.log(util.inspect(old_wl));
 		// cowgod.logger('new_wl');
