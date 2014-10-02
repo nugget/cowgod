@@ -633,9 +633,9 @@ var creds = {
 		for (u in new_wl) {
 			if (old_wl.indexOf(new_wl[u]) == -1) {
 				cowgod.logger(pretty_user(new_wl[u])+' joined the waitlist');
-				cowgod.logger('leader is -'+pretty_user(global['leader'])+'-');
+				//cowgod.logger('leader is -'+pretty_user(global['leader'])+'-');
 				if (global['leader'] == '') {
-					cowgod.logger('No Leader, No Announce)');
+					//cowgod.logger('No Leader, No Announce)');
 				} else {
 					// cowgod.logger('New DJ!');
 					move_to_end_of_round(new_wl[u]);
@@ -650,7 +650,7 @@ var creds = {
 		//cowgod.logger('ldj: new: '+pretty_waitlist(new_wl));
 
 		if (new_wl.length == 1) {
-			cowgod.logger('new_wl.length is 1 and it contains '+new_wl[0]);
+			//cowgod.logger('new_wl.length is 1 and it contains '+new_wl[0]);
 			if (new_wl[0] == '') {
 				// cowgod.logger('that is bogus');
 				// bot.chat('Plug.dj just tried to trick me, but I am too smart for that.');
