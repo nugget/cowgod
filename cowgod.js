@@ -15,6 +15,7 @@ cowgod.logger = function (buf) {
 		hh = '0'+hh;
 	}
 	console.log('['+hh+':'+mm+'] '+buf);
+	Syslog.log(Syslog.LOG_INFO, buf);
 };
 
 cowgod.remember_user = function (id,name) {

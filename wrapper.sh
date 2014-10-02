@@ -1,7 +1,7 @@
 #!/bin/sh
 rm -f /tmp/*.dmp
 
-SECS=300
+SECS=30
 
 while [ 1 ]; do
 	./plugpitbot.js --nick $1

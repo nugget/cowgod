@@ -1,5 +1,8 @@
 #!/usr/bin/env node
 
+Syslog = require('node-syslog');
+Syslog.init('plugbot', Syslog.LOG_PID | Syslog.LOG_ODELAY, Syslog.LOG_LOCAL0);
+
 var PlugBotAPI  = require('./plugbotapi');
 var fs = require('fs');
 var util = require('util');
@@ -9,7 +12,7 @@ var exec = require('child_process').exec;
 var argv = require('optimist').argv;
 var sleep = require('sleep');
 
-var cowgod = require('./cowgod.js');
+cowgod = require('./cowgod.js');
 
 var config = new Object();
 var global = new Object();
@@ -26,7 +29,7 @@ if (typeof argv.nick === 'undefined') {
 } else {
 	var myname = argv.nick;
 	var settings = require('./settings_'+myname+'.js');
-}       
+}
 
 function after(callback) {
 	return function(err, queryResult) {
@@ -888,7 +891,8 @@ var creds = {
 
 		//util.log(util.inspect(user));
 		if (user.xp != null || user.ep != null) {
-			cowgod.logger(user.username+' has '+numberWithCommas(user.xp)+' xp and '+numberWithCommas(user.ep)+' plug points!');
+			logger_tsv([ 'event','score','nickname',user.username,'plug_user_id',user.id,'level',user.level,'xp',user.xp,'ep',user.ep ]);
+			cowgod.logger(user.username+' is level '+user.level+' and has '+numberWithCommas(user.xp)+'xp + '+numberWithCommas(user.ep)+' points!');
 		}
 		
 		botdb.query('INSERT INTO users (uid) SELECT $1 WHERE 1 NOT IN (SELECT 1 FROM users WHERE uid = $2) RETURNING user_id', [
