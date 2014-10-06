@@ -23,6 +23,8 @@ var trendsetters = new Array();
 var bots = new Array();
 var outcasts = new Array();
 
+var last_heartbeat = (new Date).getTime();
+
 if (typeof argv.nick === 'undefined') {
 	console.log('Need a -nick name!');
 	process.exit(1);
@@ -263,6 +265,8 @@ var creds = {
 		process_userlist();
 		process_waitlist();
 		connect_to_irc();
+		last_heartbeat = (new Date).getTime();
+		setInterval(heartbeat, 60000);
 	});
 
 	bot.on('chat', function(data) {
@@ -1052,4 +1056,21 @@ var creds = {
 
 	function is_outcast(userid) {
 		return (outcasts.indexOf(userid.toString()) != -1);
+	}
+
+	function heartbeat() {
+		var current_time = (new Date).getTime();
+		var diff = current_time - last_heartbeat;
+
+		// cowgod.logger('Heartbeat! '+current_time+' '+last_heartbeat+' ('+diff+')');
+
+		if (diff > 240000) {
+			// cowgod.logger('Shit, the heartbeat is old');
+			process.exit(1);
+		}
+		var moo = bot.getDJ(function(current_dj) {
+			last_heartbeat = current_time;
+			// cowgod.logger('updating last_heartbeat to '+last_heartbeat);
+		});
+		return;
 	}
