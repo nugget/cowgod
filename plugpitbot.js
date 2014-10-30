@@ -812,6 +812,9 @@ var creds = {
 			case 'report_points':
 				report_points();
 				break;
+			case 'suicide':
+				process.exit(1);
+				break;
 			default:
 				return('Unknown command');
 		}
