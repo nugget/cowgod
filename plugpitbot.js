@@ -259,8 +259,9 @@ var creds = {
 	bot.on('close', reconnect);
 	bot.on('error', reconnect);
 
-	bot.on('roomJoin', function() {
+	bot.on('roomJoin', function(data) {
 		cowgod.logger('roomJoin');
+		util.log(util.inspect(data));
 		localv['voted'] = false;
 		process_userlist();
 		process_waitlist();
@@ -311,8 +312,8 @@ var creds = {
 	});
 
 	bot.on('waitListUpdate', function(data) {
-		//cowgod.logger('waitListUpdate event');
-		//util.log(util.inspect(data));
+		cowgod.logger('waitListUpdate event');
+		util.log(util.inspect(data));
 		process_waitlist('djUpdate');
 	});
 
@@ -548,6 +549,7 @@ var creds = {
 	function process_waitlist(event) {
 		if (config_enabled('db_maintain_users')) {
 			bot.getWaitList( function(wl) {
+				util.log(util.inspect(wl));
 				var gwl = new Array();
 				var nwl = new Array();
 
@@ -972,7 +974,7 @@ var creds = {
 						update_needed = true;
 						cowgod.logger(pretty_user(user.id)+' is now avatar '+user.avatarID+' changed from '+dbuser.avatar);
 
-						if (dbuser.avatar !== null) {
+						if (dbuser.avatar !== null && user.id != settings.userid) {
 							lag_say('Spiffy new avatar, @'+cowgod.id_to_name(user.id));
 						}
 					}
