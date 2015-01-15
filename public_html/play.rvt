@@ -23,7 +23,7 @@ proc total_time {seconds} {
 
 set id $response(id)
 
-set sql "SELECT * FROM songlog_expanded WHERE id = [pg_quote $id]"
+set sql "SELECT * FROM plays_expanded WHERE play_id = [pg_quote $id]"
 pg_select $::cowgod::db $sql buf {
 	array set play [array get buf]
 }
@@ -36,12 +36,12 @@ if {![array exists play]} {
 
 	webout [el_open div -class col-md-2]
 	webout [el_open div -class btn-group]
-	pg_select $::cowgod::db "SELECT max(id) as id FROM songlog_expanded WHERE id < [pg_quote $id]" buf {
+	pg_select $::cowgod::db "SELECT max(id) as id FROM plays_expanded WHERE id < [pg_quote $id]" buf {
 		if {$buf(id) ne ""} {
 			webout "[el_open a -href [::cowgod::href play $buf(id)] -class "btn"]Prev</a>"
 		}
 	}
-	pg_select $::cowgod::db "SELECT min(id) as id FROM songlog_expanded WHERE id > [pg_quote $id]" buf {
+	pg_select $::cowgod::db "SELECT min(id) as id FROM plays_expanded WHERE id > [pg_quote $id]" buf {
 		if {$buf(id) ne ""} {
 			webout "[el_open a -href [::cowgod::href play $buf(id)] -class "btn"]Next</a>"
 		}
@@ -55,13 +55,13 @@ if {![array exists play]} {
 	page_term
 }
 
-set sql "SELECT count(*) as plays, count(DISTINCT dj_id) as djs FROM songlog_expanded where artist ilike [pg_quote $play(artist)] AND song ilike [pg_quote $play(song)]"
+set sql "SELECT count(*) as plays, count(DISTINCT user_id) as djs FROM plays_expanded where author ilike [pg_quote $play(author)] AND title ilike [pg_quote $play(title)]"
 pg_select $::cowgod::db $sql buf {
 	array set stats [array get buf]
 }
 
-if {[info exists play(id)]} {
-	set sql "SELECT * FROM songs WHERE song_id = [pg_quote $play(song_id)]"
+if {[info exists play(play_id)]} {
+	set sql "SELECT * FROM plug_media WHERE media_id = [pg_quote $play(media_id)]"
 	pg_select $::cowgod::db $sql buf {
 		array set song [array get buf]
 	}
@@ -74,8 +74,8 @@ if {[info exists play(id)]} {
 	}
 	webout [el_close div]
 	webout [el_open div -class col-md-8]
-	webout "<h3>$song(song)</h3>"
-	webout "<h4>$song(artist)<br/>$song(album)</h4>"
+	webout "<h3>$song(title)</h3>"
+	webout "<h4>$song(author)</h4>"
 	if {$stats(plays) == 1} {
 		webout "<p>This is the only time this song has been played in the pit</p>"
 	} else {
@@ -84,50 +84,48 @@ if {[info exists play(id)]} {
 	webout [el_close div]
 	webout [el_open div -class col-md-2]
 	webout [el_open div -class btn-group]
-	webout "[el_open a -href [::cowgod::href play [expr $play(id) - 1]] -class "btn"]Prev</a>"
-	webout "[el_open a -href [::cowgod::href play [expr $play(id) + 1]] -class "btn"]Next</a>"
+	webout "[el_open a -href [::cowgod::href play [expr $play(play_id) - 1]] -class "btn"]Prev</a>"
+	webout "[el_open a -href [::cowgod::href play [expr $play(play_id) + 1]] -class "btn"]Next</a>"
 	webout [el_close div]
-	webout "<h4>[el_open a -href [::cowgod::href dj $play(dj_id)]]$play(nickname)[el_close a]</h4>"
+	webout "<h4>[el_open a -href [::cowgod::href dj $play(user_id)]]$play(nickname)[el_close a]</h4>"
 	webout "<h4>"
-	webout "[clock format [clock scan $play(ts)] -format "%A"]<br />"
-	webout "[clock format [clock scan $play(ts)] -format "%d-%B-%Y"]<br />"
-	webout "[clock format [clock scan $play(ts)] -format "%H:%M:%S UTC"]<br />"
+	webout "[clock format [clock scan [lindex [split $play(start_time) "."] 0]] -format "%A"]<br />"
+	webout "[clock format [clock scan [lindex [split $play(start_time) "."] 0]] -format "%d-%B-%Y"]<br />"
+	webout "[clock format [clock scan [lindex [split $play(start_time) "."] 0]] -format "%H:%M:%S UTC"]<br />"
 	webout [el_close div]
 	webout [el_close div]
 
 	webout [el_open div -class row]
 	webout [el_open div -class col-md-12 -style "text-align: right;"]
-	set sql "SELECT * FROM snaglog_expanded WHERE play_id = $play(id)"
-	pg_select $::cowgod::db $sql snags {
-		webout "[el_open span -class "label label-info"]Snagged by $snags(nickname)[el_close span]"
-	}
 	webout [el_close div]
 	webout [el_close div]
 
 	webout "<hr />"
 
+	if {0} {
 	webout [el_open table -class "table table-striped table-bordered"]
 	webout "<tr colspan=\"$play(stats_djcount)\">[el_open th -style "text-align: center;"]$play(stats_djcount) DJs on Deck</th></tr>"
 	webout "<tr>"
-	foreach dj_id [split [string map {"\"" "" "{" "" "}" ""} $play(stats_djs)] ","] {
-		pg_select $::cowgod::db "SELECT * FROM users WHERE user_id = [pg_quote $dj_id]" user {
-			if {$dj_id eq $play(dj_id)} {
+	foreach user_id [split [string map {"\"" "" "{" "" "}" ""} $play(stats_djs)] ","] {
+		pg_select $::cowgod::db "SELECT * FROM users WHERE user_id = [pg_quote $user_id]" user {
+			if {$user_id eq $play(user_id)} {
 				webout [el_open td -style "background-color: #ffffcf; text-align: center;"]
 			} else {
 				webout [el_open td -style "text-align: center;"]
 			}
 			webout "<img style=\"height: 64px;\"  src=\"[::cowgod::avatar_href $user(live_avatar) headfront]\" /><br />"
-			webout "[el_open a -href [::cowgod::href dj $dj_id]]$user(nickname)[el_close a]"
+			webout "[el_open a -href [::cowgod::href dj $user_id]]$user(nickname)[el_close a]"
 			webout [el_close td]
 		}
 	}
 	webout "</tr>"
+	}
 	webout "</table>"
 
-	webout "<p>There were $play(stats_listeners) listeners in the room</p>"
+	# webout "<p>There were $play(stats_listeners) listeners in the room</p>"
 
 	if {1} {
-		set sql "SELECT * FROM chatlog_expanded WHERE ts >= [pg_quote $play(ts)] AND ts <= ([pg_quote $play(ts)]::timestamp + [pg_quote "$play(length) seconds"]::interval)::timestamp ORDER BY id"
+		set sql "SELECT * FROM chats_expanded WHERE ts >= [pg_quote $play(start_time)] AND ts <= ([pg_quote $play(start_time)]::timestamp + [pg_quote "$play(duration) seconds"]::interval)::timestamp ORDER BY chat_id"
 		webout [el_open table -class "table table-striped table-condensed"]
 		set last_person ""
 		pg_select $::cowgod::db $sql chat {
@@ -135,7 +133,7 @@ if {[info exists play(id)]} {
 				if {$last_person ne ""} {
 					webout "</small></td></tr>"
 				}
-				webout "<tr><td style=\"text-align: center;\"><img style=\"height: 18px;\"  src=\"[::cowgod::avatar_href $chat(live_avatar) headfront]\" /></td>"
+				webout "<tr>"
 				webout "<td><small><strong>$chat(nickname)</strong></small></td>"
 				webout "<td><small>"
 				set last_person $chat(user_id)

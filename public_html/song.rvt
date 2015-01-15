@@ -42,7 +42,7 @@ if {[info exists id]} {
 
 	    webout [el_open div -class row]
 	    webout [el_open div -class col-md-12]
-		set sql "SELECT * FROM plays_expanded WHERE media_id IN ('[join $idlist "','"]') ORDER BY start_time DESC LIMIT 10"
+		set sql "SELECT * FROM plays_expanded WHERE author ilike [pg_quote $song(author)] AND title ilike [pg_quote $song(title)] ORDER BY start_time DESC LIMIT 10"
 		webout [el_open table -class "table table-striped table-bordered"]
 		webout "<tr><th colspan=\"4\">Play Log</th></tr>"
 		webout "<tr><th>When</th><th>DJ</th><th>Snagged By</th></tr>"

@@ -1,3 +1,10 @@
+<FilesMatch "rss\.json$">
+	Order Allow,Deny
+	Allow from all
+	<IfModule mod_headers.c>
+		Header set Access-Control-Allow-Origin "https://plug.dj"
+	</IfModule>
+</FilesMatch>
 <IfModule mod_rewrite.c>
 RewriteEngine On
 RewriteBase /cowgod/
@@ -6,5 +13,4 @@ RewriteRule ^([^\.\?/]+)$			$1.rvt												[QSA]
 RewriteRule ^dj/(.*)				dj.rvt?dj_id=$1										[QSA]
 RewriteRule ^play/(.*)				play.rvt?id=$1										[QSA]
 RewriteRule ^song/(.*)				song.rvt?id=$1										[QSA]
-
 </IfModule>

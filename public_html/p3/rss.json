@@ -1,0 +1,13 @@
+{
+    "author": "nügget",
+    "images": {
+        "background": "",
+        "booth": "",
+        "playback": ""
+    },
+    "rules": {
+        "allowAutojoin": "false",
+        "allowAutorespond": "true",
+        "allowAutowoot": "true"
+    }
+}
