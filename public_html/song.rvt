@@ -7,22 +7,6 @@ page_init
 opt header 0
 ::cowgod::dbconnect
 
-proc youtube_iframe_embed {cid} {
-	set retbuf ""
-
-	set iframe_url "[http]://www.youtube.com/embed/$cid?origin=http://macnugget.org/"
-
-	append retbuf [el_open div -class "embed-responsive embed-responsive-16by9"]
-	append retbuf "[el_open iframe -class "embed-responsive-item" -src $iframe_url][el_close iframe]"
-	append retbuf [el_close div]
-
-	#append retbuf [el_open div -class "embed-responsive embed-responsive-16by9"]
-	#append retbuf "[el_open iframe -class "embed-responsive-item" -src $iframe_url -width 640 -height 320][el_close iframe]"
-	#append retbuf [el_close div]
-
-	return $retbuf
-}
-
 unset -nocomplain response dj
 load_response
 
@@ -48,7 +32,7 @@ if {[info exists id]} {
 		if {[info exists song(cid)] && $song(cid) ne ""} {
 			webout [el_open div -class row]
 			webout [el_open div -class col-md-8]
-			webout [youtube_iframe_embed $song(cid)]
+			webout [::cowgod::youtube_iframe_embed $song(cid)]
 			webout [el_close div]
 			webout [el_close div]
 		}

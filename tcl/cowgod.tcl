@@ -101,6 +101,18 @@ namespace eval ::cowgod {
         sql_exec $::cowgod::db $sql
 	}
 
+	proc youtube_iframe_embed {cid} {
+		set retbuf ""
+
+		set iframe_url "[http]://www.youtube.com/embed/$cid?origin=http://macnugget.org/"
+
+		append retbuf [el_open div -class "embed-responsive embed-responsive-16by9"]
+		append retbuf "[el_open iframe -class "embed-responsive-item" -src $iframe_url][el_close iframe]"
+		append retbuf [el_close div]
+
+		return $retbuf
+	}
+
 }
 
 package provide cowgod 1.0

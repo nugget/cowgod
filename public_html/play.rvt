@@ -74,8 +74,9 @@ if {[info exists play(play_id)]} {
 	}
 	webout [el_close div]
 	webout [el_open div -class col-md-8]
-	webout "<h3>$song(title)</h3>"
+	webout "<h3>[el_open a -href [::cowgod::href song $song(media_id)]]$song(title)[el_close a]</h3>"
 	webout "<h4>$song(author)</h4>"
+
 	if {$stats(plays) == 1} {
 		webout "<p>This is the only time this song has been played in the pit</p>"
 	} else {
