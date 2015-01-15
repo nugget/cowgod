@@ -36,12 +36,12 @@ if {![array exists play]} {
 
 	webout [el_open div -class col-md-2]
 	webout [el_open div -class btn-group]
-	pg_select $::cowgod::db "SELECT max(id) as id FROM plays_expanded WHERE id < [pg_quote $id]" buf {
+	pg_select $::cowgod::db "SELECT max(play_id) as id FROM plays_expanded WHERE play_id < [pg_quote $id]" buf {
 		if {$buf(id) ne ""} {
 			webout "[el_open a -href [::cowgod::href play $buf(id)] -class "btn"]Prev</a>"
 		}
 	}
-	pg_select $::cowgod::db "SELECT min(id) as id FROM plays_expanded WHERE id > [pg_quote $id]" buf {
+	pg_select $::cowgod::db "SELECT min(play_id) as id FROM plays_expanded WHERE play_id > [pg_quote $id]" buf {
 		if {$buf(id) ne ""} {
 			webout "[el_open a -href [::cowgod::href play $buf(id)] -class "btn"]Next</a>"
 		}
