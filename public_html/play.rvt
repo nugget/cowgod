@@ -79,7 +79,7 @@ if {[info exists play(play_id)]} {
 	if {$stats(plays) == 1} {
 		webout "<p>This is the only time this song has been played in the pit</p>"
 	} else {
-		webout "<p>Played [el_open a -href [::cowgod::href song $play(song_id)]][comma [expr $stats(plays) - 1]] other times[el_close a] by [comma $stats(djs)] DJs in the Pit</p>"
+		webout "<p>Played [el_open a -href [::cowgod::href song $play(media_id)]][comma [expr $stats(plays) - 1]] other times[el_close a] by [comma $stats(djs)] DJs in the Pit</p>"
 	}
 	webout [el_close div]
 	webout [el_open div -class col-md-2]
