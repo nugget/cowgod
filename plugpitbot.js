@@ -261,7 +261,7 @@ var creds = {
 
 	bot.on('roomJoin', function(data) {
 		cowgod.logger('roomJoin');
-		util.log(util.inspect(data));
+		//util.log(util.inspect(data));
 		localv['voted'] = false;
 		process_userlist();
 		process_waitlist();
@@ -312,8 +312,8 @@ var creds = {
 	});
 
 	bot.on('waitListUpdate', function(data) {
-		cowgod.logger('waitListUpdate event');
-		util.log(util.inspect(data));
+		// cowgod.logger('waitListUpdate event');
+		// util.log(util.inspect(data));
 		process_waitlist('djUpdate');
 	});
 
@@ -342,6 +342,7 @@ var creds = {
 	
 		var leader_prefix  = '';
 		var leader_suffix  = '';
+		var song_divider = '';
 
 		if (data.media === null || data.media === undefined) {
 			current_dj(null);
@@ -375,9 +376,13 @@ var creds = {
 			}
 			irc_set_topic(song_string(data.media)+' ('+cowgod.id_to_name(data.dj.id)+')'+leader_suffix);
 			current_dj(data.dj.id);
-	
+
+			if (config_enabled('song_dividers')) {
+				song_divider = 'https://macnugget.org/cowgod/images/noshamediv.png ';
+			}
+
 			if (config_enabled('announce_play')) {
-				bot.chat(leader_prefix+song_string(data.media)+' ('+cowgod.id_to_name(data.dj.id)+')'+leader_suffix);
+				bot.chat(song_divider+leader_prefix+song_string(data.media)+' ('+cowgod.id_to_name(data.dj.id)+')'+leader_suffix);
 			}
 		}
 	
@@ -549,7 +554,7 @@ var creds = {
 	function process_waitlist(event) {
 		if (config_enabled('db_maintain_users')) {
 			bot.getWaitList( function(wl) {
-				util.log(util.inspect(wl));
+				// util.log(util.inspect(wl));
 				var gwl = new Array();
 				var nwl = new Array();
 
