@@ -8,7 +8,7 @@ page_init
 ::macnugget::require_acl cowgod_admin
 
 opt header 0
-page_header -title "Turntable.fm Pit of no Shame"
+page_header -title "Plug.dj Pit of no Shame"
 
 ::cowgod::dbconnect
 ::cowgod::buttonbar
@@ -22,7 +22,7 @@ puts "<li><a href=\"audit\">Audit Trail</a></li>"
 puts "<li><a href=\"avatars\">All Avatars</a></li>"
 puts "</ul>"
 
-if {![info exists ::user(turntable_user_id)] || $::user(turntable_user_id) eq ""} {
+if {![info exists ::user(plug_user_id)] || $::user(plug_user_id) eq ""} {
 	puts "<h2>Error</h2>"
 	puts "<p>Your account ($::user(username)) is not linked to a Turntable User ID</p>"
 	::cowgod::dbdisconnect

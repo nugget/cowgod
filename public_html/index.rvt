@@ -5,7 +5,7 @@ package require cowgod
 
 page_init
 opt header 0
-page_header -title "Turntable.fm Pit of no Shame"
+page_header -title "Plug.dj Pit of no Shame"
 
 ::cowgod::dbconnect
 
@@ -16,7 +16,7 @@ webout [el_oc img -src "/cowgod/images/tpons.jpg" -class "img-thumbnail"]
 webout [el_close p]
 
 webout [el_open p -class "text-center"]
-webout "Join us on turntable.fm's <a href=\"http://turntable.fm/turntablefm_pit_of_no_shame\">Pit of No Shame</a> or on <a href=\"https://www.facebook.com/groups/pitofnoshame/\">Facebook</a>."
+webout "Join us on plug.dj's <a href=\"https://plug.dj/pit-of-no-shame\">Pit of No Shame</a> or on <a href=\"https://www.facebook.com/groups/pitofnoshame/\">Facebook</a>."
 webout [el_close p]
 
 ::cowgod::dbdisconnect

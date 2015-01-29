@@ -5,7 +5,7 @@ package require cowgod
 
 page_init
 opt header 0
-page_header -title "Turntable.fm Pit of no Shame"
+page_header -title "Plug.dj Pit of no Shame"
 
 ::cowgod::dbconnect
 ::cowgod::buttonbar
