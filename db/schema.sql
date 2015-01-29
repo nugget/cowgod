@@ -32,6 +32,7 @@ CREATE TABLE globals (
 	uid varchar NOT NULL,
 	key varchar NOT NULL,
 	value varchar NOT NULL,
+	source varchar,
 	PRIMARY KEY(global_id)
 );
 CREATE TRIGGER onupdate BEFORE UPDATE ON globals FOR EACH ROW EXECUTE PROCEDURE onupdate_changed();
@@ -298,14 +299,16 @@ GRANT SELECT,INSERT,UPDATE ON autoboot TO bots;
 CREATE TABLE auditlog (
 	id serial NOT NULL,
 	added timestamp(0) without time zone NOT NULL DEFAULT (current_timestamp at time zone 'utc'),
-	user_id integer NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+	user_id varchar NOT NULL REFERENCES users(uid) ON DELETE CASCADE,
 	action varchar NOT NULL,
 	target_id varchar,
 	value varchar,
 	comments varchar,
+	source varchar,
 	PRIMARY KEY(id)
 );
-GRANT SELECT,INSERT ON auditlog TO bots;
+GRANT SELECT,INSERT ON auditlog TO bots,cowgod;
+GRANT ALL ON auditlog_id_seq TO cowgod;
 
 CREATE OR REPLACE FUNCTION nick(varchar) RETURNS varchar AS $$
 	DECLARE
