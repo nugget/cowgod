@@ -1074,13 +1074,26 @@ var creds = {
 
 		// cowgod.logger('Heartbeat! '+current_time+' '+last_heartbeat+' ('+diff+')');
 
+		if (diff > 60100) {
+			cowgod.logger('That is weird, the heartbeat is old ('+diff+')');
+		}
+
 		if (diff > 240000) {
-			// cowgod.logger('Shit, the heartbeat is old');
+			cowgod.logger('Shit, the heartbeat is crazy old ('+diff+')');
 			process.exit(1);
 		}
 		var moo = bot.getDJ(function(current_dj) {
 			last_heartbeat = current_time;
-			// cowgod.logger('updating last_heartbeat to '+last_heartbeat);
+
+			if (current_dj === null || current_dj === undefined) {
+				// nobody is playing a song
+				cowgod.logger('updating last_heartbeat with no active dj');
+			} else {
+				// there is a dj active
+				cowgod.logger('updating last_heartbeat while current dj is '+pretty_user(current_dj.id));
+				// util.log(util.inspect(current_dj));
+			}
 		});
+ 
 		return;
 	}
