@@ -11,6 +11,44 @@ CREATE OR REPLACE FUNCTION onupdate_changed() RETURNS trigger AS $$
 	END;
 $$ LANGUAGE plpgsql;
 
+CREATE OR REPLACE FUNCTION calc_xp() RETURNS trigger AS $$
+	DECLARE
+		l RECORD;
+		l_calc_xp integer;
+		l_previous_total_xp integer;
+	BEGIN
+		IF NEW.cume_xp IS NULL AND NEW.total_xp IS NULL THEN
+			RAISE EXCEPTION 'Row needs to contain cume_xp OR total_xp';
+		ELSE
+			l_previous_total_xp := COALESCE((SELECT total_xp FROM levels WHERE level < NEW.level ORDER BY level DESC LIMIT 1),0);
+
+			IF NEW.cume_xp IS NULL THEN
+				NEW.cume_xp := NEW.total_xp - l_previous_total_xp;
+				RAISE DEBUG 'Setting cume_xp to % from total_xp value',NEW.cume_xp;
+			ELSEIF NEW.total_xp IS NULL THEN
+				NEW.total_xp := NEW.cume_xp + l_previous_total_xp;
+				RAISE DEBUG 'Setting total_xp to % from total_xp value',NEW.cume_xp;
+			END IF;
+		END IF;
+
+		RETURN NEW;
+	END;
+$$ LANGUAGE plpgsql;
+
+CREATE TABLE levels (
+	level integer NOT NULL,
+	added timestamp(0) without time zone NOT NULL DEFAULT (current_timestamp at time zone 'utc'),
+	changed timestamp(0) without time zone NOT NULL DEFAULT (current_timestamp at time zone 'utc'),
+	deleted timestamp(0) without time zone,
+	cume_xp integer NOT NULL,
+	total_xp integer NOT NULL,
+	unlocks varchar,
+	PRIMARY KEY(level)
+);
+GRANT SELECT ON levels TO bots;
+CREATE TRIGGER onupdate BEFORE UPDATE ON levels FOR EACH ROW EXECUTE PROCEDURE onupdate_changed();
+CREATE TRIGGER levelcalc BEFORE UPDATE OR INSERT ON levels FOR EACH ROW EXECUTE PROCEDURE calc_xp();
+
 CREATE TABLE settings (
 	setting_id serial NOT NULL,
 	added timestamp(0) without time zone NOT NULL DEFAULT (current_timestamp at time zone 'utc'),
@@ -379,5 +417,3 @@ CREATE VIEW auditlog_expanded AS
 	FROM auditlog a;
 
 GRANT SELECT ON snaglog_expanded, songlog_expanded, joins_expanded,chatlog_expanded,auditlog_expanded TO bots;
-
-
