@@ -1089,7 +1089,7 @@ var creds = {
 				// nobody is playing a song
 				cowgod.logger('updating last_heartbeat with no active dj');
 			} else {
-				if (current.dj.id === undefined) {
+				if (current_dj.id === undefined) {
 					cowgod.logger('Unexpected getDJ results!');
 					util.log(util.inspect(current_dj));
 				} else {
