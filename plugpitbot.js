@@ -1089,9 +1089,13 @@ var creds = {
 				// nobody is playing a song
 				cowgod.logger('updating last_heartbeat with no active dj');
 			} else {
-				// there is a dj active
-				cowgod.logger('updating last_heartbeat while current dj is '+pretty_user(current_dj.id));
-				// util.log(util.inspect(current_dj));
+				if (current.dj.id === undefined) {
+					cowgod.logger('Unexpected getDJ results!');
+					util.log(util.inspect(current_dj));
+				} else {
+					// there is a dj active
+					cowgod.logger('updating last_heartbeat while current dj is '+pretty_user(current_dj.id));
+				}
 			}
 		});
  
