@@ -289,9 +289,9 @@ var creds = {
 		heartbeat_reset();
 		// cowgod.logger('join event');
 		// util.log(util.inspect(data));
+		cowgod.remember_user(data.id,data.username);
 		log_join(data);
 		update_user(data);
-		cowgod.remember_user(data.id,data.username);
 		process_waitlist();
 
 		if (config_enabled('greet_bagel')) {
