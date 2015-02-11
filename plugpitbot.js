@@ -23,8 +23,6 @@ var trendsetters = new Array();
 var bots = new Array();
 var outcasts = new Array();
 
-var last_heartbeat = (new Date).getTime();
-
 if (typeof argv.nick === 'undefined') {
 	console.log('Need a -nick name!');
 	process.exit(1);
@@ -260,17 +258,20 @@ var creds = {
 	bot.on('error', reconnect);
 
 	bot.on('roomJoin', function(data) {
-		cowgod.logger('roomJoin');
+		//cowgod.logger('roomJoin');
+		heartbeat_reset();
 		//util.log(util.inspect(data));
+
 		localv['voted'] = false;
 		process_userlist();
 		process_waitlist();
 		connect_to_irc();
-		last_heartbeat = (new Date).getTime();
 		setInterval(heartbeat, 60000);
 	});
 
 	bot.on('chat', function(data) {
+		//cowgod.logger('chat');
+		heartbeat_reset();
 		//util.log(util.inspect(data));
 		log_chat(data);
 		cowgod.remember_user(data.uid,data.un);
@@ -278,11 +279,13 @@ var creds = {
 	});
 
 	bot.on('emote', function(data) {
+		heartbeat_reset();
 		log_chat(data);
 		cowgod.remember_user(data.fromID,data.from);
 	});
 
 	bot.on('userJoin', function(data) {
+		heartbeat_reset();
 		// cowgod.logger('join event');
 		// util.log(util.inspect(data));
 		log_join(data);
@@ -305,6 +308,7 @@ var creds = {
 	});
 
 	bot.on('userLeave', function(data) {
+		heartbeat_reset();
 		// cowgod.logger('leave event');
 		// util.log(util.inspect(data));
 		log_part(data);
@@ -312,12 +316,14 @@ var creds = {
 	});
 
 	bot.on('waitListUpdate', function(data) {
+		heartbeat_reset();
 		// cowgod.logger('waitListUpdate event');
 		// util.log(util.inspect(data));
 		process_waitlist('djUpdate');
 	});
 
 	bot.on('grabUpdate', function(data) {
+		heartbeat_reset();
 		cowgod.logger('curate event');
 		//util.log(util.inspect(data));
 		// this is like a TT snag
@@ -325,17 +331,20 @@ var creds = {
 	});
 
 	bot.on('voteUpdate', function(data) {
+		heartbeat_reset();
 		//cowgod.logger('voteUpdate event');
 		//util.log(util.inspect(data));
 		log_vote(data);
 	});
 	
 	bot.on('userUpdate', function(data) {
+		heartbeat_reset();
 		cowgod.logger('userUpdate');
 		util.log(util.inspect(data));
 	});
 
 	bot.on('advance', function(data) {
+		heartbeat_reset();
 		// cowgod.logger('advance event');
 		// util.log(util.inspect(data));
 		localv['voted'] = false;
@@ -544,7 +553,9 @@ var creds = {
 
 	function process_userlist() {
 		bot.getUsers( function(users) {
+			heartbeat_reset();
 			// util.log(util.inspect(users));
+
 			for (var u in users) {
 				update_user(users[u]);
 			}
@@ -554,7 +565,9 @@ var creds = {
 	function process_waitlist(event) {
 		if (config_enabled('db_maintain_users')) {
 			bot.getWaitList( function(wl) {
+				heartbeat_reset();
 				// util.log(util.inspect(wl));
+
 				var gwl = new Array();
 				var nwl = new Array();
 
@@ -708,6 +721,8 @@ var creds = {
 		cowgod.logger('current_dj is '+pretty_user(global['current_dj']));
 	
 		bot.getWaitList( function(wl) {
+			heartbeat_reset();
+
 			var uidlist = new Array();
 	
 			for (var u in wl) {
@@ -743,7 +758,9 @@ var creds = {
 	function report_points() {
 		cowgod.logger('reporting points to room');
 		bot.getUser(settings.userid, function(me) {
+			heartbeat_reset();
 			//util.log(util.inspect(me));
+
 			lag_say('I currently have '+numberWithCommas(me.xp)+' xp and '+numberWithCommas(me.ep)+' plug points!');
 		});
 	}
@@ -1068,33 +1085,42 @@ var creds = {
 		return (outcasts.indexOf(userid.toString()) != -1);
 	}
 
-	function heartbeat() {
-		var current_time = (new Date).getTime();
+	function heartbeat_reset() {
+		last_heartbeat = Math.round(new Date().getTime() / 1000.0);
+		// cowgod.logger('updating last_heartbeat');
+		return;
+	}
+
+	function heartbeat(action) {
+		var current_time = Math.round(new Date().getTime() / 1000.0);
 		var diff = current_time - last_heartbeat;
+
+		if (diff < 60) {
+			// cowgod.logger('Last heartbeat was '+diff+' seconds ago, that seems cool');
+			return;
+		}
 
 		// cowgod.logger('Heartbeat! '+current_time+' '+last_heartbeat+' ('+diff+')');
 
-		if (diff > 60100) {
+		if (diff > 120) {
 			cowgod.logger('That is weird, the heartbeat is old ('+diff+')');
 		}
 
-		if (diff > 240000) {
+		if (diff > 300) {
 			cowgod.logger('Shit, the heartbeat is crazy old ('+diff+')');
 			process.exit(1);
 		}
-		var moo = bot.getDJ(function(current_dj) {
-			last_heartbeat = current_time;
 
-			if (current_dj === null || current_dj === undefined) {
+		bot.getUser(settings.userid, function(me) {
+			if (me === null || me === undefined) {
 				// nobody is playing a song
-				cowgod.logger('updating last_heartbeat with no active dj');
+				cowgod.logger('Failed heartbeat with no result from getUser');
 			} else {
-				if (current_dj.id === undefined) {
-					cowgod.logger('Unexpected getDJ results!');
-					util.log(util.inspect(current_dj));
+				if (me.id === null || me.id === undefined) {
+					cowgod.logger('Failed heartbeat with unexpected result from getUser');
+					util.log(util.inspect(me));
 				} else {
-					// there is a dj active
-					cowgod.logger('updating last_heartbeat while current dj is '+pretty_user(current_dj.id));
+					heartbeat_reset();
 				}
 			}
 		});
