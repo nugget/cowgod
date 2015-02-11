@@ -256,6 +256,7 @@ var creds = {
 
 	bot.on('close', reconnect);
 	bot.on('error', reconnect);
+	bot.on('unableToConnect', reconnect);
 
 	bot.on('roomJoin', function(data) {
 		//cowgod.logger('roomJoin');
