@@ -1109,7 +1109,7 @@ var creds = {
 			return;
 		}
 
-		cowgod.logger('Heartbeat! '+current_time+' '+localv['last_heartbeat']+' ('+diff+')');
+		// cowgod.logger('Heartbeat! '+current_time+' '+localv['last_heartbeat']+' ('+diff+')');
 
 		if (diff > 120) {
 			cowgod.logger('That is weird, the heartbeat is old ('+diff+')');
