@@ -23,6 +23,9 @@ var trendsetters = new Array();
 var bots = new Array();
 var outcasts = new Array();
 
+heartbeat_reset('init');
+setInterval(heartbeat, 60000);
+
 if (typeof argv.nick === 'undefined') {
 	console.log('Need a -nick name!');
 	process.exit(1);
@@ -257,22 +260,27 @@ var creds = {
 	bot.on('close', reconnect);
 	bot.on('error', reconnect);
 	bot.on('unableToConnect', reconnect);
+	bot.on('connectionError', reconnect);
+	bot.on('invalidLogin', reconnect);
+
+	bot.on('debug', function(text) {
+		if (config_enabled('debug')) {
+			cowgod.logger(text);
+		}
+	});
 
 	bot.on('roomJoin', function(data) {
 		//cowgod.logger('roomJoin');
-		heartbeat_reset();
-		//util.log(util.inspect(data));
-
+		heartbeat_reset('roomJoin');
 		localv['voted'] = false;
 		process_userlist();
 		process_waitlist();
 		connect_to_irc();
-		setInterval(heartbeat, 60000);
 	});
 
 	bot.on('chat', function(data) {
 		//cowgod.logger('chat');
-		heartbeat_reset();
+		heartbeat_reset('chat');
 		//util.log(util.inspect(data));
 		log_chat(data);
 		cowgod.remember_user(data.uid,data.un);
@@ -280,13 +288,13 @@ var creds = {
 	});
 
 	bot.on('emote', function(data) {
-		heartbeat_reset();
+		heartbeat_reset('emote');
 		log_chat(data);
 		cowgod.remember_user(data.fromID,data.from);
 	});
 
 	bot.on('userJoin', function(data) {
-		heartbeat_reset();
+		heartbeat_reset('userJoin');
 		// cowgod.logger('join event');
 		// util.log(util.inspect(data));
 		cowgod.remember_user(data.id,data.username);
@@ -309,7 +317,7 @@ var creds = {
 	});
 
 	bot.on('userLeave', function(data) {
-		heartbeat_reset();
+		heartbeat_reset('userLeave');
 		// cowgod.logger('leave event');
 		// util.log(util.inspect(data));
 		log_part(data);
@@ -317,14 +325,14 @@ var creds = {
 	});
 
 	bot.on('waitListUpdate', function(data) {
-		heartbeat_reset();
+		heartbeat_reset('waitListUpdate');
 		// cowgod.logger('waitListUpdate event');
 		// util.log(util.inspect(data));
 		process_waitlist('djUpdate');
 	});
 
 	bot.on('grabUpdate', function(data) {
-		heartbeat_reset();
+		heartbeat_reset('grabUpdate');
 		cowgod.logger('curate event');
 		//util.log(util.inspect(data));
 		// this is like a TT snag
@@ -332,20 +340,20 @@ var creds = {
 	});
 
 	bot.on('voteUpdate', function(data) {
-		heartbeat_reset();
+		heartbeat_reset('voteUpdate');
 		//cowgod.logger('voteUpdate event');
 		//util.log(util.inspect(data));
 		log_vote(data);
 	});
 	
 	bot.on('userUpdate', function(data) {
-		heartbeat_reset();
+		heartbeat_reset('userUpdate');
 		cowgod.logger('userUpdate');
 		util.log(util.inspect(data));
 	});
 
 	bot.on('advance', function(data) {
-		heartbeat_reset();
+		heartbeat_reset('advance');
 		// cowgod.logger('advance event');
 		// util.log(util.inspect(data));
 		localv['voted'] = false;
@@ -554,7 +562,7 @@ var creds = {
 
 	function process_userlist() {
 		bot.getUsers( function(users) {
-			heartbeat_reset();
+			heartbeat_reset('process_userlist getUsers');
 			// util.log(util.inspect(users));
 
 			for (var u in users) {
@@ -566,7 +574,7 @@ var creds = {
 	function process_waitlist(event) {
 		if (config_enabled('db_maintain_users')) {
 			bot.getWaitList( function(wl) {
-				heartbeat_reset();
+				heartbeat_reset('process_waitlist getWaitList');
 				// util.log(util.inspect(wl));
 
 				var gwl = new Array();
@@ -722,7 +730,7 @@ var creds = {
 		cowgod.logger('current_dj is '+pretty_user(global['current_dj']));
 	
 		bot.getWaitList( function(wl) {
-			heartbeat_reset();
+			heartbeat_reset('move_to_end_of_round getWaitList');
 
 			var uidlist = new Array();
 	
@@ -759,7 +767,7 @@ var creds = {
 	function report_points() {
 		cowgod.logger('reporting points to room');
 		bot.getUser(settings.userid, function(me) {
-			heartbeat_reset();
+			heartbeat_reset('report_points getUser');
 			//util.log(util.inspect(me));
 
 			lag_say('I currently have '+numberWithCommas(me.xp)+' xp and '+numberWithCommas(me.ep)+' plug points!');
@@ -1086,22 +1094,22 @@ var creds = {
 		return (outcasts.indexOf(userid.toString()) != -1);
 	}
 
-	function heartbeat_reset() {
-		last_heartbeat = Math.round(new Date().getTime() / 1000.0);
-		// cowgod.logger('updating last_heartbeat');
+	function heartbeat_reset(event) {
+		localv['last_heartbeat'] = Math.round(new Date().getTime() / 1000.0);
+		cowgod.logger('updating last_heartbeat ('+event+')');
 		return;
 	}
 
 	function heartbeat(action) {
 		var current_time = Math.round(new Date().getTime() / 1000.0);
-		var diff = current_time - last_heartbeat;
+		var diff = current_time - localv['last_heartbeat'];
 
 		if (diff < 60) {
-			// cowgod.logger('Last heartbeat was '+diff+' seconds ago, that seems cool');
+			cowgod.logger('Last heartbeat was '+diff+' seconds ago, that seems cool');
 			return;
 		}
 
-		// cowgod.logger('Heartbeat! '+current_time+' '+last_heartbeat+' ('+diff+')');
+		cowgod.logger('Heartbeat! '+current_time+' '+localv['last_heartbeat']+' ('+diff+')');
 
 		if (diff > 120) {
 			cowgod.logger('That is weird, the heartbeat is old ('+diff+')');
@@ -1121,9 +1129,32 @@ var creds = {
 					cowgod.logger('Failed heartbeat with unexpected result from getUser');
 					util.log(util.inspect(me));
 				} else {
-					heartbeat_reset();
+					heartbeat_reset('heartbeat internal');
 				}
 			}
+		});
+
+		bot.getMedia(function(media) {
+			//util.log(util.inspect(media));
+			bot.getTimeRemaining(function(tr) {
+				//util.log(util.inspect(tr));
+				if (media === null || media === undefined) {
+					// cowgod.logger('nothing playing');
+				} else {
+					// cowgod.logger('playtime logging '+media.id+'/'+tr+' :: '+localv['last_media_id']+'/'+localv['last_media_tr']);
+					if (localv['last_media_id'] == media.id && localv['last_media_tr'] == tr) {
+						localv['last_media_sc'] = localv['last_media_sc'] + 1;
+						cowgod.logger('playing is stalled for the '+localv['last_media_sc']+' count');
+	
+						if (localv['last_media_sc'] > 10) {
+							cowgod.logget('Playing stalled for 10 minutes, reconnecting');
+							process.exit(1);
+						}
+					}
+					localv['last_media_id'] = media.id;
+					localv['last_media_tr'] = tr;
+				}
+			});
 		});
  
 		return;
