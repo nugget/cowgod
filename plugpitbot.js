@@ -1096,7 +1096,7 @@ var creds = {
 
 	function heartbeat_reset(event) {
 		localv['last_heartbeat'] = Math.round(new Date().getTime() / 1000.0);
-		cowgod.logger('updating last_heartbeat ('+event+')');
+		//cowgod.logger('updating last_heartbeat ('+event+')');
 		return;
 	}
 
