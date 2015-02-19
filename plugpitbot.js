@@ -221,7 +221,7 @@ var creds = {
 	function process_irc_message(from,to,text,message) {
 		if(text.substr(0,1) == '/') {
 			cowgod.logger('Command detected');
-			return process_cnc_command(text);
+			return process_cnc_command(text,from);
 		}
 
 		if(from == 'NickServ') {
@@ -703,17 +703,24 @@ var creds = {
 				if (old_wl[u] == global['current_dj']) {
 					cowgod.logger('Confused, it looked like '+pretty_user(old_wl[u])+' left the waitlist, but that is the current DJ');
 				} else {
-					cowgod.logger(pretty_user(old_wl[u])+' left the waitlist');
+					var old_guy = old_wl[u];
+					cowgod.logger(pretty_user(old_guy)+' left the waitlist');
 	
 					if (old_wl[u] == global['leader']) {
-						cowgod.logger('Ack, we need a new leader!');
-						var new_guy = new_wl[u];
-						// cowgod.logger('new_guy is '+new_guy+' and comes from position '+u+' in new_wl list');
-						if (typeof new_guy  === 'undefined' || new_guy == '') {
-							cowgod.logger('That will not do, we will use current_dj for the new leader: '+global['current_dj']);
-							new_guy = global['current_dj'];
-						}
-						set_global('leader',new_guy,'Battlefield promotion from lost_dj');
+						cowgod.logger('Do we need a new leader?');
+						bot.getDJ(function(cdj) {
+							if (cdj.id == old_guy) {
+								cowgod.logger('No, plug is just on crack, old_guy is DJing');
+							} else {
+								var new_guy = new_wl[u];
+								// cowgod.logger('new_guy is '+new_guy+' and comes from position '+u+' in new_wl list');
+								if (typeof new_guy  === 'undefined' || new_guy == '') {
+									cowgod.logger('That will not do, we will use current_dj for the new leader: '+global['current_dj']);
+									new_guy = global['current_dj'];
+								}
+								set_global('leader',new_guy,'Battlefield promotion from lost_dj');
+							}
+						});
 					}
 				}
 			}
@@ -774,7 +781,7 @@ var creds = {
 		});
 	}
 	
-	function process_cnc_command(command) {
+	function process_cnc_command(command,from) {
 		var argv = command.replace(/\s+/g,' ').split(' ');
 		var command = argv[0].substr(1).toLowerCase();
 		var args_arr = argv.slice(1);
@@ -817,10 +824,16 @@ var creds = {
 				if (argv.length == 3) {
 					if (itemname in config) {
 						set_config(itemname,toggle);
+
 						return(itemname+' is currently '+config[itemname]);
 					} else {
-						set_global(itemname,toggle,'comment');
-						return(itemname+' is currently '+global[itemname]);
+						set_global(itemname,toggle,'Set on IRC by '+from);
+
+						if (itemname == 'leader') {
+							return(itemname+' is currently '+pretty_user(global[itemname]));
+						} else {
+							return(itemname+' is currently '+global[itemname]);
+						}
 					}
 				}
 				break;
@@ -1105,11 +1118,11 @@ var creds = {
 		var diff = current_time - localv['last_heartbeat'];
 
 		if (diff < 60) {
-			cowgod.logger('Last heartbeat was '+diff+' seconds ago, that seems cool');
+			// cowgod.logger('Last heartbeat was '+diff+' seconds ago, that seems cool');
 			return;
 		}
 
-		// cowgod.logger('Heartbeat! '+current_time+' '+localv['last_heartbeat']+' ('+diff+')');
+		cowgod.logger('Heartbeat! '+current_time+' '+localv['last_heartbeat']+' ('+diff+')');
 
 		if (diff > 120) {
 			cowgod.logger('That is weird, the heartbeat is old ('+diff+')');
@@ -1139,9 +1152,9 @@ var creds = {
 			bot.getTimeRemaining(function(tr) {
 				//util.log(util.inspect(tr));
 				if (media === null || media === undefined) {
-					// cowgod.logger('nothing playing');
+					cowgod.logger('nothing playing');
 				} else {
-					// cowgod.logger('playtime logging '+media.id+'/'+tr+' :: '+localv['last_media_id']+'/'+localv['last_media_tr']);
+					cowgod.logger('playtime logging '+media.id+'/'+tr+' :: '+localv['last_media_id']+'/'+localv['last_media_tr']);
 					if (localv['last_media_id'] == media.id && localv['last_media_tr'] == tr) {
 						localv['last_media_sc'] = localv['last_media_sc'] + 1;
 						cowgod.logger('playing is stalled for the '+localv['last_media_sc']+' count');
