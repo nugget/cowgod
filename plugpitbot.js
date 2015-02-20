@@ -1166,6 +1166,7 @@ var creds = {
 					}
 					localv['last_media_id'] = media.id;
 					localv['last_media_tr'] = tr;
+					localv['last_media_sc'] = 0;
 				}
 			});
 		});
