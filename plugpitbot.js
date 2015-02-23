@@ -1157,16 +1157,17 @@ var creds = {
 					cowgod.logger('playtime logging '+media.id+'/'+tr+' :: '+localv['last_media_id']+'/'+localv['last_media_tr']);
 					if (localv['last_media_id'] == media.id && localv['last_media_tr'] == tr) {
 						localv['last_media_sc'] = localv['last_media_sc'] + 1;
-						cowgod.logger('playing is stalled for the '+localv['last_media_sc']+' count');
+						cowgod.logger('playing is stalled for '+localv['last_media_sc']+' cycles');
 	
 						if (localv['last_media_sc'] > 10) {
-							cowgod.logget('Playing stalled for 10 minutes, reconnecting');
+							cowgod.logget('Playing stalled for 10 cycles, reconnecting');
 							process.exit(1);
 						}
+					} else {
+						localv['last_media_id'] = media.id;
+						localv['last_media_tr'] = tr;
+						localv['last_media_sc'] = 0;
 					}
-					localv['last_media_id'] = media.id;
-					localv['last_media_tr'] = tr;
-					localv['last_media_sc'] = 0;
 				}
 			});
 		});
