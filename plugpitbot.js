@@ -366,6 +366,7 @@ var creds = {
 			current_dj(null);
 			set_global('leader','','Nothing is playing');
 			irc_set_topic('Nothing is playing in the Pit :(');
+			process_waitlist('silence');
 		} else {
 			if (is_leader(data.dj.id)) {
 				// cowgod.logger('this dj is the leader');
@@ -573,6 +574,11 @@ var creds = {
 
 	function process_waitlist(event) {
 		if (config_enabled('db_maintain_users')) {
+			if (event === 'silence') {
+				cowgod.logger('Clearing waitlist because all I hear is silence');
+				set_global('waitlist','','Nothing playing');
+				return;
+			}
 			bot.getWaitList( function(wl) {
 				heartbeat_reset('process_waitlist getWaitList');
 				// util.log(util.inspect(wl));
@@ -629,6 +635,7 @@ var creds = {
 				var moo = bot.getDJ(function(current_dj) {
 					if (current_dj === undefined || current_dj === null) {
 						// cowgod.logger('Process waitlist saw no current_dj');
+						process_waitlist('silence');
 					} else {
 						// There is an active DJ 
 						// cowgod.logger('process_waitlist: there is an active dj and the wl length is '+wl.length);
@@ -648,14 +655,23 @@ var creds = {
 
 	function pretty_waitlist(wl) {
 		var buf = '';
+		var count = 0;
+
 		for (var u in wl) {
 			var uid = wl[u].id;
 			if (uid === undefined) {
 				uid = wl[u];
 			}
-			buf = buf+pretty_user(uid)+' ';
+			if (uid != '') {
+				buf = buf+pretty_user(uid)+' ';
+				count = count + 1;
+			}
 		}
-		return buf+'(size '+wl.length+')';
+		if (count == 0) {
+			return 'empty (size '+count+')';
+		} else {
+			return buf+'(size '+count+')';
+		}
 	}
 
 	function pretty_user(uid) {
@@ -1153,6 +1169,7 @@ var creds = {
 				//util.log(util.inspect(tr));
 				if (media === null || media === undefined) {
 					cowgod.logger('nothing playing');
+					process_waitlist('silence');
 				} else {
 					cowgod.logger('playtime logging '+media.id+'/'+tr+' :: '+localv['last_media_id']+'/'+localv['last_media_tr']);
 					if (localv['last_media_id'] == media.id && localv['last_media_tr'] == tr) {
