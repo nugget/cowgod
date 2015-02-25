@@ -373,7 +373,7 @@ var creds = {
 				data.pitleader = true;
 
 				if (global['waitlist'] != '') {
-					cowgod.logger('wl is '+global['waitlist']);
+					// cowgod.logger('wl is '+global['waitlist']);
 					leader_prefix   = '*LEAD SONG* ';
 					leader_suffix   = ' ~***';
 				}
@@ -575,7 +575,6 @@ var creds = {
 	function process_waitlist(event) {
 		if (config_enabled('db_maintain_users')) {
 			if (event === 'silence') {
-				cowgod.logger('Clearing waitlist because all I hear is silence');
 				set_global('waitlist','','Nothing playing');
 				return;
 			}
@@ -698,8 +697,8 @@ var creds = {
 	}
 
 	function lost_dj(old_wl,new_wl) {
-		//cowgod.logger('ldj: old: '+pretty_waitlist(old_wl));
-		//cowgod.logger('ldj: new: '+pretty_waitlist(new_wl));
+		cowgod.logger('ldj: old: '+pretty_waitlist(old_wl));
+		cowgod.logger('ldj: new: '+pretty_waitlist(new_wl));
 
 		if (new_wl.length == 1) {
 			//cowgod.logger('new_wl.length is 1 and it contains '+new_wl[0]);
@@ -715,21 +714,21 @@ var creds = {
 		}
 	
 		for (u in old_wl) {
+			var old_guy = old_wl[u];
+			var new_guy = new_wl[u];
+			cowgod.logger('wl position '+u+' processing: old_guy = '+old_guy+' and new_guy = '+new_guy);
 			if (new_wl.indexOf(old_wl[u]) == -1) {
 				if (old_wl[u] == global['current_dj']) {
 					cowgod.logger('Confused, it looked like '+pretty_user(old_wl[u])+' left the waitlist, but that is the current DJ');
 				} else {
-					var old_guy = old_wl[u];
 					cowgod.logger(pretty_user(old_guy)+' left the waitlist');
-	
 					if (old_wl[u] == global['leader']) {
 						cowgod.logger('Do we need a new leader?');
 						bot.getDJ(function(cdj) {
 							if (cdj.id == old_guy) {
 								cowgod.logger('No, plug is just on crack, old_guy is DJing');
 							} else {
-								var new_guy = new_wl[u];
-								// cowgod.logger('new_guy is '+new_guy+' and comes from position '+u+' in new_wl list');
+								cowgod.logger('new_guy is '+new_guy+' and comes from position '+u+' in new_wl list');
 								if (typeof new_guy  === 'undefined' || new_guy == '') {
 									cowgod.logger('That will not do, we will use current_dj for the new leader: '+global['current_dj']);
 									new_guy = global['current_dj'];
