@@ -700,46 +700,42 @@ var creds = {
 		cowgod.logger('ldj: old: '+pretty_waitlist(old_wl));
 		cowgod.logger('ldj: new: '+pretty_waitlist(new_wl));
 
-		if (new_wl.length == 1) {
-			//cowgod.logger('new_wl.length is 1 and it contains '+new_wl[0]);
-			if (new_wl[0] == '') {
-				// cowgod.logger('that is bogus');
-				// bot.chat('Plug.dj just tried to trick me, but I am too smart for that.');
-				return;
-			}
-		} else if (new_wl.length == 0 && old_wl.length != 1) {
-			cowgod.logger('Ignoring bogus zero-length waitlist because the old waitlist was not just 1 person');
-			// bot.chat('Plug.dj just tried to trick me, but I am too smart for that.');
-			return;
-		}
-	
-		for (u in old_wl) {
-			var old_guy = old_wl[u];
-			var new_guy = new_wl[u];
-			cowgod.logger('wl position '+u+' processing: old_guy = '+old_guy+' and new_guy = '+new_guy);
-			if (new_wl.indexOf(old_wl[u]) == -1) {
-				if (old_wl[u] == global['current_dj']) {
-					cowgod.logger('Confused, it looked like '+pretty_user(old_wl[u])+' left the waitlist, but that is the current DJ');
+		//
+		// we have to do a getDJ call here because sometimes Plug sends out of
+		// order messages and global[current_dj] is not accurate at this point
+		//
+		bot.getDJ(function(cdj) {
+			var current_dj = cdj.id;
+
+			for (u in old_wl) {
+				var uid = old_wl[u];
+				var old_rank = u;
+				var new_rank = new_wl.indexOf(uid);
+
+				if (uid == cdj.id) {
+					cowgod.logger(pretty_user(uid)+' moved from old_wl['+old_rank+'] to the DJ booth');
+				} else if (new_rank >= 0) {
+					cowgod.logger(pretty_user(uid)+' moved from old_wl['+old_rank+'] to new_wl['+new_rank+']');
 				} else {
-					cowgod.logger(pretty_user(old_guy)+' left the waitlist');
-					if (old_wl[u] == global['leader']) {
-						cowgod.logger('Do we need a new leader?');
-						bot.getDJ(function(cdj) {
-							if (cdj.id == old_guy) {
-								cowgod.logger('No, plug is just on crack, old_guy is DJing');
-							} else {
-								cowgod.logger('new_guy is '+new_guy+' and comes from position '+u+' in new_wl list');
-								if (typeof new_guy  === 'undefined' || new_guy == '') {
-									cowgod.logger('That will not do, we will use current_dj for the new leader: '+global['current_dj']);
-									new_guy = global['current_dj'];
-								}
-								set_global('leader',new_guy,'Battlefield promotion from lost_dj');
-							}
-						});
+					// I think this is the guy who dropped!
+					if (uid != global['leader']) {
+						cowgod.logger(pretty_user(uid)+' moved from old_wl['+old_rank+'] to nowhere');
+					} else {
+						cowgod.logger(pretty_user(uid)+' moved from old_wl['+old_rank+'] to nowhere and was our leader');
+						var new_leader = new_wl[u];
+						cowgod.logger('new_wl['+u+'] is '+new_leader);
+						if (new_leader === 'undefined') {
+							new_leader = current_dj;
+							cowgod.logger('current_dj is '+new_leader);
+						}
+						if (new_leader !== 'undefined') {
+							cowgod.logger('setting new leader '+pretty_name(new_leader));
+							set_global('leader',new_leader,'Battlefield promotion from lost_dj');
+						}
 					}
 				}
 			}
-		}
+		});
 	}
 
 	function move_to_end_of_round(uid) {
