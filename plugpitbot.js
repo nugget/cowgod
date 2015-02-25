@@ -729,7 +729,7 @@ var creds = {
 							cowgod.logger('current_dj is '+new_leader);
 						}
 						if (new_leader !== 'undefined') {
-							cowgod.logger('setting new leader '+pretty_name(new_leader));
+							cowgod.logger('setting new leader '+pretty_user(new_leader));
 							set_global('leader',new_leader,'Battlefield promotion from lost_dj');
 						}
 					}
