@@ -724,11 +724,11 @@ var creds = {
 						cowgod.logger(pretty_user(uid)+' moved from old_wl['+old_rank+'] to nowhere and was our leader');
 						var new_leader = new_wl[u];
 						cowgod.logger('new_wl['+u+'] is '+new_leader);
-						if (new_leader === 'undefined') {
+						if (new_leader === null || new_leader === undefined) {
 							new_leader = current_dj;
 							cowgod.logger('current_dj is '+new_leader);
 						}
-						if (new_leader !== 'undefined') {
+						if (new_leader === null || new_leader === undefined) {
 							cowgod.logger('setting new leader '+pretty_user(new_leader));
 							set_global('leader',new_leader,'Battlefield promotion from lost_dj');
 						}
