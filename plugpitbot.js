@@ -729,6 +729,8 @@ var creds = {
 							cowgod.logger('current_dj is '+new_leader);
 						}
 						if (new_leader === null || new_leader === undefined) {
+							cowgod.logger('no viable leader found');
+						} else {
 							cowgod.logger('setting new leader '+pretty_user(new_leader));
 							set_global('leader',new_leader,'Battlefield promotion from lost_dj');
 						}
