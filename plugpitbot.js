@@ -989,7 +989,7 @@ var creds = {
 
 		//util.log(util.inspect(user));
 		if (user.xp != null) {
-			logger_tsv([ 'event','score','nickname',user.username,'plug_user_id',user.id,'level',user.level,'xp',user.xp,'ep',eser.ep ]);
+			logger_tsv([ 'event','score','nickname',user.username,'plug_user_id',user.id,'level',user.level,'xp',user.xp ]);
 			cowgod.logger(user.username+' is level '+user.level+' and has '+numberWithCommas(user.xp)+'xp points!');
 		}
 		
