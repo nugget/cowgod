@@ -362,7 +362,7 @@ var creds = {
 		var leader_suffix  = '';
 		var song_divider = '';
 
-		if (data.media === null || data.media === undefined) {
+		if (data.media === null || typeof data.media === 'undefined') {
 			current_dj(null);
 			set_global('leader','','Nothing is playing');
 			irc_set_topic('Nothing is playing in the Pit :(');
@@ -419,7 +419,7 @@ var creds = {
 			cowgod.logger('skipping vote for outcast');
 			return;
 		}
-		if (typeof vote == undefined) {
+		if (typeof vote === 'undefined') {
 			vote = 1;
 		}
 		// cowgod.logger(' I am voting '+vote);
@@ -517,8 +517,8 @@ var creds = {
 	function log_play(data) {
 		if (data.media !== null) {
 			// util.log(util.inspect(data));
-			if (typeof data.media.title == 'undefined') { data.media.title = ''; }
-			if (typeof data.media.author == 'undefined') { data.media.author = ''; }
+			if (typeof data.media.title === 'undefined') { data.media.title = ''; }
+			if (typeof data.media.author === 'undefined') { data.media.author = ''; }
 	
 			cowgod.logger(pretty_user(data.dj.id)+' is playing '+data.media.title+' by '+data.media.author);
 			logger_tsv( [ 'event','djAdvance','plug_user_id',data.dj.id,'playlistID',data.playlistID,'song',data.media.author,'title',data.media.title,'duration',data.media.duration,'media_id',data.media.id,'media_cid',data.media.cid,'media_format',data.media.format,'leader',data.pitleader ]);
@@ -632,7 +632,7 @@ var creds = {
 				// util.log(util.inspect(data));
 				//
 				var moo = bot.getDJ(function(current_dj) {
-					if (current_dj === undefined || current_dj === null) {
+					if (current_dj === 'undefined' || current_dj === null) {
 						// cowgod.logger('Process waitlist saw no current_dj');
 						process_waitlist('silence');
 					} else {
@@ -658,7 +658,7 @@ var creds = {
 
 		for (var u in wl) {
 			var uid = wl[u].id;
-			if (uid === undefined) {
+			if (typeof uid === 'undefined') {
 				uid = wl[u];
 			}
 			if (uid != '') {
@@ -724,11 +724,11 @@ var creds = {
 						cowgod.logger(pretty_user(uid)+' moved from old_wl['+old_rank+'] to nowhere and was our leader');
 						var new_leader = new_wl[u];
 						cowgod.logger('new_wl['+u+'] is '+new_leader);
-						if (new_leader === null || new_leader === undefined) {
+						if (new_leader === null || typeof new_leader === 'undefined') {
 							new_leader = current_dj;
 							cowgod.logger('current_dj is '+new_leader);
 						}
-						if (new_leader === null || new_leader === undefined) {
+						if (new_leader === null || typeof new_leader === 'undefined') {
 							cowgod.logger('no viable leader found');
 						} else {
 							cowgod.logger('setting new leader '+pretty_user(new_leader));
@@ -782,7 +782,7 @@ var creds = {
 
 	function numberWithCommas(x) {
 		if (typeof x === 'undefined') {
-			return 'undefined';
+			return 'undef';
 		}
 		return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 	}
@@ -887,7 +887,7 @@ var creds = {
 	}
 
 	function toggle_config (item,toggle) {
-		if (toggle === 'undefined') {
+		if (typeof toggle === 'undefined') {
 			if (config[item] != 'on') {
 				config[item] = 'on';
 			} else {
@@ -1149,11 +1149,11 @@ var creds = {
 		}
 
 		bot.getUser(settings.userid, function(me) {
-			if (me === null || me === undefined) {
+			if (me === null || typeof me === 'undefined') {
 				// nobody is playing a song
 				cowgod.logger('Failed heartbeat with no result from getUser');
 			} else {
-				if (me.id === null || me.id === undefined) {
+				if (me.id === null || typeof me.id === 'undefined') {
 					cowgod.logger('Failed heartbeat with unexpected result from getUser');
 					util.log(util.inspect(me));
 				} else {
@@ -1166,7 +1166,7 @@ var creds = {
 			//util.log(util.inspect(media));
 			bot.getTimeRemaining(function(tr) {
 				//util.log(util.inspect(tr));
-				if (media === null || media === undefined) {
+				if (media === null || typeof media === 'undefined') {
 					cowgod.logger('nothing playing');
 					process_waitlist('silence');
 				} else {
