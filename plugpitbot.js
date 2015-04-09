@@ -781,6 +781,9 @@ var creds = {
 	}
 
 	function numberWithCommas(x) {
+		if (typeof x === 'undefined') {
+			return 'undefined';
+		}
 		return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 	}
 
@@ -789,8 +792,7 @@ var creds = {
 		bot.getUser(settings.userid, function(me) {
 			heartbeat_reset('report_points getUser');
 			//util.log(util.inspect(me));
-
-			lag_say('I currently have '+numberWithCommas(me.xp)+' xp and '+numberWithCommas(me.ep)+' plug points!');
+			lag_say('I currently have '+numberWithCommas(me.xp)+' xp!');
 		});
 	}
 	
@@ -986,9 +988,9 @@ var creds = {
 		//cowgod.logger('update_user '+user.username);
 
 		//util.log(util.inspect(user));
-		if (user.xp != null || user.ep != null) {
-			logger_tsv([ 'event','score','nickname',user.username,'plug_user_id',user.id,'level',user.level,'xp',user.xp,'ep',user.ep ]);
-			cowgod.logger(user.username+' is level '+user.level+' and has '+numberWithCommas(user.xp)+'xp + '+numberWithCommas(user.ep)+' points!');
+		if (user.xp != null) {
+			logger_tsv([ 'event','score','nickname',user.username,'plug_user_id',user.id,'level',user.level,'xp',user.xp,'ep',eser.ep ]);
+			cowgod.logger(user.username+' is level '+user.level+' and has '+numberWithCommas(user.xp)+'xp points!');
 		}
 		
 		botdb.query('INSERT INTO users (uid) SELECT $1 WHERE 1 NOT IN (SELECT 1 FROM users WHERE uid = $2) RETURNING user_id', [
