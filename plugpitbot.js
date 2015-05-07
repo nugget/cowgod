@@ -1093,6 +1093,8 @@ var creds = {
 			if (leader_pos > 0 && ninjad_pos > 0 && target_pos > ninjad_pos) {
 				cowgod.logger('Need to move pos '+ninjad_pos+' to '+leader_pos);
 				bot.chat('ha ha!  Removing you from this round!');
+				target_pos = target_pos - 1;
+				cowgod.logger('Adjusting target_pos to '+target_pos+' to make the API happy');
 				bot.moderateMoveDJ(uid,target_pos);
 				botdb.query('INSERT INTO ninjas (user_id,dj_id,leader_id) SELECT id_from_uid($1),id_from_uid($2),id_from_uid($3)', [
 					uid,global['current_dj'],global['leader']
