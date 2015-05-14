@@ -998,7 +998,7 @@ var creds = {
 		], after(function(insresult) {
 			if (insresult.rowCount == 1) {
 				cowgod.logger('Added new user '+user.username+' ('+user.id+') to database');
-				lag_say('Hey! Welcome to the Pit, @'+user.username+' please take a moment to read our room rules);
+				lag_say('Hey! Welcome to the Pit, @'+user.username+' please take a moment to read our room rules');
 			}
 
 			botdb.query('SELECT * FROM users WHERE uid = $1', [ user.id ], after(function(result) {
