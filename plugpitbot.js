@@ -310,7 +310,7 @@ var creds = {
 		};
 		if (config_enabled('greet_pink')) {
 			if (data.id == 4104272 ) {
-				lag_say('hhttp://i.imgur.com/TggQP.gif');
+				lag_say('http://i.imgur.com/TggQP.gif');
 			}
 		};
 
@@ -998,7 +998,7 @@ var creds = {
 		], after(function(insresult) {
 			if (insresult.rowCount == 1) {
 				cowgod.logger('Added new user '+user.username+' ('+user.id+') to database');
-				lag_say('Hey! Welcome to the Pit, @'+user.username);
+				lag_say('Hey! Welcome to the Pit, @'+user.username' please take a moment to read our room rules);
 			}
 
 			botdb.query('SELECT * FROM users WHERE uid = $1', [ user.id ], after(function(result) {
