@@ -331,6 +331,13 @@ var creds = {
 		process_waitlist('djUpdate');
 	});
 
+	bot.on('scoreUpdate', function(data) {
+		// 8 Jun 20:06:57 - { positive: 2, negative: 0, grabs: 0 }
+		heartbeat_reset('scoreUpdate');
+		//cowgod.logger('scoreUpdate event');
+		//util.log(util.inspect(data));
+	});
+
 	bot.on('grabUpdate', function(data) {
 		heartbeat_reset('grabUpdate');
 		cowgod.logger('curate event');
