@@ -61,9 +61,17 @@ pg_select $::cowgod::db $sql buf {
 }
 
 if {[info exists play(play_id)]} {
-	set sql "SELECT * FROM plug_media WHERE media_id = [pg_quote $play(media_id)]"
-	pg_select $::cowgod::db $sql buf {
-		array set song [array get buf]
+	if {[info exists play(media_id)] && $play(media_id) ne ""} {
+		set sql "SELECT * FROM plug_media WHERE media_id = [pg_quote $play(media_id)]"
+		pg_select $::cowgod::db $sql buf {
+			array set song [array get buf]
+		}
+	} elseif {[info exists play(song_id)] && $play(song_id) ne ""} {
+		set sql "SELECT *,song as title,artist as author FROM tt_songs WHERE song_id = [pg_quote $play(song_id)]"
+		pg_select $::cowgod::db $sql buf {
+			array set song [array get buf]
+			set play(duration) $song(length)
+		}
 	}
 
 	webout [el_open div -class row]
@@ -74,7 +82,11 @@ if {[info exists play(play_id)]} {
 	}
 	webout [el_close div]
 	webout [el_open div -class col-md-8]
-	webout "<h3>[el_open a -href [::cowgod::href song $song(media_id)]]$song(title)[el_close a]</h3>"
+	if {[info exists song(media_id)] && $song(media_id) ne ""} {
+		webout "<h3>[el_open a -href [::cowgod::href song $song(media_id)]]$song(title)[el_close a]</h3>"
+	} else {
+		webout "<h3>$song(song)</h3>"
+	}
 	webout "<h4>$song(author)</h4>"
 
 	if {$stats(plays) == 1} {
