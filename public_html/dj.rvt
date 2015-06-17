@@ -79,7 +79,14 @@ if {[info exists dj(nickname)]} {
 	webout [el_close div]
 	webout [el_close div]
 
-	webout "<hr />"
+	set sql "select *,random() from chats where user_id = [pg_quote $dj(user_id)] order by random desc limit 1"
+	pg_select $::cowgod::db $sql quote {
+	webout "<blockquote>"
+		webout "<p>&#8220;$quote(text)&#8221</p>"
+		webout "<small>$dj(nickname) (<cite>[clock format [clock scan $quote(ts)] -format "%A, %d-%b-%Y"]</cite>)</small>"
+		webout "</blockquote>"
+	}
+
 	webout [el_open div -class row]
 
 	webout [el_open div -class col-md-6]
