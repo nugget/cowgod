@@ -73,7 +73,7 @@ foreach hash $all {
 		set date [clock format [clock scan $buf(ts)] -format "%A, %d-%b-%Y"]
 		webout "<td align=\"right\" nowrap=\"nowrap\">[el_open a -href [::cowgod::href play $play(play_id)]]$date[el_close a]</td>"
 		webout "<td>[el_open a -href [::cowgod::href dj $play(user_id)]]$play(nickname)[el_close a]</td>"
-		webout "<td align=\"right\">[el_open a -href [::cowgod::href song $play(song_id)]]$play(author) - $play(title)[el_close a]</td>"
+		webout "<td align=\"right\">$play(author) - $play(title)</td>"
 		webout "<td><small><strong>$buf(nickname)</strong> $buf(text)</small></td>"
 		webout "</tr>"
 	}
