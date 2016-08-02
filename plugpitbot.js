@@ -359,9 +359,8 @@ new PlugAPI({
 
 	bot.on('advance', function(data) {
 		heartbeat_reset('advance');
-		cowgod.logger('advance event');
-		util.log(util.inspect(data));
-		cowgod.remember_user(data.currentDJ.id,data.currentDJ.username);
+		// cowgod.logger('advance event');
+		// util.log(util.inspect(data));
 		localv['voted'] = false;
 	
 		var leader_prefix  = '';
@@ -374,6 +373,7 @@ new PlugAPI({
 			irc_set_topic('Nothing is playing in the Pit :(');
 			process_waitlist('silence');
 		} else {
+			cowgod.remember_user(data.currentDJ.id,data.currentDJ.username);
 			if (is_leader(data.currentDJ.id)) {
 				// cowgod.logger('this dj is the leader');
 				data.pitleader = true;
