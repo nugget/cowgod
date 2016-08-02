@@ -584,77 +584,76 @@ new PlugAPI({
 				set_global('waitlist','','Nothing playing');
 				return;
 			}
-			bot.getWaitList( function(wl) {
-				heartbeat_reset('process_waitlist getWaitList');
-				// util.log(util.inspect(wl));
 
-				var gwl = new Array();
-				var nwl = new Array();
+			var wl = bot.getWaitList();
+			heartbeat_reset('process_waitlist getWaitList');
+			// util.log(util.inspect(wl));
 
-				var wlbuf = '';
-				for (var u in wl) {
-					wlbuf = wlbuf+' '+wl[u].id;
-					nwl.push(wl[u].id);
-				}
-				wlbuf = wlbuf.trim();
+			var gwl = new Array();
+			var nwl = new Array();
+
+			var wlbuf = '';
+			for (var u in wl) {
+				wlbuf = wlbuf+' '+wl[u].id;
+				nwl.push(wl[u].id);
+			}
+			wlbuf = wlbuf.trim();
 	
-				var gwl_raw = global['waitlist'].split(' ');
-				for (var u in gwl_raw) {
-					var uid = parseInt(gwl_raw[u],10);
-					if (!isNaN(uid)) {
-						gwl.push(parseInt(gwl_raw[u],10));
+			var gwl_raw = global['waitlist'].split(' ');
+			for (var u in gwl_raw) {
+				var uid = parseInt(gwl_raw[u],10);
+				if (!isNaN(uid)) {
+					gwl.push(parseInt(gwl_raw[u],10));
+				}
+			}
+
+			cowgod.logger('pwl:         raw: '+pretty_waitlist(wl));
+			cowgod.logger('pwl:         nwl: '+nwl);
+			cowgod.logger('pwl: getWaitList: '+pretty_waitlist(nwl));
+			cowgod.logger('pwl:         gwl: '+gwl);
+			cowgod.logger('pwl:      global: '+pretty_waitlist(gwl));
+			cowgod.logger('pwl:       wlbuf: '+wlbuf);
+
+			if (nwl.length > gwl.length) {
+				cowgod.logger('waitlist grew');
+				if (config_enabled('manage_waitlist')) {
+					cowgod.logger('and i manage the waitlist');
+					if (event == 'djUpdate') {
+						cowgod.logger('and this was a new song djAdvance');
+						new_dj(gwl,nwl);
 					}
 				}
-
-				//cowgod.logger('pwl:         raw: '+pretty_waitlist(wl));
-				//cowgod.logger('pwl:         nwl: '+nwl);
-				//cowgod.logger('pwl: getWaitList: '+pretty_waitlist(nwl));
-				//cowgod.logger('pwl:         gwl: '+gwl);
-				//cowgod.logger('pwl:      global: '+pretty_waitlist(gwl));
-				//cowgod.logger('pwl:       wlbuf: '+wlbuf);
-
-				if (nwl.length > gwl.length) {
-					cowgod.logger('waitlist grew');
-					if (config_enabled('manage_waitlist')) {
-						cowgod.logger('and i manage the waitlist');
-						if (event == 'djUpdate') {
-							cowgod.logger('and this was a new song djAdvance');
-							new_dj(gwl,nwl);
-						}
-					}
+			} 
+			if (nwl.length < gwl.length) {
+				var sizediff = gwl.length - nwl.length;
+				if (sizediff != 1 && nwl.length == 0) {
+					cowgod.logger('waitlist shrunk by '+sizediff+' spots and is empty now, that is too suspicious.  Ignoring');
+					return;
 				} 
-				if (nwl.length < gwl.length) {
-					var sizediff = gwl.length - nwl.length;
-					if (sizediff != 1 && nwl.length == 0) {
-						cowgod.logger('waitlist shrunk by '+sizediff+' spots and is empty now, that is too suspicious.  Ignoring');
-						return;
-					} 
-					cowgod.logger('waitlist shrunk by '+sizediff+' spots');
-					lost_dj(gwl,nwl);
-				}
+				cowgod.logger('waitlist shrunk by '+sizediff+' spots');
+				lost_dj(gwl,nwl);
+			}
 		
-				set_global('waitlist',wlbuf,'Updated by getWaitList');
-				// cowgod.logger('Updated waitlist global cache');
-				// util.log(util.inspect(data));
-				//
-				var moo = bot.getDJ(function(current_dj) {
-					if (current_dj === 'undefined' || current_dj === null) {
-						// cowgod.logger('Process waitlist saw no current_dj');
-						process_waitlist('silence');
-					} else {
-						// There is an active DJ 
-						// cowgod.logger('process_waitlist: there is an active dj and the wl length is '+wl.length);
-						if (wl.length == 0) {
-							// And there is nobody else playing
-							// util.log(util.inspect(current_dj));
-							if (global['leader'] != current_dj.id) {
-								cowgod.logger(pretty_user(current_dj.id)+' is the only DJ, promoting to leader');
-								set_global('leader',current_dj.id,'Only DJ playing');
-							}
-						}
+			set_global('waitlist',wlbuf,'Updated by getWaitList');
+			// cowgod.logger('Updated waitlist global cache');
+			// util.log(util.inspect(data));
+			//
+			var current_dj = bot.getDJ();
+			if (current_dj === 'undefined' || current_dj === null) {
+				// cowgod.logger('Process waitlist saw no current_dj');
+				process_waitlist('silence');
+			} else {
+				// There is an active DJ 
+				// cowgod.logger('process_waitlist: there is an active dj and the wl length is '+wl.length);
+				if (wl.length == 0) {
+				// And there is nobody else playing
+					// util.log(util.inspect(current_dj));
+					if (global['leader'] != current_dj.id) {
+						cowgod.logger(pretty_user(current_dj.id)+' is the only DJ, promoting to leader');
+						set_global('leader',current_dj.id,'Only DJ playing');
 					}
-				});
-			});
+				}
+			}
 		}
 	}
 
