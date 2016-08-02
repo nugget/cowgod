@@ -277,9 +277,9 @@ new PlugAPI({
 	});
 
 	bot.on('chat', function(data) {
-		cowgod.logger('chat');
+		// cowgod.logger('chat');
 		heartbeat_reset('chat');
-		util.log(util.inspect(data));
+		// util.log(util.inspect(data));
 		log_chat(data);
 		cowgod.remember_user(data.from.id,data.from.username);
 		did_user_get_ninjad(data);
