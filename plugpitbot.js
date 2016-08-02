@@ -380,8 +380,8 @@ new PlugAPI({
 
 				if (global['waitlist'] != '') {
 					// cowgod.logger('wl is '+global['waitlist']);
-					leader_prefix   = '*LEAD SONG* ';
-					leader_suffix   = ' ~***';
+					leader_prefix   = ':star2: LEAD ';
+					leader_suffix   = ' :star2:';
 				}
 
 				// cowgod.logger('setting a new lead song');
