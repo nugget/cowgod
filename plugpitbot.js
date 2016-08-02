@@ -322,7 +322,7 @@ new PlugAPI({
 		process_waitlist();
 	});
 
-	bot.on('waitListUpdate', function(data) {
+	bot.on('djListUpdate', function(data) {
 		heartbeat_reset('waitListUpdate');
 		cowgod.logger('waitListUpdate event');
 		util.log(util.inspect(data));
@@ -336,18 +336,18 @@ new PlugAPI({
 		util.log(util.inspect(data));
 	});
 
-	bot.on('grabUpdate', function(data) {
-		heartbeat_reset('grabUpdate');
+	bot.on('curateUpdate', function(data) {
+		heartbeat_reset('curateUpdate');
 		cowgod.logger('curate event');
 		util.log(util.inspect(data));
 		// this is like a TT snag
 		log_curate(data);
 	});
 
-	bot.on('voteUpdate', function(data) {
+	bot.on('vote', function(data) {
 		heartbeat_reset('voteUpdate');
-		cowgod.logger('voteUpdate event');
-		util.log(util.inspect(data));
+		//cowgod.logger('voteUpdate event');
+		//util.log(util.inspect(data));
 		log_vote(data);
 	});
 	
@@ -364,7 +364,6 @@ new PlugAPI({
 		localv['voted'] = false;
 	
 		var leader_prefix  = '';
-		var leader_suffix  = '';
 		var song_divider = '';
 
 		if (data.media === null || typeof data.media === 'undefined') {
@@ -380,8 +379,7 @@ new PlugAPI({
 
 				if (global['waitlist'] != '') {
 					// cowgod.logger('wl is '+global['waitlist']);
-					leader_prefix   = ':star2: LEAD ';
-					leader_suffix   = ' :star2:';
+					leader_prefix   = ':star2: ';
 				}
 
 				// cowgod.logger('setting a new lead song');
@@ -399,7 +397,7 @@ new PlugAPI({
 					lag_vote(1);
 				}
 			}
-			irc_set_topic(song_string(data.media)+' ('+cowgod.id_to_name(data.currentDJ.id)+')'+leader_suffix);
+			irc_set_topic(song_string(data.media)+' ('+cowgod.id_to_name(data.currentDJ.id)+')');
 			current_dj(data.currentDJ.id);
 
 			if (config_enabled('song_dividers')) {
@@ -407,7 +405,15 @@ new PlugAPI({
 			}
 
 			if (config_enabled('announce_play')) {
-				bot.sendChat(song_divider+leader_prefix+song_string(data.media)+' ('+cowgod.id_to_name(data.currentDJ.id)+')'+leader_suffix);
+				if (data.pitleader == true) {
+					bot.sendChat(leader_prefix+' LEAD SONG');
+				}
+
+				bot.sendChat(song_divider+leader_prefix+song_string(data.media)+' ('+cowgod.id_to_name(data.currentDJ.id)+')');
+
+				if (data.pitleader == true) {
+					bot.sendChat(leader_prefix);
+				}
 			}
 		}
 	
@@ -486,23 +492,23 @@ new PlugAPI({
 	}
 
 	function log_vote(data) {
-		if (data.vote == 1) {
-			cowgod.logger(pretty_user(data.user.id)+' wooted');
-			if (config_enabled('follow_trends') && is_trendsetter(data.user.id)) {
+		if (data.v == 1) {
+			cowgod.logger(pretty_user(data.i)+' wooted');
+			if (config_enabled('follow_trends') && is_trendsetter(data.i)) {
 				if (!localv['voted']) {
 					localv['voted'] = true;
-					cowgod.logger('Following trendsetter '+cowgod.id_to_name(data.user.id)+'\'s vote ('+data.vote+')');
+					cowgod.logger('Following trendsetter '+cowgod.id_to_name(data.i)+'\'s vote ('+data.v+')');
 					
-					lag_vote(data.vote);
+					lag_vote(data.v);
 				}
 			}
-		} else if (data.vote == -1) {
-			cowgod.logger(pretty_user(data.user.id)+' voted meh');
+		} else if (data.v == -1) {
+			cowgod.logger(pretty_user(data.i)+' voted meh');
 		} else {
-			cowgod.logger('vote (unknown type: '+data.vote+')');
+			cowgod.logger('vote (unknown type: '+data.v+')');
 			util.log(util.inspect(data));
 		}
-		logger_tsv([ 'event','vote','vote',data.vote,'plug_user_id',data.user.id ]);
+		logger_tsv([ 'event','vote','vote',data.v,'plug_user_id',data.i]);
 	}
 
 	function log_join(data) {
@@ -517,7 +523,7 @@ new PlugAPI({
 
 	function log_curate(data) {
 		cowgod.logger(pretty_user(data.user.id)+' snagged this song');
-		logger_tsv([ 'event','snag','plug_user_id',data.user.id ]);
+		logger_tsv([ 'event','snag','plug_user_id',data.id ]);
 	}
 
 	function log_play(data) {
