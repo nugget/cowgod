@@ -336,9 +336,9 @@ new PlugAPI({
 		util.log(util.inspect(data));
 	});
 
-	bot.on('curateUpdate', function(data) {
-		heartbeat_reset('curateUpdate');
-		cowgod.logger('curate event');
+	bot.on('grab', function(data) {
+		heartbeat_reset('grab');
+		cowgod.logger('grab event');
 		util.log(util.inspect(data));
 		// this is like a TT snag
 		log_curate(data);
@@ -406,7 +406,9 @@ new PlugAPI({
 
 			if (config_enabled('announce_play')) {
 				if (data.pitleader == true) {
-					bot.sendChat(leader_prefix+' LEAD SONG');
+					if (global['waitlist'] != '') {
+						bot.sendChat(leader_prefix+' LEAD SONG');
+					}
 				}
 				bot.sendChat(song_divider+leader_prefix+song_string(data.media)+' ('+cowgod.id_to_name(data.currentDJ.id)+')');
 			}
@@ -517,8 +519,9 @@ new PlugAPI({
 	}
 
 	function log_curate(data) {
-		cowgod.logger(pretty_user(data.user.id)+' snagged this song');
-		logger_tsv([ 'event','snag','plug_user_id',data.id ]);
+		cowgod.logger(pretty_user(data)+' snagged this song');
+		util.log(util.inspect(data));
+		logger_tsv([ 'event','snag','plug_user_id',data ]);
 	}
 
 	function log_play(data) {
