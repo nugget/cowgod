@@ -20,6 +20,7 @@ cowgod.logger = function (buf) {
 
 cowgod.remember_user = function (id,name) {
 	if (typeof name === 'undefined' || typeof id === 'undefined') {
+		cowgod.logger('- trying remembering that '+name+' is user_id '+id+' ('+Object.keys(usernames).length+' names in lookup table)');
 		return;
 	}
 	if (typeof usernames[id] === 'undefined') {
@@ -29,7 +30,9 @@ cowgod.remember_user = function (id,name) {
 }
 
 cowgod.id_to_name = function (user_id) {
+	cowgod.logger('- id to name for user_id '+user_id+' ('+Object.keys(usernames).length+' names in lookup table)');
     for (var k in usernames) {
+		cowgod.logger(' looking at k '+k);
         if (k == user_id) {
             return usernames[k];
         }

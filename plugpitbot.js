@@ -3,7 +3,8 @@
 Syslog = require('node-syslog');
 Syslog.init('plugbot', Syslog.LOG_PID | Syslog.LOG_ODELAY, Syslog.LOG_LOCAL0);
 
-var PlugBotAPI  = require('./plugbotapi');
+var PlugAPI = require('plugapi');
+
 var fs = require('fs');
 var util = require('util');
 var argv = require('optimist').argv;
@@ -23,8 +24,8 @@ var trendsetters = new Array();
 var bots = new Array();
 var outcasts = new Array();
 
-heartbeat_reset('init');
-setInterval(heartbeat, 60000);
+//heartbeat_reset('init');
+//setInterval(heartbeat, 60000);
 
 if (typeof argv.nick === 'undefined') {
 	console.log('Need a -nick name!');
@@ -160,16 +161,13 @@ db_loadsettings(function() {
 db_loadglobals();
 db_loadusers();
 
-var creds = {
+cowgod.logger('! My Name Is '+myname+' headed for '+settings.plug_room);
+
+new PlugAPI({
 	email: settings.email,
 	password: settings.password
-};
-
-	cowgod.logger('! My Name Is '+myname+' headed for '+settings.plug_room);
-
-	var bot = new PlugBotAPI(creds);
-
-	//util.log(util.inspect(bot));
+}, function(err, bot) {
+	util.log(util.inspect(bot));
 	cowgod.set_active_bot(bot);
 
 	cowgod.logger('connecting to '+settings.plug_room);
@@ -270,7 +268,7 @@ var creds = {
 	});
 
 	bot.on('roomJoin', function(data) {
-		//cowgod.logger('roomJoin');
+		cowgod.logger('roomJoin');
 		heartbeat_reset('roomJoin');
 		localv['voted'] = false;
 		process_userlist();
@@ -279,11 +277,11 @@ var creds = {
 	});
 
 	bot.on('chat', function(data) {
-		//cowgod.logger('chat');
+		cowgod.logger('chat');
 		heartbeat_reset('chat');
-		//util.log(util.inspect(data));
+		util.log(util.inspect(data));
 		log_chat(data);
-		cowgod.remember_user(data.uid,data.un);
+		cowgod.remember_user(data.from.id,data.from.username);
 		did_user_get_ninjad(data);
 	});
 
@@ -295,8 +293,8 @@ var creds = {
 
 	bot.on('userJoin', function(data) {
 		heartbeat_reset('userJoin');
-		// cowgod.logger('join event');
-		// util.log(util.inspect(data));
+		cowgod.logger('join event');
+		util.log(util.inspect(data));
 		cowgod.remember_user(data.id,data.username);
 		log_join(data);
 		update_user(data);
@@ -318,38 +316,38 @@ var creds = {
 
 	bot.on('userLeave', function(data) {
 		heartbeat_reset('userLeave');
-		// cowgod.logger('leave event');
-		// util.log(util.inspect(data));
+		cowgod.logger('leave event');
+		util.log(util.inspect(data));
 		log_part(data);
 		process_waitlist();
 	});
 
 	bot.on('waitListUpdate', function(data) {
 		heartbeat_reset('waitListUpdate');
-		// cowgod.logger('waitListUpdate event');
-		// util.log(util.inspect(data));
+		cowgod.logger('waitListUpdate event');
+		util.log(util.inspect(data));
 		process_waitlist('djUpdate');
 	});
 
 	bot.on('scoreUpdate', function(data) {
 		// 8 Jun 20:06:57 - { positive: 2, negative: 0, grabs: 0 }
 		heartbeat_reset('scoreUpdate');
-		//cowgod.logger('scoreUpdate event');
-		//util.log(util.inspect(data));
+		cowgod.logger('scoreUpdate event');
+		util.log(util.inspect(data));
 	});
 
 	bot.on('grabUpdate', function(data) {
 		heartbeat_reset('grabUpdate');
 		cowgod.logger('curate event');
-		//util.log(util.inspect(data));
+		util.log(util.inspect(data));
 		// this is like a TT snag
 		log_curate(data);
 	});
 
 	bot.on('voteUpdate', function(data) {
 		heartbeat_reset('voteUpdate');
-		//cowgod.logger('voteUpdate event');
-		//util.log(util.inspect(data));
+		cowgod.logger('voteUpdate event');
+		util.log(util.inspect(data));
 		log_vote(data);
 	});
 	
@@ -361,8 +359,9 @@ var creds = {
 
 	bot.on('advance', function(data) {
 		heartbeat_reset('advance');
-		// cowgod.logger('advance event');
-		// util.log(util.inspect(data));
+		cowgod.logger('advance event');
+		util.log(util.inspect(data));
+		cowgod.remember_user(data.currentDJ.id,data.currentDJ.username);
 		localv['voted'] = false;
 	
 		var leader_prefix  = '';
@@ -375,7 +374,7 @@ var creds = {
 			irc_set_topic('Nothing is playing in the Pit :(');
 			process_waitlist('silence');
 		} else {
-			if (is_leader(data.dj.id)) {
+			if (is_leader(data.currentDJ.id)) {
 				// cowgod.logger('this dj is the leader');
 				data.pitleader = true;
 
@@ -394,21 +393,21 @@ var creds = {
 
 			log_play(data);
 
-			if (config_enabled('autobop') || (config_enabled('woot_leaders') && is_trendsetter(data.dj.id))) {
+			if (config_enabled('autobop') || (config_enabled('woot_leaders') && is_trendsetter(data.currentDJ.id))) {
 				if (!localv['voted']) {
 					localv['voted'] = true;
 					lag_vote(1);
 				}
 			}
-			irc_set_topic(song_string(data.media)+' ('+cowgod.id_to_name(data.dj.id)+')'+leader_suffix);
-			current_dj(data.dj.id);
+			irc_set_topic(song_string(data.media)+' ('+cowgod.id_to_name(data.currentDJ.id)+')'+leader_suffix);
+			current_dj(data.currentDJ.id);
 
 			if (config_enabled('song_dividers')) {
 				song_divider = 'https://macnugget.org/cowgod/images/noshamediv.png ';
 			}
 
 			if (config_enabled('announce_play')) {
-				bot.chat(song_divider+leader_prefix+song_string(data.media)+' ('+cowgod.id_to_name(data.dj.id)+')'+leader_suffix);
+				bot.sendChat(song_divider+leader_prefix+song_string(data.media)+' ('+cowgod.id_to_name(data.currentDJ.id)+')'+leader_suffix);
 			}
 		}
 	
@@ -441,7 +440,7 @@ var creds = {
 
 	function lag_say (text) {
 		waitms = parseInt(Math.random() * 5000)+500;
-		setTimeout(function(){ bot.chat(text); }, waitms);
+		setTimeout(function(){ bot.sendChat(text); }, waitms);
 	}
 
 
@@ -458,15 +457,15 @@ var creds = {
 	}
 
 	function log_chat(data) {
-		logger_tsv([ 'event','chat','nickname',data.un,'plug_user_id',data.fromID,'message',data.message,'type',data.type,'chat_id',data.chatID ]);
+		logger_tsv([ 'event','chat','nickname',data.from.username,'plug_user_id',data.from.id,'message',data.message,'type',data.type,'chat_id',data.cid ]);
 	
 		if (data.type == 'message') {
-			cowgod.logger('<'+data.un+'> '+data.message);
+			cowgod.logger('<'+data.from.username+'> '+data.message);
 		} else if (data.type == 'emote') {
-			cowgod.logger('* '+data.un+' '+data.message);
+			cowgod.logger('* '+data.from.username+' '+data.message);
 			data.message = '/me '+data.message;
 		} else  if (data.type == 'mention') {
-			cowgod.logger('<'+data.un+'> '+data.message);
+			cowgod.logger('<'+data.from.username+'> '+data.message);
 			process_room_command(data);
 		} else  if (data.type == 'skip') {
 			cowgod.logger('# '+data.message);
@@ -479,7 +478,7 @@ var creds = {
 
 		if (config_enabled('db_log_chats')) {
 			botdb.query('INSERT INTO chats (user_id,text) SELECT user_id,$2 FROM users WHERE uid = $1', [
-				data.fromID,data.message
+				data.from.id,data.message
 			], after(function(result) {
 				// cowgod.logger('Logged chat to database');
 			}));
@@ -527,14 +526,14 @@ var creds = {
 			if (typeof data.media.title === 'undefined') { data.media.title = ''; }
 			if (typeof data.media.author === 'undefined') { data.media.author = ''; }
 	
-			cowgod.logger(pretty_user(data.dj.id)+' is playing '+data.media.title+' by '+data.media.author);
-			logger_tsv( [ 'event','djAdvance','plug_user_id',data.dj.id,'playlistID',data.playlistID,'song',data.media.author,'title',data.media.title,'duration',data.media.duration,'media_id',data.media.id,'media_cid',data.media.cid,'media_format',data.media.format,'leader',data.pitleader ]);
+			cowgod.logger(pretty_user(data.currentDJ.id)+' is playing '+data.media.title+' by '+data.media.author);
+			logger_tsv( [ 'event','djAdvance','plug_user_id',data.currentDJ.id,'playlistID',data.playlistID,'song',data.media.author,'title',data.media.title,'duration',data.media.duration,'media_id',data.media.id,'media_cid',data.media.cid,'media_format',data.media.format,'leader',data.pitleader ]);
 
 			if (config_enabled('db_log_plays')) {
 				update_plug_media(data.media);
 
 				botdb.query('INSERT INTO plays (user_id,playlist_id,media_id,leader) SELECT user_id,$2,$3,$4 FROM users WHERE uid = $1', [
-					data.dj.id,data.playlistID,data.media.id,data.pitleader
+					data.currentDJ.id,data.playlistID,data.media.id,data.pitleader
 				], after(function(result) {
 					// cowgod.logger('Logged play to database');
 				}));
@@ -569,14 +568,14 @@ var creds = {
 	}
 
 	function process_userlist() {
-		bot.getUsers( function(users) {
-			heartbeat_reset('process_userlist getUsers');
-			// util.log(util.inspect(users));
+		users = bot.getUsers();
 
-			for (var u in users) {
-				update_user(users[u]);
-			}
-		});
+		heartbeat_reset('process_userlist getUsers');
+		util.log(util.inspect(users));
+
+		for (var u in users) {
+			update_user(users[u]);
+		}
 	}
 
 	function process_waitlist(event) {
@@ -697,7 +696,7 @@ var creds = {
 				} else {
 					// cowgod.logger('New DJ!');
 					move_to_end_of_round(new_wl[u]);
-					bot.chat('Welcome to the Pit, @'+cowgod.id_to_name(new_wl[u])+'!  The lead song is '+global['lead_song']+' // https://macnugget.org/cowgod/waitlist');
+					bot.sendChat('Welcome to the Pit, @'+cowgod.id_to_name(new_wl[u])+'!  The lead song is '+global['lead_song']+' // https://macnugget.org/cowgod/waitlist');
 				}
 			}
 		}
@@ -814,7 +813,7 @@ var creds = {
 				cuckoo.say(settings.irc_channel,args);
 				break;
 			case 'plugsay':
-				bot.chat(args);
+				bot.sendChat(args);
 				break;
 			case 'ircpm':
 				var target = argv[1];
@@ -947,12 +946,12 @@ var creds = {
 				if (key == 'leader') {
 					if (value != '') {
 						if (global['waitlist'] != '') {
-							bot.chat('*** The leader is now @'+cowgod.id_to_name(value));
+							bot.sendChat('*** The leader is now @'+cowgod.id_to_name(value));
 						} else {
 							cowgod.logger('*** The leader is now '+pretty_user(value));
 						}
 					} else {
-						bot.chat('*** There is no leader, let anarchy reign! (RICSAS)');
+						bot.sendChat('*** There is no leader, let anarchy reign! (RICSAS)');
 					}
 				} else if (key == 'waitlist') {
 					cowgod.logger('The waitlist is now: '+pretty_waitlist(value.split(' ')));
@@ -987,12 +986,14 @@ var creds = {
 	}
 
 	function update_user(user) {
+		//cowgod.logger('update user command');
+		//util.log(util.inspect(user));
 		cowgod.remember_user(user.id,user.username);
 		if (!config_enabled('db_maintain_users')) {
 			return;
 		}
 
-		//cowgod.logger('update_user '+user.username);
+		cowgod.logger('update_user '+user.username);
 
 		//util.log(util.inspect(user));
 		if (user.xp != null) {
@@ -1073,11 +1074,11 @@ var creds = {
 		cowgod.logger('ninja bumping user '+uid);
 
 		if (is_leader(uid)) {
-			bot.chat('You can\'t ninja yourself, silly!');
+			bot.sendChat('You can\'t ninja yourself, silly!');
 			return;
 		}
 		if (is_leader(global['current_dj'])) {
-			bot.chat('You can\'t get ninjad while the leader is playing a song, doofus!  A new round is starting now.');
+			bot.sendChat('You can\'t get ninjad while the leader is playing a song, doofus!  A new round is starting now.');
 			return;
 		}
 		bot.getWaitList( function(wl) {
@@ -1099,7 +1100,7 @@ var creds = {
 			cowgod.logger(leader_pos+' and '+ninjad_pos);
 			if (leader_pos > 0 && ninjad_pos > 0 && target_pos > ninjad_pos) {
 				cowgod.logger('Need to move pos '+ninjad_pos+' to '+leader_pos);
-				bot.chat('ha ha!  Removing you from this round!');
+				bot.sendChat('ha ha!  Removing you from this round!');
 				target_pos = target_pos - 1;
 				cowgod.logger('Adjusting target_pos to '+target_pos+' to make the API happy');
 				bot.moderateMoveDJ(uid,target_pos);
@@ -1199,3 +1200,4 @@ var creds = {
  
 		return;
 	}
+});
