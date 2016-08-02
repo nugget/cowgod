@@ -408,12 +408,7 @@ new PlugAPI({
 				if (data.pitleader == true) {
 					bot.sendChat(leader_prefix+' LEAD SONG');
 				}
-
 				bot.sendChat(song_divider+leader_prefix+song_string(data.media)+' ('+cowgod.id_to_name(data.currentDJ.id)+')');
-
-				if (data.pitleader == true) {
-					bot.sendChat(leader_prefix);
-				}
 			}
 		}
 	
