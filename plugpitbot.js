@@ -757,27 +757,26 @@ new PlugAPI({
 		cowgod.logger('I need to move '+pretty_user(uid)+' to the end of the waitlist');
 		cowgod.logger('current_dj is '+pretty_user(global['current_dj']));
 	
-		bot.getWaitList( function(wl) {
-			heartbeat_reset('move_to_end_of_round getWaitList');
+		var wl = bot.getWaitList();
+		heartbeat_reset('move_to_end_of_round getWaitList');
 
-			var uidlist = new Array();
-	
-			for (var u in wl) {
-				uidlist.push(wl[u].id);
-			}
+		var uidlist = new Array();
 
-			cowgod.logger('move_to_end waitlist is '+pretty_waitlist(wl));
-	
-			var leader_pos = uidlist.indexOf(parseInt(global['leader'], 10))
-			var target_pos = uidlist.indexOf(parseInt(uid, 10))
+		for (var u in wl) {
+			uidlist.push(wl[u].id);
+		}
 
-			cowgod.logger('leader_pos '+leader_pos+' and target_pos '+target_pos);
-	
-			if (target_pos > leader_pos) {
-				cowgod.logger('attempting move');
-				bot.moderateMoveDJ(uid,leader_pos+1);
-			}
-		});
+		cowgod.logger('move_to_end waitlist is '+pretty_waitlist(wl));
+
+		var leader_pos = uidlist.indexOf(parseInt(global['leader'], 10))
+		var target_pos = uidlist.indexOf(parseInt(uid, 10))
+
+		cowgod.logger('leader_pos '+leader_pos+' and target_pos '+target_pos);
+
+		if (target_pos > leader_pos) {
+			cowgod.logger('attempting move');
+			bot.moderateMoveDJ(uid,leader_pos+1);
+		}
 	}
 	
 	function process_room_command(data) {
@@ -797,11 +796,11 @@ new PlugAPI({
 
 	function report_points() {
 		cowgod.logger('reporting points to room');
-		bot.getUser(settings.userid, function(me) {
-			heartbeat_reset('report_points getUser');
-			//util.log(util.inspect(me));
-			lag_say('I currently have '+numberWithCommas(me.xp)+' xp!');
-		});
+		var me = bot.getUser(settings.userid);
+
+		heartbeat_reset('report_points getUser');
+		//util.log(util.inspect(me));
+		lag_say('I currently have '+numberWithCommas(me.xp)+' xp!');
 	}
 	
 	function process_cnc_command(command,from) {
@@ -1083,34 +1082,34 @@ new PlugAPI({
 			bot.sendChat('You can\'t get ninjad while the leader is playing a song, doofus!  A new round is starting now.');
 			return;
 		}
-		bot.getWaitList( function(wl) {
-			var leader_pos = -1;
-			var target_pos = -1;
-			var ninjad_pos = -1;
+		var wl = bot.getWaitList();
 
-			for (var u in wl) {
-				if (is_leader(wl[u].id)) {
-					cowgod.logger('leader is in position '+u);
-					leader_pos = parseInt(u) + 1;
-					target_pos = parseInt(u) + 2;
-				}
-				if (wl[u].id == uid) {
-					cowgod.logger('ninja-ee is in position '+u);
-					ninjad_pos = parseInt(u) + 1;
-				}
-			}		
-			cowgod.logger(leader_pos+' and '+ninjad_pos);
-			if (leader_pos > 0 && ninjad_pos > 0 && target_pos > ninjad_pos) {
-				cowgod.logger('Need to move pos '+ninjad_pos+' to '+leader_pos);
-				bot.sendChat('ha ha!  Removing you from this round!');
-				target_pos = target_pos - 1;
-				cowgod.logger('Adjusting target_pos to '+target_pos+' to make the API happy');
-				bot.moderateMoveDJ(uid,target_pos);
-				botdb.query('INSERT INTO ninjas (user_id,dj_id,leader_id) SELECT id_from_uid($1),id_from_uid($2),id_from_uid($3)', [
-					uid,global['current_dj'],global['leader']
-				], after(function(result) {}));
+		var leader_pos = -1;
+		var target_pos = -1;
+		var ninjad_pos = -1;
+
+		for (var u in wl) {
+			if (is_leader(wl[u].id)) {
+				cowgod.logger('leader is in position '+u);
+				leader_pos = parseInt(u) + 1;
+				target_pos = parseInt(u) + 2;
 			}
-		});
+			if (wl[u].id == uid) {
+				cowgod.logger('ninja-ee is in position '+u);
+				ninjad_pos = parseInt(u) + 1;
+			}
+		}		
+		cowgod.logger(leader_pos+' and '+ninjad_pos);
+		if (leader_pos > 0 && ninjad_pos > 0 && target_pos > ninjad_pos) {
+			cowgod.logger('Need to move pos '+ninjad_pos+' to '+leader_pos);
+			bot.sendChat('ha ha!  Removing you from this round!');
+			target_pos = target_pos - 1;
+			cowgod.logger('Adjusting target_pos to '+target_pos+' to make the API happy');
+			bot.moderateMoveDJ(uid,target_pos);
+			botdb.query('INSERT INTO ninjas (user_id,dj_id,leader_id) SELECT id_from_uid($1),id_from_uid($2),id_from_uid($3)', [
+				uid,global['current_dj'],global['leader']
+			], after(function(result) {}));
+		}
 	}
 
 
@@ -1160,46 +1159,45 @@ new PlugAPI({
 			process.exit(1);
 		}
 
-		bot.getUser(settings.userid, function(me) {
-			if (me === null || typeof me === 'undefined') {
-				// nobody is playing a song
-				cowgod.logger('Failed heartbeat with no result from getUser');
-			} else {
-				if (me.id === null || typeof me.id === 'undefined') {
-					cowgod.logger('Failed heartbeat with unexpected result from getUser');
-					util.log(util.inspect(me));
-				} else {
-					heartbeat_reset('heartbeat internal');
-				}
-			}
-		});
+		var me = bot.getUser(settings.userid);
 
-		bot.getMedia(function(media) {
-			//util.log(util.inspect(media));
-			bot.getTimeRemaining(function(tr) {
-				//util.log(util.inspect(tr));
-				if (media === null || typeof media === 'undefined') {
-					cowgod.logger('nothing playing');
-					process_waitlist('silence');
-				} else {
-					cowgod.logger('playtime logging '+media.id+'/'+tr+' :: '+localv['last_media_id']+'/'+localv['last_media_tr']);
-					if (localv['last_media_id'] == media.id && localv['last_media_tr'] == tr) {
-						localv['last_media_sc'] = localv['last_media_sc'] + 1;
-						cowgod.logger('playing is stalled for '+localv['last_media_sc']+' cycles');
-	
-						if (localv['last_media_sc'] > 10) {
-							cowgod.logget('Playing stalled for 10 cycles, reconnecting');
-							process.exit(1);
-						}
-					} else {
-						localv['last_media_id'] = media.id;
-						localv['last_media_tr'] = tr;
-						localv['last_media_sc'] = 0;
-					}
+		if (me === null || typeof me === 'undefined') {
+			// nobody is playing a song
+			cowgod.logger('Failed heartbeat with no result from getUser');
+		} else {
+			if (me.id === null || typeof me.id === 'undefined') {
+				cowgod.logger('Failed heartbeat with unexpected result from getUser');
+				util.log(util.inspect(me));
+			} else {
+				heartbeat_reset('heartbeat internal');
+			}
+		}
+
+		var media = bot.getMedia();
+
+		//util.log(util.inspect(media));
+		var tr = bot.getTimeRemaining();
+
+		//util.log(util.inspect(tr));
+		if (media === null || typeof media === 'undefined') {
+			cowgod.logger('nothing playing');
+			process_waitlist('silence');
+		} else {
+			cowgod.logger('playtime logging '+media.id+'/'+tr+' :: '+localv['last_media_id']+'/'+localv['last_media_tr']);
+			if (localv['last_media_id'] == media.id && localv['last_media_tr'] == tr) {
+				localv['last_media_sc'] = localv['last_media_sc'] + 1;
+				cowgod.logger('playing is stalled for '+localv['last_media_sc']+' cycles');
+
+				if (localv['last_media_sc'] > 10) {
+					cowgod.logget('Playing stalled for 10 cycles, reconnecting');
+					process.exit(1);
 				}
-			});
-		});
- 
+			} else {
+				localv['last_media_id'] = media.id;
+				localv['last_media_tr'] = tr;
+				localv['last_media_sc'] = 0;
+			}
+		}
 		return;
 	}
 });
