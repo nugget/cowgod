@@ -713,40 +713,39 @@ new PlugAPI({
 		// we have to do a getDJ call here because sometimes Plug sends out of
 		// order messages and global[current_dj] is not accurate at this point
 		//
-		bot.getDJ(function(cdj) {
-			var current_dj = cdj.id;
+		var cdj = bot.getDJ();
+		var current_dj = cdj.id;
 
-			for (u in old_wl) {
-				var uid = old_wl[u];
-				var old_rank = u;
-				var new_rank = new_wl.indexOf(uid);
+		for (u in old_wl) {
+			var uid = old_wl[u];
+			var old_rank = u;
+			var new_rank = new_wl.indexOf(uid);
 
-				if (uid == cdj.id) {
-					cowgod.logger(pretty_user(uid)+' moved from old_wl['+old_rank+'] to the DJ booth');
-				} else if (new_rank >= 0) {
-					cowgod.logger(pretty_user(uid)+' moved from old_wl['+old_rank+'] to new_wl['+new_rank+']');
+			if (uid == cdj.id) {
+				cowgod.logger(pretty_user(uid)+' moved from old_wl['+old_rank+'] to the DJ booth');
+			} else if (new_rank >= 0) {
+				cowgod.logger(pretty_user(uid)+' moved from old_wl['+old_rank+'] to new_wl['+new_rank+']');
+			} else {
+				// I think this is the guy who dropped!
+				if (uid != global['leader']) {
+					cowgod.logger(pretty_user(uid)+' moved from old_wl['+old_rank+'] to nowhere');
 				} else {
-					// I think this is the guy who dropped!
-					if (uid != global['leader']) {
-						cowgod.logger(pretty_user(uid)+' moved from old_wl['+old_rank+'] to nowhere');
+					cowgod.logger(pretty_user(uid)+' moved from old_wl['+old_rank+'] to nowhere and was our leader');
+					var new_leader = new_wl[u];
+					cowgod.logger('new_wl['+u+'] is '+new_leader);
+					if (new_leader === null || typeof new_leader === 'undefined') {
+						new_leader = current_dj;
+						cowgod.logger('current_dj is '+new_leader);
+					}
+					if (new_leader === null || typeof new_leader === 'undefined') {
+						cowgod.logger('no viable leader found');
 					} else {
-						cowgod.logger(pretty_user(uid)+' moved from old_wl['+old_rank+'] to nowhere and was our leader');
-						var new_leader = new_wl[u];
-						cowgod.logger('new_wl['+u+'] is '+new_leader);
-						if (new_leader === null || typeof new_leader === 'undefined') {
-							new_leader = current_dj;
-							cowgod.logger('current_dj is '+new_leader);
-						}
-						if (new_leader === null || typeof new_leader === 'undefined') {
-							cowgod.logger('no viable leader found');
-						} else {
-							cowgod.logger('setting new leader '+pretty_user(new_leader));
-							set_global('leader',new_leader,'Battlefield promotion from lost_dj');
-						}
+						cowgod.logger('setting new leader '+pretty_user(new_leader));
+						set_global('leader',new_leader,'Battlefield promotion from lost_dj');
 					}
 				}
 			}
-		});
+		}
 	}
 
 	function move_to_end_of_round(uid) {
