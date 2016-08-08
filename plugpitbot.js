@@ -12,6 +12,7 @@ var sys = require('sys');
 var exec = require('child_process').exec;
 var argv = require('optimist').argv;
 var sleep = require('sleep');
+var timediff = require('timediff');
 
 cowgod = require('./cowgod.js');
 
@@ -359,8 +360,8 @@ new PlugAPI({
 
 	bot.on('advance', function(data) {
 		heartbeat_reset('advance');
-		// cowgod.logger('advance event');
-		// util.log(util.inspect(data));
+		cowgod.logger('advance event');
+		util.log(util.inspect(data));
 		localv['voted'] = false;
 	
 		var leader_prefix  = '';
@@ -373,6 +374,17 @@ new PlugAPI({
 			process_waitlist('silence');
 		} else {
 			cowgod.remember_user(data.currentDJ.id,data.currentDJ.username);
+
+			var playstart = new Date(Date.parse(data.startTime+' GMT-0000'));
+			var playtime = timediff(playstart,'now','s');
+
+			if (playtime.milliseconds > 10000) {
+				cowgod.logger('This song has been playing for '+playtime.milliseconds+'ms so I will skip the normal advance activities');
+				return;
+			} else {
+				cowgod.logger('This song has only been playing for '+playtime.milliseconds+'ms so I will perform the normal advance activities');
+			}
+
 			if (is_leader(data.currentDJ.id)) {
 				// cowgod.logger('this dj is the leader');
 				data.pitleader = true;
@@ -784,8 +796,11 @@ new PlugAPI({
 
 		if (data.message.toLowerCase().indexOf('how many points') >= 0) {
 			report_points();
+		} else if (data.message.toLowerCase().indexOf('room mode') >= 0) {
+			set_room_mode(data.message);
 		}
 	}
+
 
 	function numberWithCommas(x) {
 		if (typeof x === 'undefined') {
@@ -796,10 +811,9 @@ new PlugAPI({
 
 	function report_points() {
 		cowgod.logger('reporting points to room');
-		var me = bot.getUser(settings.userid);
-
+		var me = bot.getUser();
 		heartbeat_reset('report_points getUser');
-		//util.log(util.inspect(me));
+		util.log(util.inspect(me));
 		lag_say('I currently have '+numberWithCommas(me.xp)+' xp!');
 	}
 	
@@ -1159,7 +1173,8 @@ new PlugAPI({
 			process.exit(1);
 		}
 
-		var me = bot.getUser(settings.userid);
+		var me = bot.getUser();
+		util.log(util.inspect(me));
 
 		if (me === null || typeof me === 'undefined') {
 			// nobody is playing a song
