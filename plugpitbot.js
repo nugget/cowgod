@@ -794,10 +794,39 @@ new PlugAPI({
 	function process_room_command(data) {
 		var command = data.message.toLowerCase();
 
+		util.log(util.inspect(data));
+
+		if (data.from.role <= 1) {
+			cowgod.logger('Ignoring message from user with role '+data.from.role);
+		} else {
+			cowgod.logger('Processing message from user with role '+data.from.role);
+		}
+
 		if (data.message.toLowerCase().indexOf('how many points') >= 0) {
 			report_points();
 		} else if (data.message.toLowerCase().indexOf('room mode') >= 0) {
-			set_room_mode(data.message);
+			set_room_mode(data);
+		} else if (data.message.toLowerCase().indexOf('make me the leader') >= 0) {
+			set_global('leader',data.from.id,'Set by request in the room');
+		}
+	}
+
+	function set_room_mode(data) {
+		var room_mode = '';
+
+		if (data.message.toLowerCase().indexOf('normal') >= 0) {
+			room_mode = 'normal';
+		} else if (data.message.toLowerCase().indexOf('roulette') >= 0) {
+			room_mode  = 'roulette';
+		} else if (data.message.toLowerCase().indexOf('oneshot') >= 0) {
+			room_mode = 'oneshot';
+		}
+
+		if (room_mode == '') {
+			bot.sendChat('The room mode is currently '+global['room_mode']);
+		} else {
+			set_global('room_mode',room_mode,'Set in channel by '+data.from.username);
+			bot.sendChat('The room mode is now '+global['room_mode']);
 		}
 	}
 
