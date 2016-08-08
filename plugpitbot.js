@@ -288,7 +288,7 @@ new PlugAPI({
 	bot.on('emote', function(data) {
 		heartbeat_reset('emote');
 		log_chat(data);
-		cowgod.remember_user(data.fromID,data.from);
+		cowgod.remember_user(data.from.id,data.from);
 	});
 
 	bot.on('userJoin', function(data) {
@@ -977,8 +977,8 @@ new PlugAPI({
 
 
 	function is_leader(djid) {
-		// cowgod.logger('looking to see if '+djid+' is the leader');
-		// cowgod.logger('global leader is '+global['leader']);
+		cowgod.logger('looking to see if '+djid+' is the leader');
+		cowgod.logger('global leader is '+global['leader']);
 		if ('leader' in global && global['leader'] == djid.toString()) {
 			return true;
 		} else {
@@ -1067,7 +1067,7 @@ new PlugAPI({
 		}
 
 		if (data.message.toLowerCase().indexOf('ninja') == 0) {
-			ninja_bump(data.fromID);
+			ninja_bump(data.from.id);
 		}
 	}
 
