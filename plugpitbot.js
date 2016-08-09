@@ -294,8 +294,8 @@ new PlugAPI({
 
 	bot.on('userJoin', function(data) {
 		heartbeat_reset('userJoin');
-		cowgod.logger('join event');
-		util.log(util.inspect(data));
+		//cowgod.logger('join event');
+		//util.log(util.inspect(data));
 		cowgod.remember_user(data.id,data.username);
 		log_join(data);
 		update_user(data);
@@ -317,8 +317,8 @@ new PlugAPI({
 
 	bot.on('userLeave', function(data) {
 		heartbeat_reset('userLeave');
-		cowgod.logger('leave event');
-		util.log(util.inspect(data));
+		// cowgod.logger('leave event');
+		// util.log(util.inspect(data));
 		log_part(data);
 		process_waitlist();
 	});
@@ -326,7 +326,7 @@ new PlugAPI({
 	bot.on('djListUpdate', function(data) {
 		heartbeat_reset('waitListUpdate');
 		cowgod.logger('waitListUpdate event');
-		util.log(util.inspect(data));
+		//util.log(util.inspect(data));
 		process_waitlist('djUpdate');
 	});
 
@@ -339,8 +339,8 @@ new PlugAPI({
 
 	bot.on('grab', function(data) {
 		heartbeat_reset('grab');
-		cowgod.logger('grab event');
-		util.log(util.inspect(data));
+		//cowgod.logger('grab event');
+		//util.log(util.inspect(data));
 		// this is like a TT snag
 		log_curate(data);
 	});
@@ -361,8 +361,22 @@ new PlugAPI({
 	bot.on('advance', function(data) {
 		heartbeat_reset('advance');
 		cowgod.logger('advance event');
-		util.log(util.inspect(data));
+		// util.log(util.inspect(data));
 		localv['voted'] = false;
+
+		if (localv['leader_play'] == true) {
+			cowgod.logger('This is the song immediately following the leader play');
+			cowgod.logger('currentDJ is '+data.currentDJ.id+' and isleader is '+is_leader(data.currentDJ.id));
+			if (!is_leader(data.currentDJ.id)) {
+				if (global['waitlist'] != '') {
+					if (global['room_mode'] == 'roulette') {
+						cowgod.logger('We are eligibile for the roulette revolver');
+						play_roulette();
+					}
+				}
+			}
+		}
+		localv['leader_play'] = false;
 	
 		var leader_prefix  = '';
 		var song_divider = '';
@@ -388,6 +402,7 @@ new PlugAPI({
 			if (is_leader(data.currentDJ.id)) {
 				// cowgod.logger('this dj is the leader');
 				data.pitleader = true;
+				localv['leader_play'] = true;
 
 				if (global['waitlist'] != '') {
 					// cowgod.logger('wl is '+global['waitlist']);
@@ -423,6 +438,14 @@ new PlugAPI({
 					}
 				}
 				bot.sendChat(song_divider+leader_prefix+song_string(data.media)+' ('+cowgod.id_to_name(data.currentDJ.id)+')');
+
+				if (data.pitleader == true) {
+					if (global['waitlist'] != '') {
+						if (global['room_mode'] == 'roulette') {
+							bot.sendChat(':gun: Leader Roulette is enabled! There are '+global['bullets']+' bullets in the revolver...');
+						}
+					}
+				}
 			}
 		}
 	
@@ -430,6 +453,27 @@ new PlugAPI({
 		process_waitlist('djAdvance');
 		db_loadsettings(function() {});
 	});
+
+	function play_roulette() {
+		var bootid = global['leader'];
+		var roll = Math.floor((Math.random()*6)+1);
+		var bang = 'FALSE';
+
+		cowgod.logger(cowgod.id_to_name(bootid)+' hit chamber '+roll+' with '+global['bullets']+' in the gun');
+
+		if (bootid && roll <= global['bullets']) {
+			bang = 'TRUE';
+
+			var logline = ':gun: @'+cowgod.id_to_name(bootid)+' has been shot!';
+			bot.sendChat(logline);
+			bot.moderateRemoveDJ(parseInt(global['leader']));
+		} else {
+			var logline = ':gun: *click*';
+			bot.sendChat(logline);
+		}
+
+		return;
+	}
 
 	function song_string(media) {
 		return media.author+' - '+media.title;
@@ -587,7 +631,7 @@ new PlugAPI({
 		users = bot.getUsers();
 
 		heartbeat_reset('process_userlist getUsers');
-		util.log(util.inspect(users));
+		// util.log(util.inspect(users));
 
 		for (var u in users) {
 			update_user(users[u]);
@@ -726,6 +770,10 @@ new PlugAPI({
 		// order messages and global[current_dj] is not accurate at this point
 		//
 		var cdj = bot.getDJ();
+		if (cdj === null || typeof cdj === 'undefined') {
+			cowgod.logger('cannot find current current dj cdj');
+			return;
+		}
 		var current_dj = cdj.id;
 
 		for (u in old_wl) {
@@ -926,6 +974,13 @@ new PlugAPI({
 			case 'suicide':
 				process.exit(1);
 				break;
+			case 'kick':
+				cowgod.logger('trying a kick');
+				bot.moderateRemoveDJ(parseInt(argv[1]),function(remdj) {
+					util.log(util.inspect(remdj));
+					cowgod.logger('Inside the remdj function;');
+				});
+				break;
 			default:
 				return('Unknown command');
 		}
@@ -1037,7 +1092,7 @@ new PlugAPI({
 			return;
 		}
 
-		cowgod.logger('update_user '+user.username);
+		// cowgod.logger('update_user '+user.username);
 
 		//util.log(util.inspect(user));
 		if (user.xp != null) {
