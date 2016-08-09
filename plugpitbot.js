@@ -442,7 +442,11 @@ new PlugAPI({
 				if (data.pitleader == true) {
 					if (global['waitlist'] != '') {
 						if (global['room_mode'] == 'roulette') {
-							bot.sendChat(':gun: Leader Roulette is enabled! There are '+global['bullets']+' bullets in the revolver...');
+							if (global['bullets'] == 1) {
+								bot.sendChat(':gun: Leader Roulette is enabled! There is '+global['bullets']+' bullet in the revolver...');
+							} else {
+								bot.sendChat(':gun: Leader Roulette is enabled! There are '+global['bullets']+' bullets in the revolver...');
+							}
 						}
 					}
 				}
