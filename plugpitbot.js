@@ -866,7 +866,10 @@ new PlugAPI({
 	function set_room_mode(data) {
 		var room_mode = '';
 
-		if (data.message.toLowerCase().indexOf('normal') >= 0) {
+		if (data.message.toLowerCase().indexOf('sexy party') >= 0) {
+			bot.sendChat('https://macnugget.org/cowgod/images/sexyparty.gif');
+			return;
+		} else if (data.message.toLowerCase().indexOf('normal') >= 0) {
 			room_mode = 'normal';
 		} else if (data.message.toLowerCase().indexOf('roulette') >= 0) {
 			room_mode  = 'roulette';
