@@ -971,6 +971,7 @@ new PlugAPI({
 				break;
 			case 'reload':
 				db_loadsettings(function() {});
+				db_loadglobals();
 				break;
 			case 'report_points':
 				report_points();
