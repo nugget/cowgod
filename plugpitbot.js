@@ -16,6 +16,7 @@ var timediff = require('timediff');
 
 cowgod = require('./cowgod.js');
 
+var emotes = require('./emotes.json');
 var config = new Object();
 var global = new Object();
 var localv = new Object();
@@ -284,6 +285,7 @@ new PlugAPI({
 		log_chat(data);
 		cowgod.remember_user(data.from.id,data.from.username);
 		did_user_get_ninjad(data);
+		look_for_emotes(data);
 	});
 
 	bot.on('emote', function(data) {
@@ -1175,6 +1177,26 @@ new PlugAPI({
 		if (data.message.toLowerCase().indexOf('ninja') == 0) {
 			ninja_bump(data.from.id);
 		}
+	}
+
+	function look_for_emotes(data) {
+		if (!config_enabled('parse_emotes')) {
+			return;
+		}
+
+		var line = data.message.toLowerCase();
+		var regex = /(:.+:)/;
+		var match = regex.exec(line);
+
+		if (match !== null) {
+			emotes.forEach(function(e) {
+				if (e.name == match[0]) {
+					bot.sendChat(e.image);
+				}
+			});
+		}
+
+		return;
 	}
 
 	function ninja_bump(uid) {
