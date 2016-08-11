@@ -20,6 +20,7 @@ cowgod.logger = function (buf) {
 
 cowgod.remember_user = function (id,name) {
 	if (typeof name === 'undefined' || typeof id === 'undefined') {
+		cowgod.logger('- trying remembering that '+name+' is user_id '+id+' ('+Object.keys(usernames).length+' names in lookup table)');
 		return;
 	}
 	if (typeof usernames[id] === 'undefined') {

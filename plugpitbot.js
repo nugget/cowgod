@@ -3,7 +3,8 @@
 Syslog = require('node-syslog');
 Syslog.init('plugbot', Syslog.LOG_PID | Syslog.LOG_ODELAY, Syslog.LOG_LOCAL0);
 
-var PlugBotAPI  = require('./plugbotapi');
+var PlugAPI = require('plugapi');
+
 var fs = require('fs');
 var util = require('util');
 var argv = require('optimist').argv;
@@ -11,9 +12,11 @@ var sys = require('sys');
 var exec = require('child_process').exec;
 var argv = require('optimist').argv;
 var sleep = require('sleep');
+var timediff = require('timediff');
 
 cowgod = require('./cowgod.js');
 
+var emotes = require('./emotes.json');
 var config = new Object();
 var global = new Object();
 var localv = new Object();
@@ -23,8 +26,8 @@ var trendsetters = new Array();
 var bots = new Array();
 var outcasts = new Array();
 
-heartbeat_reset('init');
-setInterval(heartbeat, 60000);
+//heartbeat_reset('init');
+//setInterval(heartbeat, 60000);
 
 if (typeof argv.nick === 'undefined') {
 	console.log('Need a -nick name!');
@@ -160,16 +163,13 @@ db_loadsettings(function() {
 db_loadglobals();
 db_loadusers();
 
-var creds = {
+cowgod.logger('! My Name Is '+myname+' headed for '+settings.plug_room);
+
+new PlugAPI({
 	email: settings.email,
 	password: settings.password
-};
-
-	cowgod.logger('! My Name Is '+myname+' headed for '+settings.plug_room);
-
-	var bot = new PlugBotAPI(creds);
-
-	//util.log(util.inspect(bot));
+}, function(err, bot) {
+	util.log(util.inspect(bot));
 	cowgod.set_active_bot(bot);
 
 	cowgod.logger('connecting to '+settings.plug_room);
@@ -270,7 +270,7 @@ var creds = {
 	});
 
 	bot.on('roomJoin', function(data) {
-		//cowgod.logger('roomJoin');
+		cowgod.logger('roomJoin');
 		heartbeat_reset('roomJoin');
 		localv['voted'] = false;
 		process_userlist();
@@ -279,24 +279,25 @@ var creds = {
 	});
 
 	bot.on('chat', function(data) {
-		//cowgod.logger('chat');
+		// cowgod.logger('chat');
 		heartbeat_reset('chat');
-		//util.log(util.inspect(data));
+		// util.log(util.inspect(data));
 		log_chat(data);
-		cowgod.remember_user(data.uid,data.un);
+		cowgod.remember_user(data.from.id,data.from.username);
 		did_user_get_ninjad(data);
+		look_for_emotes(data);
 	});
 
 	bot.on('emote', function(data) {
 		heartbeat_reset('emote');
 		log_chat(data);
-		cowgod.remember_user(data.fromID,data.from);
+		cowgod.remember_user(data.from.id,data.from);
 	});
 
 	bot.on('userJoin', function(data) {
 		heartbeat_reset('userJoin');
-		// cowgod.logger('join event');
-		// util.log(util.inspect(data));
+		//cowgod.logger('join event');
+		//util.log(util.inspect(data));
 		cowgod.remember_user(data.id,data.username);
 		log_join(data);
 		update_user(data);
@@ -324,29 +325,29 @@ var creds = {
 		process_waitlist();
 	});
 
-	bot.on('waitListUpdate', function(data) {
+	bot.on('djListUpdate', function(data) {
 		heartbeat_reset('waitListUpdate');
-		// cowgod.logger('waitListUpdate event');
-		// util.log(util.inspect(data));
+		cowgod.logger('waitListUpdate event');
+		//util.log(util.inspect(data));
 		process_waitlist('djUpdate');
 	});
 
 	bot.on('scoreUpdate', function(data) {
 		// 8 Jun 20:06:57 - { positive: 2, negative: 0, grabs: 0 }
 		heartbeat_reset('scoreUpdate');
-		//cowgod.logger('scoreUpdate event');
-		//util.log(util.inspect(data));
+		cowgod.logger('scoreUpdate event');
+		util.log(util.inspect(data));
 	});
 
-	bot.on('grabUpdate', function(data) {
-		heartbeat_reset('grabUpdate');
-		cowgod.logger('curate event');
+	bot.on('grab', function(data) {
+		heartbeat_reset('grab');
+		//cowgod.logger('grab event');
 		//util.log(util.inspect(data));
 		// this is like a TT snag
 		log_curate(data);
 	});
 
-	bot.on('voteUpdate', function(data) {
+	bot.on('vote', function(data) {
 		heartbeat_reset('voteUpdate');
 		//cowgod.logger('voteUpdate event');
 		//util.log(util.inspect(data));
@@ -361,12 +362,25 @@ var creds = {
 
 	bot.on('advance', function(data) {
 		heartbeat_reset('advance');
-		// cowgod.logger('advance event');
+		cowgod.logger('advance event');
 		// util.log(util.inspect(data));
 		localv['voted'] = false;
+
+		if (localv['leader_play'] == true) {
+			cowgod.logger('This is the song immediately following the leader play');
+			cowgod.logger('currentDJ is '+data.currentDJ.id+' and isleader is '+is_leader(data.currentDJ.id));
+			if (!is_leader(data.currentDJ.id)) {
+				if (global['waitlist'] != '') {
+					if (global['room_mode'] == 'roulette') {
+						cowgod.logger('We are eligibile for the roulette revolver');
+						play_roulette();
+					}
+				}
+			}
+		}
+		localv['leader_play'] = false;
 	
 		var leader_prefix  = '';
-		var leader_suffix  = '';
 		var song_divider = '';
 
 		if (data.media === null || typeof data.media === 'undefined') {
@@ -375,14 +389,26 @@ var creds = {
 			irc_set_topic('Nothing is playing in the Pit :(');
 			process_waitlist('silence');
 		} else {
-			if (is_leader(data.dj.id)) {
+			cowgod.remember_user(data.currentDJ.id,data.currentDJ.username);
+
+			var playstart = new Date(Date.parse(data.startTime+' GMT-0000'));
+			var playtime = timediff(playstart,'now','s');
+
+			if (playtime.milliseconds > 10000) {
+				cowgod.logger('This song has been playing for '+playtime.milliseconds+'ms so I will skip the normal advance activities');
+				return;
+			} else {
+				cowgod.logger('This song has only been playing for '+playtime.milliseconds+'ms so I will perform the normal advance activities');
+			}
+
+			if (is_leader(data.currentDJ.id)) {
 				// cowgod.logger('this dj is the leader');
 				data.pitleader = true;
+				localv['leader_play'] = true;
 
 				if (global['waitlist'] != '') {
 					// cowgod.logger('wl is '+global['waitlist']);
-					leader_prefix   = '*LEAD SONG* ';
-					leader_suffix   = ' ~***';
+					leader_prefix   = ':star2: ';
 				}
 
 				// cowgod.logger('setting a new lead song');
@@ -394,21 +420,38 @@ var creds = {
 
 			log_play(data);
 
-			if (config_enabled('autobop') || (config_enabled('woot_leaders') && is_trendsetter(data.dj.id))) {
+			if (config_enabled('autobop') || (config_enabled('woot_leaders') && is_trendsetter(data.currentDJ.id))) {
 				if (!localv['voted']) {
 					localv['voted'] = true;
 					lag_vote(1);
 				}
 			}
-			irc_set_topic(song_string(data.media)+' ('+cowgod.id_to_name(data.dj.id)+')'+leader_suffix);
-			current_dj(data.dj.id);
+			irc_set_topic(song_string(data.media)+' ('+cowgod.id_to_name(data.currentDJ.id)+')');
+			current_dj(data.currentDJ.id);
 
 			if (config_enabled('song_dividers')) {
 				song_divider = 'https://macnugget.org/cowgod/images/noshamediv.png ';
 			}
 
 			if (config_enabled('announce_play')) {
-				bot.chat(song_divider+leader_prefix+song_string(data.media)+' ('+cowgod.id_to_name(data.dj.id)+')'+leader_suffix);
+				if (data.pitleader == true) {
+					if (global['waitlist'] != '') {
+						bot.sendChat(leader_prefix+' LEAD SONG');
+					}
+				}
+				bot.sendChat(song_divider+leader_prefix+song_string(data.media)+' ('+cowgod.id_to_name(data.currentDJ.id)+')');
+
+				if (data.pitleader == true) {
+					if (global['waitlist'] != '') {
+						if (global['room_mode'] == 'roulette') {
+							if (global['bullets'] == 1) {
+								bot.sendChat(':gun: Leader Roulette is enabled! There is '+global['bullets']+' bullet in the revolver...');
+							} else {
+								bot.sendChat(':gun: Leader Roulette is enabled! There are '+global['bullets']+' bullets in the revolver...');
+							}
+						}
+					}
+				}
 			}
 		}
 	
@@ -416,6 +459,27 @@ var creds = {
 		process_waitlist('djAdvance');
 		db_loadsettings(function() {});
 	});
+
+	function play_roulette() {
+		var bootid = global['leader'];
+		var roll = Math.floor((Math.random()*6)+1);
+		var bang = 'FALSE';
+
+		cowgod.logger(cowgod.id_to_name(bootid)+' hit chamber '+roll+' with '+global['bullets']+' in the gun');
+
+		if (bootid && roll <= global['bullets']) {
+			bang = 'TRUE';
+
+			var logline = ':gun: @'+cowgod.id_to_name(bootid)+' has been shot!';
+			bot.sendChat(logline);
+			bot.moderateRemoveDJ(parseInt(global['leader']));
+		} else {
+			var logline = ':gun: *click*';
+			bot.sendChat(logline);
+		}
+
+		return;
+	}
 
 	function song_string(media) {
 		return media.author+' - '+media.title;
@@ -441,7 +505,7 @@ var creds = {
 
 	function lag_say (text) {
 		waitms = parseInt(Math.random() * 5000)+500;
-		setTimeout(function(){ bot.chat(text); }, waitms);
+		setTimeout(function(){ bot.sendChat(text); }, waitms);
 	}
 
 
@@ -458,15 +522,15 @@ var creds = {
 	}
 
 	function log_chat(data) {
-		logger_tsv([ 'event','chat','nickname',data.un,'plug_user_id',data.fromID,'message',data.message,'type',data.type,'chat_id',data.chatID ]);
+		logger_tsv([ 'event','chat','nickname',data.from.username,'plug_user_id',data.from.id,'message',data.message,'type',data.type,'chat_id',data.cid ]);
 	
 		if (data.type == 'message') {
-			cowgod.logger('<'+data.un+'> '+data.message);
+			cowgod.logger('<'+data.from.username+'> '+data.message);
 		} else if (data.type == 'emote') {
-			cowgod.logger('* '+data.un+' '+data.message);
+			cowgod.logger('* '+data.from.username+' '+data.message);
 			data.message = '/me '+data.message;
 		} else  if (data.type == 'mention') {
-			cowgod.logger('<'+data.un+'> '+data.message);
+			cowgod.logger('<'+data.from.username+'> '+data.message);
 			process_room_command(data);
 		} else  if (data.type == 'skip') {
 			cowgod.logger('# '+data.message);
@@ -479,7 +543,7 @@ var creds = {
 
 		if (config_enabled('db_log_chats')) {
 			botdb.query('INSERT INTO chats (user_id,text) SELECT user_id,$2 FROM users WHERE uid = $1', [
-				data.fromID,data.message
+				data.from.id,data.message
 			], after(function(result) {
 				// cowgod.logger('Logged chat to database');
 			}));
@@ -487,23 +551,23 @@ var creds = {
 	}
 
 	function log_vote(data) {
-		if (data.vote == 1) {
-			cowgod.logger(pretty_user(data.user.id)+' wooted');
-			if (config_enabled('follow_trends') && is_trendsetter(data.user.id)) {
+		if (data.v == 1) {
+			cowgod.logger(pretty_user(data.i)+' wooted');
+			if (config_enabled('follow_trends') && is_trendsetter(data.i)) {
 				if (!localv['voted']) {
 					localv['voted'] = true;
-					cowgod.logger('Following trendsetter '+cowgod.id_to_name(data.user.id)+'\'s vote ('+data.vote+')');
+					cowgod.logger('Following trendsetter '+cowgod.id_to_name(data.i)+'\'s vote ('+data.v+')');
 					
-					lag_vote(data.vote);
+					lag_vote(data.v);
 				}
 			}
-		} else if (data.vote == -1) {
-			cowgod.logger(pretty_user(data.user.id)+' voted meh');
+		} else if (data.v == -1) {
+			cowgod.logger(pretty_user(data.i)+' voted meh');
 		} else {
-			cowgod.logger('vote (unknown type: '+data.vote+')');
+			cowgod.logger('vote (unknown type: '+data.v+')');
 			util.log(util.inspect(data));
 		}
-		logger_tsv([ 'event','vote','vote',data.vote,'plug_user_id',data.user.id ]);
+		logger_tsv([ 'event','vote','vote',data.v,'plug_user_id',data.i]);
 	}
 
 	function log_join(data) {
@@ -517,8 +581,9 @@ var creds = {
 	}
 
 	function log_curate(data) {
-		cowgod.logger(pretty_user(data.user.id)+' snagged this song');
-		logger_tsv([ 'event','snag','plug_user_id',data.user.id ]);
+		cowgod.logger(pretty_user(data)+' snagged this song');
+		util.log(util.inspect(data));
+		logger_tsv([ 'event','snag','plug_user_id',data ]);
 	}
 
 	function log_play(data) {
@@ -527,14 +592,14 @@ var creds = {
 			if (typeof data.media.title === 'undefined') { data.media.title = ''; }
 			if (typeof data.media.author === 'undefined') { data.media.author = ''; }
 	
-			cowgod.logger(pretty_user(data.dj.id)+' is playing '+data.media.title+' by '+data.media.author);
-			logger_tsv( [ 'event','djAdvance','plug_user_id',data.dj.id,'playlistID',data.playlistID,'song',data.media.author,'title',data.media.title,'duration',data.media.duration,'media_id',data.media.id,'media_cid',data.media.cid,'media_format',data.media.format,'leader',data.pitleader ]);
+			cowgod.logger(pretty_user(data.currentDJ.id)+' is playing '+data.media.title+' by '+data.media.author);
+			logger_tsv( [ 'event','djAdvance','plug_user_id',data.currentDJ.id,'playlistID',data.playlistID,'song',data.media.author,'title',data.media.title,'duration',data.media.duration,'media_id',data.media.id,'media_cid',data.media.cid,'media_format',data.media.format,'leader',data.pitleader ]);
 
 			if (config_enabled('db_log_plays')) {
 				update_plug_media(data.media);
 
 				botdb.query('INSERT INTO plays (user_id,playlist_id,media_id,leader) SELECT user_id,$2,$3,$4 FROM users WHERE uid = $1', [
-					data.dj.id,data.playlistID,data.media.id,data.pitleader
+					data.currentDJ.id,data.playlistID,data.media.id,data.pitleader
 				], after(function(result) {
 					// cowgod.logger('Logged play to database');
 				}));
@@ -569,14 +634,14 @@ var creds = {
 	}
 
 	function process_userlist() {
-		bot.getUsers( function(users) {
-			heartbeat_reset('process_userlist getUsers');
-			// util.log(util.inspect(users));
+		users = bot.getUsers();
 
-			for (var u in users) {
-				update_user(users[u]);
-			}
-		});
+		heartbeat_reset('process_userlist getUsers');
+		// util.log(util.inspect(users));
+
+		for (var u in users) {
+			update_user(users[u]);
+		}
 	}
 
 	function process_waitlist(event) {
@@ -585,77 +650,76 @@ var creds = {
 				set_global('waitlist','','Nothing playing');
 				return;
 			}
-			bot.getWaitList( function(wl) {
-				heartbeat_reset('process_waitlist getWaitList');
-				// util.log(util.inspect(wl));
 
-				var gwl = new Array();
-				var nwl = new Array();
+			var wl = bot.getWaitList();
+			heartbeat_reset('process_waitlist getWaitList');
+			// util.log(util.inspect(wl));
 
-				var wlbuf = '';
-				for (var u in wl) {
-					wlbuf = wlbuf+' '+wl[u].id;
-					nwl.push(wl[u].id);
-				}
-				wlbuf = wlbuf.trim();
+			var gwl = new Array();
+			var nwl = new Array();
+
+			var wlbuf = '';
+			for (var u in wl) {
+				wlbuf = wlbuf+' '+wl[u].id;
+				nwl.push(wl[u].id);
+			}
+			wlbuf = wlbuf.trim();
 	
-				var gwl_raw = global['waitlist'].split(' ');
-				for (var u in gwl_raw) {
-					var uid = parseInt(gwl_raw[u],10);
-					if (!isNaN(uid)) {
-						gwl.push(parseInt(gwl_raw[u],10));
+			var gwl_raw = global['waitlist'].split(' ');
+			for (var u in gwl_raw) {
+				var uid = parseInt(gwl_raw[u],10);
+				if (!isNaN(uid)) {
+					gwl.push(parseInt(gwl_raw[u],10));
+				}
+			}
+
+			cowgod.logger('pwl:         raw: '+pretty_waitlist(wl));
+			cowgod.logger('pwl:         nwl: '+nwl);
+			cowgod.logger('pwl: getWaitList: '+pretty_waitlist(nwl));
+			cowgod.logger('pwl:         gwl: '+gwl);
+			cowgod.logger('pwl:      global: '+pretty_waitlist(gwl));
+			cowgod.logger('pwl:       wlbuf: '+wlbuf);
+
+			if (nwl.length > gwl.length) {
+				cowgod.logger('waitlist grew');
+				if (config_enabled('manage_waitlist')) {
+					cowgod.logger('and i manage the waitlist');
+					if (event == 'djUpdate') {
+						cowgod.logger('and this was a new song djAdvance');
+						new_dj(gwl,nwl);
 					}
 				}
-
-				//cowgod.logger('pwl:         raw: '+pretty_waitlist(wl));
-				//cowgod.logger('pwl:         nwl: '+nwl);
-				//cowgod.logger('pwl: getWaitList: '+pretty_waitlist(nwl));
-				//cowgod.logger('pwl:         gwl: '+gwl);
-				//cowgod.logger('pwl:      global: '+pretty_waitlist(gwl));
-				//cowgod.logger('pwl:       wlbuf: '+wlbuf);
-
-				if (nwl.length > gwl.length) {
-					cowgod.logger('waitlist grew');
-					if (config_enabled('manage_waitlist')) {
-						cowgod.logger('and i manage the waitlist');
-						if (event == 'djUpdate') {
-							cowgod.logger('and this was a new song djAdvance');
-							new_dj(gwl,nwl);
-						}
-					}
+			} 
+			if (nwl.length < gwl.length) {
+				var sizediff = gwl.length - nwl.length;
+				if (sizediff != 1 && nwl.length == 0) {
+					cowgod.logger('waitlist shrunk by '+sizediff+' spots and is empty now, that is too suspicious.  Ignoring');
+					return;
 				} 
-				if (nwl.length < gwl.length) {
-					var sizediff = gwl.length - nwl.length;
-					if (sizediff != 1 && nwl.length == 0) {
-						cowgod.logger('waitlist shrunk by '+sizediff+' spots and is empty now, that is too suspicious.  Ignoring');
-						return;
-					} 
-					cowgod.logger('waitlist shrunk by '+sizediff+' spots');
-					lost_dj(gwl,nwl);
-				}
+				cowgod.logger('waitlist shrunk by '+sizediff+' spots');
+				lost_dj(gwl,nwl);
+			}
 		
-				set_global('waitlist',wlbuf,'Updated by getWaitList');
-				// cowgod.logger('Updated waitlist global cache');
-				// util.log(util.inspect(data));
-				//
-				var moo = bot.getDJ(function(current_dj) {
-					if (current_dj === 'undefined' || current_dj === null) {
-						// cowgod.logger('Process waitlist saw no current_dj');
-						process_waitlist('silence');
-					} else {
-						// There is an active DJ 
-						// cowgod.logger('process_waitlist: there is an active dj and the wl length is '+wl.length);
-						if (wl.length == 0) {
-							// And there is nobody else playing
-							// util.log(util.inspect(current_dj));
-							if (global['leader'] != current_dj.id) {
-								cowgod.logger(pretty_user(current_dj.id)+' is the only DJ, promoting to leader');
-								set_global('leader',current_dj.id,'Only DJ playing');
-							}
-						}
+			set_global('waitlist',wlbuf,'Updated by getWaitList');
+			// cowgod.logger('Updated waitlist global cache');
+			// util.log(util.inspect(data));
+			//
+			var current_dj = bot.getDJ();
+			if (current_dj === 'undefined' || current_dj === null) {
+				// cowgod.logger('Process waitlist saw no current_dj');
+				process_waitlist('silence');
+			} else {
+				// There is an active DJ 
+				// cowgod.logger('process_waitlist: there is an active dj and the wl length is '+wl.length);
+				if (wl.length == 0) {
+				// And there is nobody else playing
+					// util.log(util.inspect(current_dj));
+					if (global['leader'] != current_dj.id) {
+						cowgod.logger(pretty_user(current_dj.id)+' is the only DJ, promoting to leader');
+						set_global('leader',current_dj.id,'Only DJ playing');
 					}
-				});
-			});
+				}
+			}
 		}
 	}
 
@@ -697,7 +761,7 @@ var creds = {
 				} else {
 					// cowgod.logger('New DJ!');
 					move_to_end_of_round(new_wl[u]);
-					bot.chat('Welcome to the Pit, @'+cowgod.id_to_name(new_wl[u])+'!  The lead song is '+global['lead_song']+' // https://macnugget.org/cowgod/waitlist');
+					bot.sendChat('Welcome to the Pit, @'+cowgod.id_to_name(new_wl[u])+'!  The lead song is '+global['lead_song']+' // https://macnugget.org/cowgod/waitlist');
 				}
 			}
 		}
@@ -711,40 +775,43 @@ var creds = {
 		// we have to do a getDJ call here because sometimes Plug sends out of
 		// order messages and global[current_dj] is not accurate at this point
 		//
-		bot.getDJ(function(cdj) {
-			var current_dj = cdj.id;
+		var cdj = bot.getDJ();
+		if (cdj === null || typeof cdj === 'undefined') {
+			cowgod.logger('cannot find current current dj cdj');
+			return;
+		}
+		var current_dj = cdj.id;
 
-			for (u in old_wl) {
-				var uid = old_wl[u];
-				var old_rank = u;
-				var new_rank = new_wl.indexOf(uid);
+		for (u in old_wl) {
+			var uid = old_wl[u];
+			var old_rank = u;
+			var new_rank = new_wl.indexOf(uid);
 
-				if (uid == cdj.id) {
-					cowgod.logger(pretty_user(uid)+' moved from old_wl['+old_rank+'] to the DJ booth');
-				} else if (new_rank >= 0) {
-					cowgod.logger(pretty_user(uid)+' moved from old_wl['+old_rank+'] to new_wl['+new_rank+']');
+			if (uid == cdj.id) {
+				cowgod.logger(pretty_user(uid)+' moved from old_wl['+old_rank+'] to the DJ booth');
+			} else if (new_rank >= 0) {
+				cowgod.logger(pretty_user(uid)+' moved from old_wl['+old_rank+'] to new_wl['+new_rank+']');
+			} else {
+				// I think this is the guy who dropped!
+				if (uid != global['leader']) {
+					cowgod.logger(pretty_user(uid)+' moved from old_wl['+old_rank+'] to nowhere');
 				} else {
-					// I think this is the guy who dropped!
-					if (uid != global['leader']) {
-						cowgod.logger(pretty_user(uid)+' moved from old_wl['+old_rank+'] to nowhere');
+					cowgod.logger(pretty_user(uid)+' moved from old_wl['+old_rank+'] to nowhere and was our leader');
+					var new_leader = new_wl[u];
+					cowgod.logger('new_wl['+u+'] is '+new_leader);
+					if (new_leader === null || typeof new_leader === 'undefined') {
+						new_leader = current_dj;
+						cowgod.logger('current_dj is '+new_leader);
+					}
+					if (new_leader === null || typeof new_leader === 'undefined') {
+						cowgod.logger('no viable leader found');
 					} else {
-						cowgod.logger(pretty_user(uid)+' moved from old_wl['+old_rank+'] to nowhere and was our leader');
-						var new_leader = new_wl[u];
-						cowgod.logger('new_wl['+u+'] is '+new_leader);
-						if (new_leader === null || typeof new_leader === 'undefined') {
-							new_leader = current_dj;
-							cowgod.logger('current_dj is '+new_leader);
-						}
-						if (new_leader === null || typeof new_leader === 'undefined') {
-							cowgod.logger('no viable leader found');
-						} else {
-							cowgod.logger('setting new leader '+pretty_user(new_leader));
-							set_global('leader',new_leader,'Battlefield promotion from lost_dj');
-						}
+						cowgod.logger('setting new leader '+pretty_user(new_leader));
+						set_global('leader',new_leader,'Battlefield promotion from lost_dj');
 					}
 				}
 			}
-		});
+		}
 	}
 
 	function move_to_end_of_round(uid) {
@@ -756,36 +823,70 @@ var creds = {
 		cowgod.logger('I need to move '+pretty_user(uid)+' to the end of the waitlist');
 		cowgod.logger('current_dj is '+pretty_user(global['current_dj']));
 	
-		bot.getWaitList( function(wl) {
-			heartbeat_reset('move_to_end_of_round getWaitList');
+		var wl = bot.getWaitList();
+		heartbeat_reset('move_to_end_of_round getWaitList');
 
-			var uidlist = new Array();
-	
-			for (var u in wl) {
-				uidlist.push(wl[u].id);
-			}
+		var uidlist = new Array();
 
-			cowgod.logger('move_to_end waitlist is '+pretty_waitlist(wl));
-	
-			var leader_pos = uidlist.indexOf(parseInt(global['leader'], 10))
-			var target_pos = uidlist.indexOf(parseInt(uid, 10))
+		for (var u in wl) {
+			uidlist.push(wl[u].id);
+		}
 
-			cowgod.logger('leader_pos '+leader_pos+' and target_pos '+target_pos);
-	
-			if (target_pos > leader_pos) {
-				cowgod.logger('attempting move');
-				bot.moderateMoveDJ(uid,leader_pos+1);
-			}
-		});
+		cowgod.logger('move_to_end waitlist is '+pretty_waitlist(wl));
+
+		var leader_pos = uidlist.indexOf(parseInt(global['leader'], 10))
+		var target_pos = uidlist.indexOf(parseInt(uid, 10))
+
+		cowgod.logger('leader_pos '+leader_pos+' and target_pos '+target_pos);
+
+		if (target_pos > leader_pos) {
+			cowgod.logger('attempting move');
+			bot.moderateMoveDJ(uid,leader_pos+1);
+		}
 	}
 	
 	function process_room_command(data) {
 		var command = data.message.toLowerCase();
 
+		util.log(util.inspect(data));
+
+		if (data.from.role <= 1) {
+			cowgod.logger('Ignoring message from user with role '+data.from.role);
+		} else {
+			cowgod.logger('Processing message from user with role '+data.from.role);
+		}
+
 		if (data.message.toLowerCase().indexOf('how many points') >= 0) {
 			report_points();
+		} else if (data.message.toLowerCase().indexOf('room mode') >= 0) {
+			set_room_mode(data);
+		} else if (data.message.toLowerCase().indexOf('make me the leader') >= 0) {
+			set_global('leader',data.from.id,'Set by request in the room');
 		}
 	}
+
+	function set_room_mode(data) {
+		var room_mode = '';
+
+		if (data.message.toLowerCase().indexOf('sexy party') >= 0) {
+			bot.sendChat('https://macnugget.org/cowgod/images/sexyparty.gif');
+			return;
+		} else if (data.message.toLowerCase().indexOf('normal') >= 0) {
+			room_mode = 'normal';
+		} else if (data.message.toLowerCase().indexOf('roulette') >= 0) {
+			room_mode  = 'roulette';
+		} else if (data.message.toLowerCase().indexOf('oneshot') >= 0) {
+			room_mode = 'oneshot';
+		}
+
+		if (room_mode == '') {
+			bot.sendChat('The room mode is currently '+global['room_mode']);
+		} else {
+			set_global('room_mode',room_mode,'Set in channel by '+data.from.username);
+			bot.sendChat('The room mode is now '+global['room_mode']);
+		}
+	}
+
 
 	function numberWithCommas(x) {
 		if (typeof x === 'undefined') {
@@ -796,11 +897,10 @@ var creds = {
 
 	function report_points() {
 		cowgod.logger('reporting points to room');
-		bot.getUser(settings.userid, function(me) {
-			heartbeat_reset('report_points getUser');
-			//util.log(util.inspect(me));
-			lag_say('I currently have '+numberWithCommas(me.xp)+' xp!');
-		});
+		var me = bot.getUser();
+		heartbeat_reset('report_points getUser');
+		util.log(util.inspect(me));
+		lag_say('I currently have '+numberWithCommas(me.xp)+' xp!');
 	}
 	
 	function process_cnc_command(command,from) {
@@ -814,7 +914,7 @@ var creds = {
 				cuckoo.say(settings.irc_channel,args);
 				break;
 			case 'plugsay':
-				bot.chat(args);
+				bot.sendChat(args);
 				break;
 			case 'ircpm':
 				var target = argv[1];
@@ -876,12 +976,20 @@ var creds = {
 				break;
 			case 'reload':
 				db_loadsettings(function() {});
+				db_loadglobals();
 				break;
 			case 'report_points':
 				report_points();
 				break;
 			case 'suicide':
 				process.exit(1);
+				break;
+			case 'kick':
+				cowgod.logger('trying a kick');
+				bot.moderateRemoveDJ(parseInt(argv[1]),function(remdj) {
+					util.log(util.inspect(remdj));
+					cowgod.logger('Inside the remdj function;');
+				});
 				break;
 			default:
 				return('Unknown command');
@@ -947,12 +1055,12 @@ var creds = {
 				if (key == 'leader') {
 					if (value != '') {
 						if (global['waitlist'] != '') {
-							bot.chat('*** The leader is now @'+cowgod.id_to_name(value));
+							bot.sendChat('*** The leader is now @'+cowgod.id_to_name(value));
 						} else {
 							cowgod.logger('*** The leader is now '+pretty_user(value));
 						}
 					} else {
-						bot.chat('*** There is no leader, let anarchy reign! (RICSAS)');
+						bot.sendChat('*** There is no leader, let anarchy reign! (RICSAS)');
 					}
 				} else if (key == 'waitlist') {
 					cowgod.logger('The waitlist is now: '+pretty_waitlist(value.split(' ')));
@@ -977,8 +1085,8 @@ var creds = {
 
 
 	function is_leader(djid) {
-		// cowgod.logger('looking to see if '+djid+' is the leader');
-		// cowgod.logger('global leader is '+global['leader']);
+		cowgod.logger('looking to see if '+djid+' is the leader');
+		cowgod.logger('global leader is '+global['leader']);
 		if ('leader' in global && global['leader'] == djid.toString()) {
 			return true;
 		} else {
@@ -987,12 +1095,14 @@ var creds = {
 	}
 
 	function update_user(user) {
+		//cowgod.logger('update user command');
+		//util.log(util.inspect(user));
 		cowgod.remember_user(user.id,user.username);
 		if (!config_enabled('db_maintain_users')) {
 			return;
 		}
 
-		//cowgod.logger('update_user '+user.username);
+		// cowgod.logger('update_user '+user.username);
 
 		//util.log(util.inspect(user));
 		if (user.xp != null) {
@@ -1065,49 +1175,69 @@ var creds = {
 		}
 
 		if (data.message.toLowerCase().indexOf('ninja') == 0) {
-			ninja_bump(data.fromID);
+			ninja_bump(data.from.id);
 		}
+	}
+
+	function look_for_emotes(data) {
+		if (!config_enabled('parse_emotes')) {
+			return;
+		}
+
+		var line = data.message.toLowerCase();
+		var regex = /(:.+:)/;
+		var match = regex.exec(line);
+
+		if (match !== null) {
+			emotes.forEach(function(e) {
+				if (e.name == match[0]) {
+					bot.sendChat(e.image);
+				}
+			});
+		}
+
+		return;
 	}
 
 	function ninja_bump(uid) {
 		cowgod.logger('ninja bumping user '+uid);
 
 		if (is_leader(uid)) {
-			bot.chat('You can\'t ninja yourself, silly!');
+			bot.sendChat('You can\'t ninja yourself, silly!');
 			return;
 		}
 		if (is_leader(global['current_dj'])) {
-			bot.chat('You can\'t get ninjad while the leader is playing a song, doofus!  A new round is starting now.');
+			bot.sendChat('You can\'t get ninjad while the leader is playing a song, doofus!  A new round is starting now.');
 			return;
 		}
-		bot.getWaitList( function(wl) {
-			var leader_pos = -1;
-			var target_pos = -1;
-			var ninjad_pos = -1;
+		var wl = bot.getWaitList();
 
-			for (var u in wl) {
-				if (is_leader(wl[u].id)) {
-					cowgod.logger('leader is in position '+u);
-					leader_pos = parseInt(u) + 1;
-					target_pos = parseInt(u) + 2;
-				}
-				if (wl[u].id == uid) {
-					cowgod.logger('ninja-ee is in position '+u);
-					ninjad_pos = parseInt(u) + 1;
-				}
-			}		
-			cowgod.logger(leader_pos+' and '+ninjad_pos);
-			if (leader_pos > 0 && ninjad_pos > 0 && target_pos > ninjad_pos) {
-				cowgod.logger('Need to move pos '+ninjad_pos+' to '+leader_pos);
-				bot.chat('ha ha!  Removing you from this round!');
-				target_pos = target_pos - 1;
-				cowgod.logger('Adjusting target_pos to '+target_pos+' to make the API happy');
-				bot.moderateMoveDJ(uid,target_pos);
-				botdb.query('INSERT INTO ninjas (user_id,dj_id,leader_id) SELECT id_from_uid($1),id_from_uid($2),id_from_uid($3)', [
-					uid,global['current_dj'],global['leader']
-				], after(function(result) {}));
+		var leader_pos = -1;
+		var target_pos = -1;
+		var ninjad_pos = -1;
+
+		for (var u in wl) {
+			if (is_leader(wl[u].id)) {
+				cowgod.logger('leader is in position '+u);
+				leader_pos = parseInt(u) + 1;
+				target_pos = parseInt(u) + 2;
 			}
-		});
+			if (wl[u].id == uid) {
+				cowgod.logger('ninja-ee is in position '+u);
+				ninjad_pos = parseInt(u) + 1;
+			}
+		}		
+		cowgod.logger(leader_pos+' and '+ninjad_pos);
+		if (leader_pos > 0 && ninjad_pos > 0 && target_pos > ninjad_pos) {
+			cowgod.logger('Need to move pos '+ninjad_pos+' to '+leader_pos);
+			bot.sendChat('ha ha!  Removing you from this round!');
+			target_pos = target_pos - 1;
+			cowgod.logger('Adjusting target_pos to '+target_pos+' to make the API happy');
+			bot.moderateMoveDJ(uid,target_pos);
+			botdb.query('INSERT INTO ninjas (user_id,dj_id,leader_id) SELECT id_from_uid($1),id_from_uid($2),id_from_uid($3)', [
+				uid,global['current_dj'],global['leader']
+			], after(function(result) {}));
+		}
 	}
 
 
@@ -1157,45 +1287,46 @@ var creds = {
 			process.exit(1);
 		}
 
-		bot.getUser(settings.userid, function(me) {
-			if (me === null || typeof me === 'undefined') {
-				// nobody is playing a song
-				cowgod.logger('Failed heartbeat with no result from getUser');
-			} else {
-				if (me.id === null || typeof me.id === 'undefined') {
-					cowgod.logger('Failed heartbeat with unexpected result from getUser');
-					util.log(util.inspect(me));
-				} else {
-					heartbeat_reset('heartbeat internal');
-				}
-			}
-		});
+		var me = bot.getUser();
+		util.log(util.inspect(me));
 
-		bot.getMedia(function(media) {
-			//util.log(util.inspect(media));
-			bot.getTimeRemaining(function(tr) {
-				//util.log(util.inspect(tr));
-				if (media === null || typeof media === 'undefined') {
-					cowgod.logger('nothing playing');
-					process_waitlist('silence');
-				} else {
-					cowgod.logger('playtime logging '+media.id+'/'+tr+' :: '+localv['last_media_id']+'/'+localv['last_media_tr']);
-					if (localv['last_media_id'] == media.id && localv['last_media_tr'] == tr) {
-						localv['last_media_sc'] = localv['last_media_sc'] + 1;
-						cowgod.logger('playing is stalled for '+localv['last_media_sc']+' cycles');
-	
-						if (localv['last_media_sc'] > 10) {
-							cowgod.logget('Playing stalled for 10 cycles, reconnecting');
-							process.exit(1);
-						}
-					} else {
-						localv['last_media_id'] = media.id;
-						localv['last_media_tr'] = tr;
-						localv['last_media_sc'] = 0;
-					}
+		if (me === null || typeof me === 'undefined') {
+			// nobody is playing a song
+			cowgod.logger('Failed heartbeat with no result from getUser');
+		} else {
+			if (me.id === null || typeof me.id === 'undefined') {
+				cowgod.logger('Failed heartbeat with unexpected result from getUser');
+				util.log(util.inspect(me));
+			} else {
+				heartbeat_reset('heartbeat internal');
+			}
+		}
+
+		var media = bot.getMedia();
+
+		//util.log(util.inspect(media));
+		var tr = bot.getTimeRemaining();
+
+		//util.log(util.inspect(tr));
+		if (media === null || typeof media === 'undefined') {
+			cowgod.logger('nothing playing');
+			process_waitlist('silence');
+		} else {
+			cowgod.logger('playtime logging '+media.id+'/'+tr+' :: '+localv['last_media_id']+'/'+localv['last_media_tr']);
+			if (localv['last_media_id'] == media.id && localv['last_media_tr'] == tr) {
+				localv['last_media_sc'] = localv['last_media_sc'] + 1;
+				cowgod.logger('playing is stalled for '+localv['last_media_sc']+' cycles');
+
+				if (localv['last_media_sc'] > 10) {
+					cowgod.logget('Playing stalled for 10 cycles, reconnecting');
+					process.exit(1);
 				}
-			});
-		});
- 
+			} else {
+				localv['last_media_id'] = media.id;
+				localv['last_media_tr'] = tr;
+				localv['last_media_sc'] = 0;
+			}
+		}
 		return;
 	}
+});
