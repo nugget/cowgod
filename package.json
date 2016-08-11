@@ -11,7 +11,10 @@
     "type": "git",
     "url": "git://github.com/nugget/cowgod.git"
   },
-  "author": "David McNett <nugget@macnugget.org>",
+  "contributors":  [
+	  "David McNett <nugget@macnugget.org> (https://macnugget.org/)",
+	  "Tamara Elles"
+  ],
   "main": "plugpitbot.js",
   "directories": {},
   "engines": {
