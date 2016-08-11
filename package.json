@@ -1,0 +1,27 @@
+{
+  "name": "Cowgod",
+  "description": "Plug.dj bot for the Pit of No Shame",
+  "version": "2.0.0",
+  "license" : "BSD-2-Clause",
+  "keywords": [
+    "plug.dj",
+    "turntable.fm"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/nugget/cowgod.git"
+  },
+  "author": "David McNett <nugget@macnugget.org>",
+  "main": "plugpitbot.js",
+  "directories": {
+  },
+  "engines": {
+    "node": ">= 0.6.0"
+  },
+  "dependencies": {
+    "plugapi": "*"
+  },
+  "devDependencies": {
+  },
+  "optionalDependencies": {}
+}
