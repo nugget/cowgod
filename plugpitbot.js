@@ -583,7 +583,7 @@ new PlugAPI({
 		logger_tsv([ 'event','snag','plug_user_id',data ]);
 
 		if (config_enabled('db_log_grabs')) {
-			botdb.query('INSERT INTO chats (user_id) SELECT $1', [
+			botdb.query('INSERT INTO grabs (user_id) SELECT u.user_id FROM users u WHERE uid = $1', [
 				data
 			], after(function(result) {
 				// cowgod.logger('Logged chat to database');
