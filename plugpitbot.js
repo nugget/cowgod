@@ -1,8 +1,5 @@
 #!/usr/bin/env node
 
-Syslog = require('node-syslog');
-Syslog.init('plugbot', Syslog.LOG_PID | Syslog.LOG_ODELAY, Syslog.LOG_LOCAL0);
-
 var PlugAPI = require('plugapi');
 
 var fs = require('fs');
@@ -582,8 +579,16 @@ new PlugAPI({
 
 	function log_curate(data) {
 		cowgod.logger(pretty_user(data)+' snagged this song');
-		util.log(util.inspect(data));
+		// util.log(util.inspect(data));
 		logger_tsv([ 'event','snag','plug_user_id',data ]);
+
+		if (config_enabled('db_log_grabs')) {
+			botdb.query('INSERT INTO chats (user_id) SELECT $1', [
+				data
+			], after(function(result) {
+				// cowgod.logger('Logged chat to database');
+			}));
+		}
 	}
 
 	function log_play(data) {
