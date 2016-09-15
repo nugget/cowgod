@@ -874,7 +874,7 @@ new PlugAPI({
 	}
 
 	function report_lead_song() {
-		bot.sendChat('The lead song is '+global['lead_song']+' Pay attention next time Rentta!');
+		bot.sendChat('The lead song is '+global['lead_song']+');
 	}
 
 	function set_room_mode(data) {
