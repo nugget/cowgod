@@ -868,6 +868,13 @@ new PlugAPI({
 		} else if (data.message.toLowerCase().indexOf('make me the leader') >= 0) {
 			set_global('leader',data.from.id,'Set by request in the room');
 		}
+		else if (data.message.toLowerCase().indexOf('what is the lead') >= 0) {
+			report_lead_song();
+		}
+	}
+
+	function report_lead_song() {
+		bot.sendChat('The lead song is '+global['lead_song']+' Pay attention next time Rentta!');
 	}
 
 	function set_room_mode(data) {
