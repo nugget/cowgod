@@ -865,8 +865,6 @@ new PlugAPI({
 			report_points();
 		} else if (data.message.toLowerCase().indexOf('room mode') >= 0) {
 			set_room_mode(data);
-		} else if (data.message.toLowerCase().match(/make (.+) the leader/) >= 0) {
-			set_global('leader',current_dj(),'Set by request in the room');
 		} else if (data.message.toLowerCase().indexOf('what is the lead') >= 0) {
 			report_lead_song();
 		}
