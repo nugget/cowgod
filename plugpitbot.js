@@ -867,6 +867,10 @@ new PlugAPI({
 			set_room_mode(data);
 		} else if (data.message.toLowerCase().indexOf('make me the leader') >= 0) {
 			set_global('leader',data.from.id,'Set by request in the room');
+		} else if (data.message.toLowerCase().indexOf('this dj is the leader') >= 0) {
+			set_global('leader',current_dj(),'Set by request in the room');
+		} else if (data.message.toLowerCase().indexOf('who is the lead') >= 0) {
+			bot.sendChat('The leader is '+cowgod.id_to_name(current_dj()));
 		}
 		else if (data.message.toLowerCase().indexOf('what is the lead') >= 0) {
 			report_lead_song();
