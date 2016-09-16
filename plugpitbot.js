@@ -853,7 +853,7 @@ new PlugAPI({
 	function process_room_command(data) {
 		var command = data.message.toLowerCase();
 
-		util.log(util.inspect(data));
+		// util.log(util.inspect(data));
 
 		if (data.from.role <= 1) {
 			cowgod.logger('Ignoring message from user with role '+data.from.role);
@@ -865,20 +865,36 @@ new PlugAPI({
 			report_points();
 		} else if (data.message.toLowerCase().indexOf('room mode') >= 0) {
 			set_room_mode(data);
-		} else if (data.message.toLowerCase().indexOf('make me the leader') >= 0) {
-			set_global('leader',data.from.id,'Set by request in the room');
-		} else if (data.message.toLowerCase().indexOf('this dj is the leader') >= 0) {
+		} else if (data.message.toLowerCase().match(/make (.+) the leader/) >= 0) {
 			set_global('leader',current_dj(),'Set by request in the room');
-		} else if (data.message.toLowerCase().indexOf('who is the lead') >= 0) {
-			bot.sendChat('The leader is '+cowgod.id_to_name(current_dj()));
-		}
-		else if (data.message.toLowerCase().indexOf('what is the lead') >= 0) {
+		} else if (data.message.toLowerCase().indexOf('what is the lead') >= 0) {
 			report_lead_song();
+		}
+
+		var res = data.message.toLowerCase().match(/make (.+) the leader/);
+		if (res !== null) {
+			var newlead = res[1];
+			var leadid;
+
+			if (newlead == 'me') {
+				leadid = data.from.id;
+			} else if (newlead.toLowerCase().indexOf('current dj') >= 0) {
+				leadid = current_dj();
+			} else {
+				leadid = cowgod.name_to_id(newlead);
+			}
+
+			if (leadid === null || leadid === undefined) {
+				bot.sendChat('I could not figure out who '+newlead+' is, sorry');
+			} else {
+				cowgod.logger('I am supposed to make '+newlead+' ('+leadid+') the leader');
+				set_global('leader',leadid,'Set by request in the room');
+			}
 		}
 	}
 
 	function report_lead_song() {
-		bot.sendChat('The lead song is '+global['lead_song']+');
+		bot.sendChat('The lead song is '+global['lead_song']);
 	}
 
 	function set_room_mode(data) {

@@ -38,8 +38,14 @@ cowgod.id_to_name = function (user_id) {
 }
 
 cowgod.name_to_id = function (username) {
+	var barenick = '';
+	var withatsign = '';
 	for (var k in usernames) {
-		if (usernames[k] == username) {
+		username = username.toLowerCase();
+		barenick = usernames[k].toLowerCase();
+		withatsign = '@'+usernames[k].toLowerCase();
+
+		if (barenick == username || withatsign == username) {
 			return k;
 		}
 	}
