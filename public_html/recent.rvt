@@ -22,7 +22,7 @@ pg_select $::cowgod::db $sql buf {
 	if {$date ne $last_date} {
 		set last_date $date
 		puts "<tr><th colspan=\"6\" align=\"left\">$date</th></tr>"
-		puts "<tr><th>Time</th><th>Artist</th><th>Song</th><th>DJ</th><th>Snags</th></tr>"
+		puts "<tr><th>Time</th><th>Artist</th><th>Song</th><th>DJ</th><th>Grabs</th></tr>"
 	}
 	set time [clock format [clock scan [lindex [split $buf(start_time) "."] 0]] -format "%H:%M"]
 	if {[string is true -strict $buf(leader)]} {
