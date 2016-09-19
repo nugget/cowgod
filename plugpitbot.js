@@ -172,6 +172,8 @@ new PlugAPI({
 	cowgod.logger('connecting to '+settings.plug_room);
 	bot.connect(settings.plug_room);
 
+	bot.deleteCommands = false;
+
 	if (typeof settings.irc_server !== 'undefined') {
 		var irc = require('irc');
 	}
@@ -283,6 +285,12 @@ new PlugAPI({
 		cowgod.remember_user(data.from.id,data.from.username);
 		did_user_get_ninjad(data);
 		look_for_emotes(data);
+	});
+
+	bot.on('chatDelete', function(data) {
+		// util.log('chatDelete');
+		// util.log(util.inspect(data));
+		log_chatDelete(data);
 	});
 
 	bot.on('emote', function(data) {
@@ -551,6 +559,11 @@ new PlugAPI({
 				// cowgod.logger('Logged chat to database');
 			}));
 		}
+	}
+
+	function log_chatDelete(data) {
+		logger_tsv([ 'event','chatDelete','cid',data.c,'mi',data.mi ]);
+		cowgod.logger(cowgod.id_to_name(data.mi)+'/'+data.mi+' deleted chat id '+data.c);
 	}
 
 	function log_vote(data) {
