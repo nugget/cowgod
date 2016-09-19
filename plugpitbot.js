@@ -468,6 +468,12 @@ new PlugAPI({
 			bang = 'TRUE';
 
 			var logline = ':gun: @'+cowgod.id_to_name(bootid)+' has been shot!';
+
+			if (config_enabled('roulette_images')) {
+				var imgnum = Math.floor((Math.random()*10)+1);
+				say('https://macnugget.org/cowgod/images/roulette_safe'+imgnum+'.gif');
+			}
+
 			bot.sendChat(logline);
 			bot.moderateRemoveDJ(parseInt(global['leader']));
 		} else {
