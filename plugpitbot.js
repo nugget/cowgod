@@ -372,13 +372,15 @@ new PlugAPI({
 		localv['voted'] = false;
 
 		if (localv['leader_play'] == true) {
-			cowgod.logger('This is the song immediately following the leader play');
-			cowgod.logger('currentDJ is '+data.currentDJ.id+' and isleader is '+is_leader(data.currentDJ.id));
-			if (!is_leader(data.currentDJ.id)) {
-				if (global['waitlist'] != '') {
-					if (global['room_mode'] == 'roulette') {
-						cowgod.logger('We are eligibile for the roulette revolver');
-						play_roulette();
+			if (data.currentDJ.id !== undefined) {
+				cowgod.logger('This is the song immediately following the leader play');
+				cowgod.logger('currentDJ is '+data.currentDJ.id+' and isleader is '+is_leader(data.currentDJ.id));
+				if (!is_leader(data.currentDJ.id)) {
+					if (global['waitlist'] != '') {
+						if (global['room_mode'] == 'roulette') {
+							cowgod.logger('We are eligibile for the roulette revolver');
+							play_roulette();
+						}
 					}
 				}
 			}
