@@ -486,7 +486,7 @@ new PlugAPI({
 			bot.sendChat(logline);
 
 			if (config_enabled('roulette_images')) {
-				var imgnum = Math.floor((Math.random()*16)+1);
+				var imgnum = Math.floor((Math.random()*23)+1);
 				bot.sendChat('https://macnugget.org/cowgod/images/roulette_safe'+imgnum+'.gif');
 			}
 		}
