@@ -1123,7 +1123,7 @@ new PlugAPI({
 					}
 
 					if (value != global['leader']) {
-						global['streak'] = 0;
+						global['streak'] = 1;
 					}
 				} else if (key == 'waitlist') {
 					cowgod.logger('The waitlist is now: '+pretty_waitlist(value.split(' ')));
