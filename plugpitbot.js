@@ -380,6 +380,8 @@ new PlugAPI({
 						if (global['room_mode'] == 'roulette') {
 							cowgod.logger('We are eligibile for the roulette revolver');
 							play_roulette();
+						} else {
+							global['streak'] = 0;
 						}
 					}
 				}
@@ -483,11 +485,14 @@ new PlugAPI({
 			bot.moderateRemoveDJ(parseInt(global['leader']));
 
 			plays_log_shot(bootid);
+
 		} else {
 			bang = 'FALSE';
 
 			var logline = ':gun: *click*';
 			bot.sendChat(logline);
+
+			global['streak'] = global['streak'] + 1;
 
 			if (config_enabled('roulette_images')) {
 				var imgnum = Math.floor((Math.random()*23)+1);
@@ -496,8 +501,11 @@ new PlugAPI({
 		}
 
 		logger_tsv([ 'event','roulette','dj_id',bootid,'roll',roll,'bullets',global['bullets'],'streak',global['streak'],'bang',bang]);
-
 		botdb.query('UPDATE plays SET shot = '+bang+', streak = '+global['streak']+' WHERE play_id = (SELECT play_id FROM plays WHERE leader IS TRUE ORDER BY play_id DESC LIMIT 1)');
+
+		if (bang == 'TRUE') {
+			global['streak'] = 0;
+		}
 
 		return;
 	}
@@ -1123,7 +1131,7 @@ new PlugAPI({
 					}
 
 					if (value != global['leader']) {
-						global['streak'] = 1;
+						global['streak'] = 0;
 					}
 				} else if (key == 'waitlist') {
 					cowgod.logger('The waitlist is now: '+pretty_waitlist(value.split(' ')));
