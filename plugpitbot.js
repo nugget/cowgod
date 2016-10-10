@@ -483,9 +483,6 @@ new PlugAPI({
 
 			bot.sendChat(logline);
 			bot.moderateRemoveDJ(parseInt(global['leader']));
-
-			plays_log_shot(bootid);
-
 		} else {
 			bang = 'FALSE';
 
