@@ -280,7 +280,7 @@ new PlugAPI({
 	bot.on('chat', function(data) {
 		// cowgod.logger('chat');
 		heartbeat_reset('chat');
-		// util.log(util.inspect(data));
+		//util.log(util.inspect(data));
 		log_chat(data);
 		cowgod.remember_user(data.from.id,data.from.username);
 		did_user_get_ninjad(data);
@@ -543,7 +543,7 @@ new PlugAPI({
 	}
 
 	function log_chat(data) {
-		logger_tsv([ 'event','chat','nickname',data.from.username,'plug_user_id',data.from.id,'message',data.message,'type',data.type,'chat_id',data.cid ]);
+		logger_tsv([ 'event','chat','nickname',data.from.username,'plug_user_id',data.from.id,'message',data.message,'type',data.type,'chat_id',data.id ]);
 	
 		if (data.type == 'message') {
 			cowgod.logger('<'+data.from.username+'> '+data.message);
