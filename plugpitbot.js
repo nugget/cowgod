@@ -381,7 +381,8 @@ new PlugAPI({
 							cowgod.logger('We are eligibile for the roulette revolver');
 							play_roulette();
 						} else {
-							global['streak'] = 0;
+							set_global('streak','0','Reset because roulette is not enabled or active');
+							cowgod.logger('Resetting streak count to 0');
 						}
 					}
 				}
@@ -446,6 +447,7 @@ new PlugAPI({
 				if (data.pitleader == true) {
 					if (global['waitlist'] != '') {
 						bot.sendChat(leader_prefix+' LEAD SONG');
+						cowgod.logger('This is the lead song, streak count is currently '+global['streak']);
 					}
 				}
 				bot.sendChat(song_divider+leader_prefix+song_string(data.media)+' ('+cowgod.id_to_name(data.currentDJ.id)+')');
@@ -489,7 +491,7 @@ new PlugAPI({
 			var logline = ':gun: *click*';
 			bot.sendChat(logline);
 
-			global['streak'] = global['streak'] + 1;
+			set_global('streak',(parseInt(global['streak']) + 1),'Incremented from a click');
 
 			if (config_enabled('roulette_images')) {
 				var imgnum = Math.floor((Math.random()*23)+1);
@@ -501,7 +503,8 @@ new PlugAPI({
 		botdb.query('UPDATE plays SET shot = '+bang+', streak = '+global['streak']+' WHERE play_id = (SELECT play_id FROM plays WHERE leader IS TRUE ORDER BY play_id DESC LIMIT 1)');
 
 		if (bang == 'TRUE') {
-			global['streak'] = 0;
+			set_global('streak','0','Reset because because of a bang');
+			cowgod.logger('Resetting streak count to 0');
 		}
 
 		return;
@@ -1128,7 +1131,8 @@ new PlugAPI({
 					}
 
 					if (value != global['leader']) {
-						global['streak'] = 0;
+						set_global('streak','0','Reset because because the leader changed');
+						cowgod.logger('Resetting streak count to 0');
 					}
 				} else if (key == 'waitlist') {
 					cowgod.logger('The waitlist is now: '+pretty_waitlist(value.split(' ')));
