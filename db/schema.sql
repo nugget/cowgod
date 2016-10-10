@@ -128,6 +128,9 @@ CREATE TABLE plays (
 	song_id varchar REFERENCES tt_songs(song_id),
 	leader boolean NOT NULL DEFAULT FALSE,
 	site varchar NOT NULL DEFAULT 'plug',
+	room_mode varchar,
+	shot boolean,
+	streak integer,
 	PRIMARY KEY(play_id)
 );
 GRANT SELECT,INSERT,UPDATE ON plays TO bots;
@@ -367,16 +370,17 @@ CREATE OR REPLACE FUNCTION nick(varchar) RETURNS varchar AS $$
 $$ LANGUAGE plpgsql;
 
 
-CREATE TABLE roulettelog (
+CREATE TABLE roulette (
 	id serial NOT NULL,
 	added timestamp(0) without time zone NOT NULL DEFAULT (current_timestamp at time zone 'utc'),
 	rules varchar NOT NULL DEFAULT 'rouletteone',
-	user_id varchar NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+	user_id integer NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
 	odds integer,
 	roll integer,
+	hit boolean,
 	PRIMARY KEY(id)
 );
-GRANT SELECT,INSERT ON roulettelog TO bots;
+GRANT SELECT,INSERT ON roulette TO bots;
 
 DROP VIEW tt_plays_expanded;
 CREATE VIEW tt_plays_expanded AS

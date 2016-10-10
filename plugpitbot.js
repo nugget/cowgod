@@ -481,7 +481,11 @@ new PlugAPI({
 
 			bot.sendChat(logline);
 			bot.moderateRemoveDJ(parseInt(global['leader']));
+
+			plays_log_shot(bootid);
 		} else {
+			bang = 'FALSE';
+
 			var logline = ':gun: *click*';
 			bot.sendChat(logline);
 
@@ -490,6 +494,10 @@ new PlugAPI({
 				bot.sendChat('https://macnugget.org/cowgod/images/roulette_safe'+imgnum+'.gif');
 			}
 		}
+
+		logger_tsv([ 'event','roulette','dj_id',bootid,'roll',roll,'bullets',global['bullets'],'streak',global['streak'],'bang',bang]);
+
+		botdb.query('UPDATE plays SET shot = '+bang+', streak = '+global['streak']+' WHERE play_id = (SELECT play_id FROM plays WHERE leader IS TRUE ORDER BY play_id DESC LIMIT 1)');
 
 		return;
 	}
@@ -624,8 +632,8 @@ new PlugAPI({
 			if (config_enabled('db_log_plays')) {
 				update_plug_media(data.media);
 
-				botdb.query('INSERT INTO plays (user_id,playlist_id,media_id,leader) SELECT user_id,$2,$3,$4 FROM users WHERE uid = $1', [
-					data.currentDJ.id,data.playlistID,data.media.id,data.pitleader
+				botdb.query('INSERT INTO plays (user_id,playlist_id,media_id,leader,room_mode) SELECT user_id,$2,$3,$4,$5 FROM users WHERE uid = $1', [
+					data.currentDJ.id,data.playlistID,data.media.id,data.pitleader,global['room_mode']
 				], after(function(result) {
 					// cowgod.logger('Logged play to database');
 				}));
@@ -1112,6 +1120,10 @@ new PlugAPI({
 						}
 					} else {
 						bot.sendChat('*** There is no leader, let anarchy reign! (RICSAS)');
+					}
+
+					if (value != global['leader']) {
+						global['streak'] = 0;
 					}
 				} else if (key == 'waitlist') {
 					cowgod.logger('The waitlist is now: '+pretty_waitlist(value.split(' ')));
