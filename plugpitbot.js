@@ -372,7 +372,9 @@ new PlugAPI({
 		localv['voted'] = false;
 
 		if (localv['leader_play'] == true) {
-			if (data.currentDJ.id !== undefined) {
+			if (data.currentDJ === undefined) {
+				cowgod.logger('I think the DJ stepped down');
+			} else if (data.currentDJ.id !== undefined) {
 				cowgod.logger('This is the song immediately following the leader play');
 				cowgod.logger('currentDJ is '+data.currentDJ.id+' and isleader is '+is_leader(data.currentDJ.id));
 				if (!is_leader(data.currentDJ.id)) {
@@ -382,7 +384,6 @@ new PlugAPI({
 							play_roulette();
 						} else {
 							set_global('streak','0','Reset because roulette is not enabled or active');
-							cowgod.logger('Resetting streak count to 0');
 						}
 					}
 				}
@@ -492,6 +493,7 @@ new PlugAPI({
 			bot.sendChat(logline);
 
 			set_global('streak',(parseInt(global['streak']) + 1),'Incremented from a click');
+			cowgod.logger('Updated streak to '+global['streak']);
 
 			if (config_enabled('roulette_images')) {
 				var imgnum = Math.floor((Math.random()*23)+1);
@@ -500,11 +502,11 @@ new PlugAPI({
 		}
 
 		logger_tsv([ 'event','roulette','dj_id',bootid,'roll',roll,'bullets',global['bullets'],'streak',global['streak'],'bang',bang]);
+		cowgod.logger('UPDATE plays SET shot = '+bang+', streak = '+global['streak']+' WHERE play_id = (SELECT play_id FROM plays WHERE leader IS TRUE ORDER BY play_id DESC LIMIT 1)');
 		botdb.query('UPDATE plays SET shot = '+bang+', streak = '+global['streak']+' WHERE play_id = (SELECT play_id FROM plays WHERE leader IS TRUE ORDER BY play_id DESC LIMIT 1)');
 
 		if (bang == 'TRUE') {
 			set_global('streak','0','Reset because because of a bang');
-			cowgod.logger('Resetting streak count to 0');
 		}
 
 		return;
@@ -1126,13 +1128,14 @@ new PlugAPI({
 						} else {
 							cowgod.logger('*** The leader is now '+pretty_user(value));
 						}
+						set_global('streak','0','Reset because because the leader changed');
 					} else {
 						bot.sendChat('*** There is no leader, let anarchy reign! (RICSAS)');
+						set_global('streak','0','Reset because because the nobody is playing');
 					}
 
 					if (value != global['leader']) {
 						set_global('streak','0','Reset because because the leader changed');
-						cowgod.logger('Resetting streak count to 0');
 					}
 				} else if (key == 'waitlist') {
 					cowgod.logger('The waitlist is now: '+pretty_waitlist(value.split(' ')));
