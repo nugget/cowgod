@@ -793,6 +793,25 @@ new PlugAPI({
 				}
 			}
 		}
+
+		if (global['room_mode'] == 'roulette') {
+			var new_bullets = 1;
+			if (wl.length > 15) {
+				new_bullets = 4;
+			} else if (wl.length > 9) {
+				new_bullets = 3;
+			} else if (wl.length > 6) {
+				new_bullets = 2;
+			} 
+
+			cowgod.logger('Evaluating bullet count: '+global['bullets']+'/'+new_bullets+'/'+wl.length);
+
+			if (new_bullets != parseInt(global['bullets'])) {
+				set_global('bullets',new_bullets,'Set because waitlist is '+wl.length+' DJs');
+				bot.sendChat('With '+wl.length+' DJs in the booth I am putting '+new_bullets+' bullets in the gun');
+			}
+		}
+
 	}
 
 	function pretty_waitlist(wl) {
