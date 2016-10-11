@@ -370,112 +370,120 @@ new PlugAPI({
 		cowgod.logger('advance event');
 		//util.log(util.inspect(data));
 		localv['voted'] = false;
-  
-		if (localv['leader_play'] == true) {
-			if (data.currentDJ === undefined) {
-				cowgod.logger('I think the DJ stepped down');
-			} else if (data.currentDJ.id !== undefined) {
-				cowgod.logger('This is the song immediately following the leader play');
-				cowgod.logger('currentDJ is '+data.currentDJ.id+' and isleader is '+is_leader(data.currentDJ.id));
-				if (!is_leader(data.currentDJ.id)) {
-					if (global['waitlist'] != '') {
-						if (global['room_mode'] == 'roulette') {
-							cowgod.logger('We are eligibile for the roulette revolver');
-							play_roulette();
-						} else {
-							set_global('streak','0','Reset because roulette is not enabled or active');
+
+
+		cowgod.logger('ae '+data.currentDJ);
+
+		if (data.currentDJ === null) {
+			cowgod.logger('Got an advance event with a NULL currentDJ');
+			util.log(util.inspect(data));
+		} else {
+			if (localv['leader_play'] == true) {
+				if (data.currentDJ === undefined) {
+					cowgod.logger('I think the DJ stepped down');
+				} else if (data.currentDJ.id !== undefined) {
+					cowgod.logger('This is the song immediately following the leader play');
+					cowgod.logger('currentDJ is '+data.currentDJ.id+' and isleader is '+is_leader(data.currentDJ.id));
+					if (!is_leader(data.currentDJ.id)) {
+						if (global['waitlist'] != '') {
+							if (global['room_mode'] == 'roulette') {
+								cowgod.logger('We are eligibile for the roulette revolver');
+								play_roulette();
+							} else {
+								set_global('streak','0','Reset because roulette is not enabled or active');
+							}
 						}
 					}
 				}
 			}
-		}
-		localv['leader_play'] = false;
+			localv['leader_play'] = false;
 
-		if (data.djs.length == 1) {
-			// There is only one DJ playing and it is this DJ
-			set_global('streak','0','Reset on song advance with no other DJs');
-			if (data.currentDJ.id != global['leader']) {	
-				cowgod.logger(pretty_user(data.currentDJ.id)+' is the only DJ, promoting to leader');
-				set_global('leader',data.currentDJ.id,'Only DJ playing on advance');
+			if (data.djs.length == 1) {
+				// There is only one DJ playing and it is this DJ
+				set_global('streak','0','Reset on song advance with no other DJs');
+				if (data.currentDJ.id != global['leader']) {	
+					cowgod.logger(pretty_user(data.currentDJ.id)+' is the only DJ, promoting to leader');
+					set_global('leader',data.currentDJ.id,'Only DJ playing on advance');
+				}
 			}
-		}
 	
-		var leader_prefix  = '';
-		var song_divider = '';
+			var leader_prefix  = '';
+			var song_divider = '';
 
-		if (data.media === null || typeof data.media === 'undefined') {
-			current_dj(null);
-			set_global('leader','','Nothing is playing');
-			irc_set_topic('Nothing is playing in the Pit :(');
-			process_waitlist('silence');
-		} else {
-			cowgod.remember_user(data.currentDJ.id,data.currentDJ.username);
-
-			var playstart = new Date(Date.parse(data.startTime+' GMT-0000'));
-			var playtime = timediff(playstart,'now','s');
-
-			if (playtime.milliseconds > 10000) {
-				cowgod.logger('This song has been playing for '+playtime.milliseconds+'ms so I will skip the normal advance activities');
-				return;
+			if (data.media === null || typeof data.media === 'undefined') {
+				current_dj(null);
+				set_global('leader','','Nothing is playing');
+				irc_set_topic('Nothing is playing in the Pit :(');
+				process_waitlist('silence');
 			} else {
-				cowgod.logger('This song has only been playing for '+playtime.milliseconds+'ms so I will perform the normal advance activities');
-			}
+				cowgod.remember_user(data.currentDJ.id,data.currentDJ.username);
 
-			if (is_leader(data.currentDJ.id)) {
-				// cowgod.logger('this dj is the leader');
-				data.pitleader = true;
-				localv['leader_play'] = true;
+				var playstart = new Date(Date.parse(data.startTime+' GMT-0000'));
+				var playtime = timediff(playstart,'now','s');
 
-				if (global['waitlist'] != '') {
-					// cowgod.logger('wl is '+global['waitlist']);
-					leader_prefix   = ':star2: ';
+				if (playtime.milliseconds > 10000) {
+					cowgod.logger('This song has been playing for '+playtime.milliseconds+'ms so I will skip the normal advance activities');
+					return;
+				} else {
+					cowgod.logger('This song has only been playing for '+playtime.milliseconds+'ms so I will perform the normal advance activities');
 				}
 
-				// cowgod.logger('setting a new lead song');
-				set_global('lead_song',song_string(data.media));
-			} else {
-				// cowgod.logger('this dj is not the leader');
-				data.pitleader = false;
-			}
+				if (is_leader(data.currentDJ.id)) {
+					// cowgod.logger('this dj is the leader');
+					data.pitleader = true;
+					localv['leader_play'] = true;
 
-			log_play(data);
-
-			if (config_enabled('autobop') || (config_enabled('woot_leaders') && is_trendsetter(data.currentDJ.id))) {
-				if (!localv['voted']) {
-					localv['voted'] = true;
-					lag_vote(1);
-				}
-			}
-			irc_set_topic(song_string(data.media)+' ('+cowgod.id_to_name(data.currentDJ.id)+')');
-			current_dj(data.currentDJ.id);
-
-			if (config_enabled('song_dividers')) {
-				song_divider = 'https://macnugget.org/cowgod/images/noshamediv.png ';
-			}
-
-			if (config_enabled('announce_play')) {
-				if (data.pitleader == true) {
 					if (global['waitlist'] != '') {
-						bot.sendChat(leader_prefix+' LEAD SONG');
-						cowgod.logger('This is the lead song, streak count is currently '+global['streak']);
+						// cowgod.logger('wl is '+global['waitlist']);
+						leader_prefix   = ':star2: ';
+					}
+
+					// cowgod.logger('setting a new lead song');
+					set_global('lead_song',song_string(data.media));
+				} else {
+					// cowgod.logger('this dj is not the leader');
+					data.pitleader = false;
+				}
+
+				log_play(data);
+
+				if (config_enabled('autobop') || (config_enabled('woot_leaders') && is_trendsetter(data.currentDJ.id))) {
+					if (!localv['voted']) {
+						localv['voted'] = true;
+						lag_vote(1);
 					}
 				}
-				bot.sendChat(song_divider+leader_prefix+song_string(data.media)+' ('+cowgod.id_to_name(data.currentDJ.id)+')');
+				irc_set_topic(song_string(data.media)+' ('+cowgod.id_to_name(data.currentDJ.id)+')');
+				current_dj(data.currentDJ.id);
 
-				if (data.pitleader == true) {
-					if (global['waitlist'] != '') {
-						if (global['room_mode'] == 'roulette') {
-							if (global['bullets'] == 1) {
-								bot.sendChat(':gun: Leader Roulette is enabled! There is '+global['bullets']+' bullet in the revolver...');
-							} else {
-								bot.sendChat(':gun: Leader Roulette is enabled! There are '+global['bullets']+' bullets in the revolver...');
+				if (config_enabled('song_dividers')) {
+					song_divider = 'https://macnugget.org/cowgod/images/noshamediv.png ';
+				}
+
+				if (config_enabled('announce_play')) {
+					if (data.pitleader == true) {
+						if (global['waitlist'] != '') {
+							bot.sendChat(leader_prefix+' LEAD SONG');
+							cowgod.logger('This is the lead song, streak count is currently '+global['streak']);
+						}
+					}
+					bot.sendChat(song_divider+leader_prefix+song_string(data.media)+' ('+cowgod.id_to_name(data.currentDJ.id)+')');
+
+					if (data.pitleader == true) {
+						if (global['waitlist'] != '') {
+							if (global['room_mode'] == 'roulette') {
+								if (global['bullets'] == 1) {
+									bot.sendChat(':gun: Leader Roulette is enabled! There is '+global['bullets']+' bullet in the revolver...');
+								} else {
+									bot.sendChat(':gun: Leader Roulette is enabled! There are '+global['bullets']+' bullets in the revolver...');
+								}
 							}
 						}
 					}
 				}
 			}
 		}
-	
+
 		process_userlist();
 		process_waitlist('djAdvance');
 		db_loadsettings(function() {});
@@ -497,6 +505,17 @@ new PlugAPI({
 			bot.moderateRemoveDJ(parseInt(global['leader']));
 
 			set_global('streak',(parseInt(global['streak']) + 1),'Incremented from a bang');
+
+			if (parseInt(global['streak']) > parseInt(global['longest_streak'])) {
+				var nowd = new Date();
+				cowgod.logger('date is now '+nowd.toLocaleDateString());
+
+				bot.sendChat('@'+cowgod.id_to_name(bootid)+' has set a new roulette streak record by surviving '+global['streak']+' consecutive plays!');
+				bot.sendChat('The previous record of '+global['longest_streak']+' was set by '+global['longest_streak_credits']);
+
+				set_global('longest_streak',global['streak'],'set by roulette');
+				set_global('longest_streak_credits','@'+cowgod.id_to_name(bootid)+' on '+nowd.toLocaleDateString());
+			}
 		} else {
 			bang = 'FALSE';
 
