@@ -495,6 +495,8 @@ new PlugAPI({
 
 			bot.sendChat(logline);
 			bot.moderateRemoveDJ(parseInt(global['leader']));
+
+			set_global('streak',(parseInt(global['streak']) + 1),'Incremented from a bang');
 		} else {
 			bang = 'FALSE';
 
@@ -502,7 +504,6 @@ new PlugAPI({
 			bot.sendChat(logline);
 
 			set_global('streak',(parseInt(global['streak']) + 1),'Incremented from a click');
-			cowgod.logger('Updated streak to '+global['streak']);
 
 			if (config_enabled('roulette_images')) {
 				var imgnum = Math.floor((Math.random()*23)+1);
