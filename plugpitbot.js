@@ -530,7 +530,7 @@ new PlugAPI({
 		}
 
 		logger_tsv([ 'event','roulette','dj_id',bootid,'roll',roll,'bullets',global['bullets'],'streak',global['streak'],'bang',bang]);
-		cowgod.logger('UPDATE plays SET shot = '+bang+', streak = '+global['streak']+' WHERE play_id = (SELECT play_id FROM plays WHERE leader IS TRUE ORDER BY play_id DESC LIMIT 1)');
+		cowgod.logger('UPDATE plays SET shot = '+bang+', streak = '+global['streak']+', bullets = '+global['bullets']+' WHERE play_id = (SELECT play_id FROM plays WHERE leader IS TRUE ORDER BY play_id DESC LIMIT 1)');
 		botdb.query('UPDATE plays SET shot = '+bang+', streak = '+global['streak']+' WHERE play_id = (SELECT play_id FROM plays WHERE leader IS TRUE ORDER BY play_id DESC LIMIT 1)');
 
 		if (bang == 'TRUE') {
