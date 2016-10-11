@@ -368,9 +368,9 @@ new PlugAPI({
 	bot.on('advance', function(data) {
 		heartbeat_reset('advance');
 		cowgod.logger('advance event');
-		// util.log(util.inspect(data));
+		//util.log(util.inspect(data));
 		localv['voted'] = false;
-
+  
 		if (localv['leader_play'] == true) {
 			if (data.currentDJ === undefined) {
 				cowgod.logger('I think the DJ stepped down');
@@ -390,6 +390,15 @@ new PlugAPI({
 			}
 		}
 		localv['leader_play'] = false;
+
+		if (data.djs.length == 1) {
+			// There is only one DJ playing and it is this DJ
+			set_global('streak','0','Reset on song advance with no other DJs');
+			if (data.currentDJ.id != global['leader']) {	
+				cowgod.logger(pretty_user(data.currentDJ.id)+' is the only DJ, promoting to leader');
+				set_global('leader',data.currentDJ.id,'Only DJ playing on advance');
+			}
+		}
 	
 		var leader_prefix  = '';
 		var song_divider = '';
@@ -756,7 +765,7 @@ new PlugAPI({
 				// There is an active DJ 
 				// cowgod.logger('process_waitlist: there is an active dj and the wl length is '+wl.length);
 				if (wl.length == 0) {
-				// And there is nobody else playing
+					// And there is nobody else playing
 					// util.log(util.inspect(current_dj));
 					if (global['leader'] != current_dj.id) {
 						cowgod.logger(pretty_user(current_dj.id)+' is the only DJ, promoting to leader');
