@@ -1170,6 +1170,8 @@ new PlugAPI({
 
 	function set_global(key,value,comments) {
 		if (key in global) {
+			var oldvalue = global[key];
+
 			if (global[key] != value) {
 				global[key] = value;
 
@@ -1191,10 +1193,12 @@ new PlugAPI({
 					}
 				} else if (key == 'waitlist') {
 					cowgod.logger('The waitlist is now: '+pretty_waitlist(value.split(' ')));
+				} else if (key == 'lead_song') {
+					cowgod.logger('The lead song is now: '+value);
 				} else if (key == 'current_dj') {
 					// No need to announce this
 				} else {
-					cowgod.logger('- global['+key+'] changed from "'+global[key]+'" to "'+value+'"');
+					cowgod.logger('- global['+key+'] changed from "'+oldvalue+'" to "'+value+'"');
 				}
 				
 				botdb.query('UPDATE globals SET value = $1, comments = $2 WHERE key = $3 AND uid = $4', [
@@ -1212,8 +1216,8 @@ new PlugAPI({
 
 
 	function is_leader(djid) {
-		cowgod.logger('looking to see if '+djid+' is the leader');
-		cowgod.logger('global leader is '+global['leader']);
+		// cowgod.logger('looking to see if '+djid+' is the leader');
+		// cowgod.logger('global leader is '+global['leader']);
 		if ('leader' in global && global['leader'] == djid.toString()) {
 			return true;
 		} else {
