@@ -132,6 +132,8 @@ CREATE TABLE plays (
 	shot boolean,
 	streak integer,
 	bullets integer,
+	djcount integer,
+	roomcount integer,
 	PRIMARY KEY(play_id)
 );
 GRANT SELECT,INSERT,UPDATE ON plays TO bots;
