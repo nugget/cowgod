@@ -660,7 +660,7 @@ new PlugAPI({
 
 	function log_play(data) {
 		if (data.media !== null) {
-			util.log(util.inspect(data));
+			// util.log(util.inspect(data));
 			if (typeof data.media.title === 'undefined') { data.media.title = ''; }
 			if (typeof data.media.author === 'undefined') { data.media.author = ''; }
 	
@@ -670,8 +670,8 @@ new PlugAPI({
 			if (config_enabled('db_log_plays')) {
 				update_plug_media(data.media);
 
-				var djcount = 0;
-				var roomcount = 0;
+				var djcount = data.djs.length;
+				var roomcount = data.lastPlay.score.listeners;
 
 				botdb.query('INSERT INTO plays (user_id,playlist_id,media_id,leader,room_mode,djcount,roomcount) SELECT user_id,$2,$3,$4,$5,$6,$7 FROM users WHERE uid = $1', [
 					data.currentDJ.id,data.playlistID,data.media.id,data.pitleader,global['room_mode'],djcount,roomcount
