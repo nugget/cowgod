@@ -15,58 +15,58 @@ load_response
 
 set toplimit 10
 
-set sql "SELECT * FROM plays_expanded WHERE stats_listeners IS NOT NULL ORDER BY stats_listeners DESC, id LIMIT 1"
+set sql "SELECT * FROM plays_expanded WHERE roomcount IS NOT NULL ORDER BY roomcount DESC, play_id LIMIT 1"
 pg_select $::cowgod::db $sql buf {
 	array set play [array get buf]
 }
 
-set sql "SELECT count(*) as plays, count(DISTINCT dj_id) as djs FROM plays_expanded where artist ilike [pg_quote $play(artist)] AND song ilike [pg_quote $play(song)]"
+set sql "SELECT count(*) as plays, count(DISTINCT user_id) as djs FROM plays_expanded where author ilike [pg_quote $play(author)] AND title ilike [pg_quote $play(title)]"
 pg_select $::cowgod::db $sql buf {
 	array set stats [array get buf]
 }
 
-if {[info exists play(id)]} {
-	set sql "SELECT * FROM songs WHERE song_id = [pg_quote $play(song_id)]"
+if {[info exists play(play_id)]} {
+	set sql "SELECT * FROM plug_media WHERE media_id = [pg_quote $play(media_id)]"
 	pg_select $::cowgod::db $sql buf {
-		array set song [array get buf]
+		array set title [array get buf]
 	}
 
 	webout [el_open div -class row]
 	webout [el_open div -class col-md-12]
-	webout "[el_open p -style "text-align: center;" -class "info"]There were [el_open span -class "badge badge-important"]$play(stats_listeners)[el_close span] listeners in the room</p>"
+	webout "[el_open p -style "text-align: center;" -class "info"]There were [el_open span -class "badge badge-important"]$play(roomcount)[el_close span] listeners in the room</p>"
 	webout [el_close div]
 	webout [el_close div]
 
 	webout [el_open div -class row]
 
 	webout [el_open div -class col-md-2]
-	if {[info exists song(coverart)] && $song(coverart) ne "" && $song(coverart) ne "undefined"} {
-		webout "<img class=\"img-rounded\" src=\"$song(coverart)\" />"
+	if {[info exists title(coverart)] && $title(coverart) ne "" && $title(coverart) ne "undefined"} {
+		webout "<img class=\"img-rounded\" src=\"$title(coverart)\" />"
 	}
 	webout [el_close div]
 	webout [el_open div -class col-md-8]
-	webout "<h3>$song(song)</h3>"
-	webout "<h4>$song(artist)<br/>$song(album)</h4>"
+	webout "<h3>$title(title)</h3>"
+	webout "<h4>$title(author)</h4>"
 	if {$stats(plays) == 1} {
-		webout "<p>This is the only time this song has been played in the pit</p>"
+		webout "<p>This is the only time this title has been played in the pit</p>"
 	} else {
-		webout "<p>Played [el_open a -href [::cowgod::href song $play(song_id)]][comma [expr $stats(plays) - 1]] other times[el_close a] by [comma $stats(djs)] DJs in the Pit</p>"
+		webout "<p>Played [el_open a -href [::cowgod::href title $play(media_id)]][comma [expr $stats(plays) - 1]] other times[el_close a] by [comma $stats(djs)] DJs in the Pit</p>"
 	}
 	webout [el_close div]
 	webout [el_open div -class col-md-2]
-	webout "<h4>[el_open a -href [::cowgod::href dj $play(dj_id)]]$play(nickname)[el_close a]</h4>"
+	webout "<h4>[el_open a -href [::cowgod::href dj $play(user_id)]]$play(nickname)[el_close a]</h4>"
 	webout "<h4>"
-	webout "[clock format [clock scan $play(ts)] -format "%A"]<br />"
-	webout "[clock format [clock scan $play(ts)] -format "%d-%B-%Y"]<br />"
-	webout "[clock format [clock scan $play(ts)] -format "%H:%M:%S UTC"]<br />"
+	webout "[clock format [clock scan [lindex [split $play(start_time) "."] 0]] -format "%A"]<br />"
+	webout "[clock format [clock scan [lindex [split $play(start_time) "."] 0]] -format "%d-%B-%Y"]<br />"
+	webout "[clock format [clock scan [lindex [split $play(start_time) "."] 0]] -format "%H:%M:%S UTC"]<br />"
 	webout [el_close div]
 	webout [el_close div]
 
 	webout [el_open div -class row]
 	webout [el_open div -class col-md-12 -style "text-align: right;"]
-	set sql "SELECT * FROM snaglog_expanded WHERE play_id = $play(id)"
+	set sql "SELECT * FROM grabs_expanded WHERE play_id = $play(play_id)"
 	pg_select $::cowgod::db $sql snags {
-		webout "[el_open span -class "label label-info"]Snagged by $snags(nickname)[el_close span]"
+		webout "[el_open span -class "label label-info"]Grabbed by $snags(nickname)[el_close span]"
 	}
 	webout [el_close div]
 	webout [el_close div]
@@ -74,21 +74,7 @@ if {[info exists play(id)]} {
 	webout "<hr />"
 
 	webout [el_open table -class "table table-striped table-bordered"]
-	webout "<tr colspan=\"$play(stats_djcount)\">[el_open th -style "text-align: center;"]$play(stats_djcount) DJs on Deck</th></tr>"
-	webout "<tr>"
-	foreach dj_id [split [string map {"\"" "" "{" "" "}" ""} $play(stats_djs)] ","] {
-		pg_select $::cowgod::db "SELECT * FROM users WHERE user_id = [pg_quote $dj_id]" user {
-			if {$dj_id eq $play(dj_id)} {
-				webout [el_open td -style "background-color: #ffffcf; text-align: center;"]
-			} else {
-				webout [el_open td -style "text-align: center;"]
-			}
-			webout "<img style=\"height: 64px;\"  src=\"[::cowgod::avatar_href $user(live_avatar) headfront]\" /><br />"
-			webout "[el_open a -href [::cowgod::href dj $dj_id]]$user(nickname)[el_close a]"
-			webout [el_close td]
-		}
-	}
-	webout "</tr>"
+	webout "<tr colspan=\"$play(djcount)\">[el_open th -style "text-align: center;"]$play(djcount) DJs on Deck</th></tr>"
 	webout "</table>"
 
 }

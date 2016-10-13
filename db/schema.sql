@@ -154,6 +154,14 @@ CREATE TABLE grabs (
 GRANT SELECT,INSERT,UPDATE ON grabs TO bots;
 CREATE INDEX grabs_user_id ON grabs(user_id);
 
+DROP VIEW grabs_expanded;
+CREATE VIEW grabs_expanded AS
+	SELECT g.*,coalesce(u.nickname,u.tt_nickname) as nickname,u.uid
+	FROM grabs g
+	LEFT JOIN users u USING (user_id);
+GRANT SELECT ON grabs_expanded TO bots;
+
+
 -- insert into grabs (play_id,ts,user_id,site) SELECT play_id,ts,user_id,site FROM tt_snags_expanded ORDER BY ts;
 
 CREATE TABLE ninjas (
