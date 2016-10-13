@@ -422,13 +422,6 @@ new PlugAPI({
 			var playstart = new Date(Date.parse(data.startTime+' GMT-0000'));
 			var playtime = timediff(playstart,'now','s');
 
-			if (playtime.milliseconds > 10000) {
-				cowgod.logger('This song has been playing for '+playtime.milliseconds+'ms so I will skip the normal advance activities');
-				return;
-			} else {
-				cowgod.logger('This song has only been playing for '+playtime.milliseconds+'ms so I will perform the normal advance activities');
-			}
-
 			if (is_leader(data.currentDJ.id)) {
 				// cowgod.logger('this dj is the leader');
 				data.pitleader = true;
@@ -444,6 +437,13 @@ new PlugAPI({
 			} else {
 				// cowgod.logger('this dj is not the leader');
 				data.pitleader = false;
+			}
+
+			if (playtime.milliseconds > 10000) {
+				cowgod.logger('This song has been playing for '+playtime.milliseconds+'ms so I will skip the normal advance activities');
+				return;
+			} else {
+				cowgod.logger('This song has only been playing for '+playtime.milliseconds+'ms so I will perform the normal advance activities');
 			}
 
 			log_play(data);
@@ -660,7 +660,7 @@ new PlugAPI({
 
 	function log_play(data) {
 		if (data.media !== null) {
-			// util.log(util.inspect(data));
+			util.log(util.inspect(data));
 			if (typeof data.media.title === 'undefined') { data.media.title = ''; }
 			if (typeof data.media.author === 'undefined') { data.media.author = ''; }
 	
@@ -670,8 +670,11 @@ new PlugAPI({
 			if (config_enabled('db_log_plays')) {
 				update_plug_media(data.media);
 
-				botdb.query('INSERT INTO plays (user_id,playlist_id,media_id,leader,room_mode) SELECT user_id,$2,$3,$4,$5 FROM users WHERE uid = $1', [
-					data.currentDJ.id,data.playlistID,data.media.id,data.pitleader,global['room_mode']
+				var djcount = 0;
+				var roomcount = 0;
+
+				botdb.query('INSERT INTO plays (user_id,playlist_id,media_id,leader,room_mode,djcount,roomcount) SELECT user_id,$2,$3,$4,$5,$6,$7 FROM users WHERE uid = $1', [
+					data.currentDJ.id,data.playlistID,data.media.id,data.pitleader,global['room_mode'],djcount,roomcount
 				], after(function(result) {
 					// cowgod.logger('Logged play to database');
 				}));
