@@ -372,7 +372,7 @@ new PlugAPI({
 		localv['voted'] = false;
 
 
-		cowgod.logger('ae '+data.currentDJ);
+		// cowgod.logger('ae '+data.currentDJ);
 
 		if (data.currentDJ === null) {
 			// cowgod.logger('Got an advance event with a NULL currentDJ');
@@ -671,7 +671,7 @@ new PlugAPI({
 				update_plug_media(data.media);
 
 				var djcount = data.djs.length;
-				var roomcount = data.lastPlay.score.listeners;
+				var roomcount = parseInt(data.lastPlay.score.listeners) + 1;
 
 				botdb.query('INSERT INTO plays (user_id,playlist_id,media_id,leader,room_mode,djcount,roomcount) SELECT user_id,$2,$3,$4,$5,$6,$7 FROM users WHERE uid = $1', [
 					data.currentDJ.id,data.playlistID,data.media.id,data.pitleader,global['room_mode'],djcount,roomcount
@@ -748,12 +748,14 @@ new PlugAPI({
 				}
 			}
 
-			cowgod.logger('pwl:         raw: '+pretty_waitlist(wl));
-			cowgod.logger('pwl:         nwl: '+nwl);
-			cowgod.logger('pwl: getWaitList: '+pretty_waitlist(nwl));
-			cowgod.logger('pwl:         gwl: '+gwl);
-			cowgod.logger('pwl:      global: '+pretty_waitlist(gwl));
-			cowgod.logger('pwl:       wlbuf: '+wlbuf);
+			if (0) {
+				cowgod.logger('pwl:         raw: '+pretty_waitlist(wl));
+				cowgod.logger('pwl:         nwl: '+nwl);
+				cowgod.logger('pwl: getWaitList: '+pretty_waitlist(nwl));
+				cowgod.logger('pwl:         gwl: '+gwl);
+				cowgod.logger('pwl:      global: '+pretty_waitlist(gwl));
+				cowgod.logger('pwl:       wlbuf: '+wlbuf);
+			}
 
 			if (nwl.length > gwl.length) {
 				cowgod.logger('waitlist grew');
@@ -807,7 +809,7 @@ new PlugAPI({
 				new_bullets = 2;
 			} 
 
-			cowgod.logger('Evaluating bullet count: '+global['bullets']+'/'+new_bullets+'/'+wl.length);
+			// cowgod.logger('Evaluating bullet count: '+global['bullets']+'/'+new_bullets+'/'+wl.length);
 
 			if (new_bullets != parseInt(global['bullets'])) {
 				set_global('bullets',new_bullets,'Set because waitlist is '+wl.length+' DJs');
