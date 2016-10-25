@@ -16,11 +16,17 @@ page_header -title "DJ Statistics"
 ::cowgod::buttonbar
 
 webout [el_open table -class "table table-striped table-bordered table-centered"]
-puts "<tr><th>&nbsp;</th><th>DJ</th><th>Plays</th><th colspan=\"2\">Seat One</th><th>First Play</th><th>Last Play</th></tr>"
+puts "<tr><th>&nbsp;</th><th>DJ</th><th>Level</th><th>Plays</th><th colspan=\"2\">Seat One</th><th>First Play</th><th>Last Play</th></tr>"
 
-set sql "select user_id,nickname,count(*) as count,count(leader is true) as lead_plays,
+if {[info exists response(levelmode)]} {
+	set orderby "3 desc, 4 desc"
+} else {
+	set orderby "4 desc"
+}
+
+set sql "select user_id,nickname,coalesce(level,0) as level,count(*) as count,count(leader is true) as lead_plays,
                 min(start_time)::timestamp(0) as first_song,max(start_time)::timestamp(0) as last_song,
-				max(play_id) as play_id from plays_expanded group by 1,2 order by 3 desc LIMIT $limit"
+				max(play_id) as play_id from plays_expanded where level <= 17 group by 1,2,3 order by $orderby LIMIT $limit"
 
 set rank 1
 pg_select $::cowgod::db $sql buf {
@@ -28,6 +34,7 @@ pg_select $::cowgod::db $sql buf {
 	webout "<tr>"
     webout "<td style=\"text-align: right;\">[comma $rank]</td>"
 	webout "<td>[el_open a -href [::cowgod::href dj $buf(user_id)]]$buf(nickname)[el_close a]</td>"
+    webout "<td style=\"text-align: right;\">[comma $buf(level)]</td>"
     webout "<td style=\"text-align: right;\">[comma $buf(count)]</td>"
     webout "<td style=\"text-align: right;\">[comma $buf(lead_plays)]</td>"
 	webout "<td style=\"text-align: right;\">${first_per}%</td>"
