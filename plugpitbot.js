@@ -1337,7 +1337,7 @@ new PlugAPI({
 			bot.sendChat('You can\'t ninja yourself, silly!');
 			return;
 		}
-		if (is_leader(global['current_dj'])) {
+		if (localv['leader_play']) { //Bagel changed this if check to avoid the bug of not-ninjaing by 2nd position in a round where the leader has been shot/reassigned
 			bot.sendChat('You can\'t get ninjad while the leader is playing a song, doofus!  A new round is starting now.');
 			return;
 		}
