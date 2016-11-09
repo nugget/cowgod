@@ -1361,7 +1361,7 @@ new PlugAPI({
 		cowgod.logger(leader_pos+' and '+ninjad_pos);
 		//Bagel adding a special case for new leader being the ninja (-1 pos means leader wasn't found in the wl)
 		if( leader_pos == -1) {
-			cowgod.logger('Could not move pos '+ninjad_pos+' because ninja is now leader);
+			cowgod.logger('Could not move pos '+ninjad_pos+' because ninja is now leader');
 	      		bot.sendChat('Ha ha! But lucky timing since your ninja is the new leader!  Quick, pick another song!');
 			botdb.query('INSERT INTO ninjas (user_id,dj_id,leader_id) SELECT id_from_uid($1),id_from_uid($2),id_from_uid($3)', [
 				uid,global['current_dj'],global['leader']
