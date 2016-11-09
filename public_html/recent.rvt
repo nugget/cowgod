@@ -10,7 +10,12 @@ page_header -title "Recent Song Played in the Pit"
 ::cowgod::dbconnect
 ::cowgod::buttonbar
 
+load_response
+
 set limit 100
+if {[info exists response(limit)] && [string is integer -strict $response(limit)]} {
+	set limit $response(limit)
+}
 
 set sql "SELECT * FROM plays_expanded ORDER BY start_time DESC LIMIT $limit"
 
