@@ -15,9 +15,12 @@ load_response
 
 set toplimit 10
 
-set sql "SELECT * FROM plays_expanded WHERE roomcount IS NOT NULL ORDER BY roomcount DESC, play_id LIMIT 1"
-pg_select $::cowgod::db $sql buf {
-	array set play [array get buf]
+set sql "SELECT play_id FROM plays WHERE roomcount IS NOT NULL ORDER BY roomcount DESC, play_id LIMIT 1"
+pg_select $::cowgod::db $sql prow {
+	set sql "SELECT * FROM plays_expanded WHERE play_id = $prow(play_id) LIMIT 1"
+	pg_select $::cowgod::db $sql buf {
+		array set play [array get buf]
+	}
 }
 
 set sql "SELECT count(*) as plays, count(DISTINCT user_id) as djs FROM plays_expanded where author ilike [pg_quote $play(author)] AND title ilike [pg_quote $play(title)]"
