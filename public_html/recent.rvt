@@ -27,7 +27,7 @@ pg_select $::cowgod::db $sql buf {
 	if {$date ne $last_date} {
 		set last_date $date
 		puts "<tr><th colspan=\"6\" align=\"left\">$date</th></tr>"
-		puts "<tr><th>Time</th><th>Artist</th><th>Song</th><th>DJ</th><th>Grabs</th></tr>"
+		puts "<tr><th>Time</th><th>Artist</th><th>Song</th><th>DJ</th><th>Grabs</th><th>Streak</th></tr>"
 	}
 	set time [clock format [clock scan [lindex [split $buf(start_time) "."] 0]] -format "%H:%M"]
 	if {[string is true -strict $buf(leader)]} {
@@ -42,6 +42,7 @@ pg_select $::cowgod::db $sql buf {
 	puts "<a href=\"[::cowgod::href dj $buf(user_id)]\">$buf(nickname)</a>"
 	puts "</td>"
 	puts "<td align=\"right\">[llength $buf(snaggers)]</td>"
+	puts "<td align=\"right\">$buf(streak)</td>"
 	puts "</tr>"
 
 }
