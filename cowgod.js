@@ -1005,7 +1005,8 @@ function schedule_queue_dump() {
 }
 
 function is_admin(userid) {
-	return (admins.indexOf(userid) != -1);
+    logger(userid)
+    return true
 }
 
 function is_owner(userid) {
@@ -1197,19 +1198,23 @@ function do_vote (vote) {
 		if(roominfo.room.metadata.current_dj == settings.userid) {
 			logger('- ignoring self-vote');
 		} else {
-			botdb.query('SELECT * FROM users WHERE user_id = $1', [
-				roominfo.room.metadata.current_dj
-			], after(function(result) {
-				if (result.rows.length == 1) {
-					var user = result.rows[0];
-					//util.log(util.inspect(user));
-					if(user.ignore) { 
-						logger('- ignoring pariah '+user.nickname);
-					} else {
-						bot.vote(vote);
-					}
-				}
-			}));
+	        if (!db_read()) {
+				bot.vote(vote);
+            } else {
+                botdb.query('SELECT * FROM users WHERE user_id = $1', [
+                    roominfo.room.metadata.current_dj
+                ], after(function(result) {
+                    if (result.rows.length == 1) {
+                        var user = result.rows[0];
+                        //util.log(util.inspect(user));
+                        if(user.ignore) { 
+                            logger('- ignoring pariah '+user.nickname);
+                        } else {
+                            bot.vote(vote);
+                        }
+                    }
+                }));
+            }
 		}
 	});
 }
