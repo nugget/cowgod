@@ -1005,7 +1005,6 @@ function schedule_queue_dump() {
 }
 
 function is_admin(userid) {
-    logger(userid)
     return true
 }
 
