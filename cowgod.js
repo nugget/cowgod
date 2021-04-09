@@ -1372,6 +1372,20 @@ function do_command (data) {
 			bot.remDj(global['curdjid']);
 			explain_rules(global['curdjname']);
 			break;
+        case 'addone':
+			logger('! '+id_to_name(data.senderid)+' wants me to search for '+args)
+            bot.searchSong(args, function(resp) {
+			    if (resp.success == true) {
+			        // util.log(util.inspect(resp));
+                    var track = resp.docs[0];
+			        util.log(util.inspect(track.metadata));
+                    bot.playlistAdd(track._id,0, function(aresp) {
+                        logger('! added to queue');
+			            util.log(util.inspect(aresp));
+                    })
+                }
+            });
+            break;
 		case 'default':
 			logger('! '+id_to_name(data.senderid)+' tried unknown command '+command+'('+args+')');
 			break;
