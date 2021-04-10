@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"math/rand"
 	"os"
 	"regexp"
@@ -108,10 +109,24 @@ func pmSimpleCommands(evt ttapi.PmmedEvt) {
 	re := regexp.MustCompile(`(?i)^/([^ ]+)$`)
 	res := re.FindStringSubmatch(evt.Text)
 
+	fmt.Println("pmSimple", len(res), res)
+
 	if len(res) != 0 {
-		switch res[1] {
+		command := strings.ToLower(res[1])
+
+		switch command {
 		case "skip":
 			tt.Bot.Skip()
+		case "bop":
+			err := tt.Bot.VoteUp()
+			if err != nil {
+				logrus.WithError(err).Error("Unable to bop")
+			}
+		case "lame":
+			err := tt.Bot.VoteDown()
+			if err != nil {
+				logrus.WithError(err).Error("Unable to lame")
+			}
 		}
 	}
 }

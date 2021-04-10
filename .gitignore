@@ -1,5 +1,1 @@
-node_modules
-log
-settings.js
-settings_*
-minimetexts.dat
+*.fish
