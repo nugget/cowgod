@@ -1,3 +1,5 @@
+[![Go](https://github.com/nugget/cowgod/actions/workflows/go.yml/badge.svg?branch=main)](https://github.com/nugget/cowgod/actions/workflows/go.yml)
+
 cowgod Turntable.fm bot
 =======================
 
