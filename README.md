@@ -16,6 +16,16 @@ Universal Bot Commands
 * `/lame` Vote down the current song
 * `/skip` Skip the currently playing song
 
+Using
+-----
+
+You can build and run this bot locally if you have golang installed.
+Alternatively, you can run it via docker:
+
+```
+docker run nugget/cowgod:latest
+```
+
 Useful Links
 ------------
 
