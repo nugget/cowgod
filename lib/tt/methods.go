@@ -1,7 +1,6 @@
 package tt
 
 import (
-	"fmt"
 	"math/rand"
 
 	"github.com/sirupsen/logrus"
@@ -69,7 +68,7 @@ func RandomizePlaylist(name string, count int) error {
 		return err
 	}
 
-	fmt.Printf("playLists: %+v\n", playLists)
+	// fmt.Printf("playLists: %+v\n", playLists)
 
 	Songs, err := Bot.PlaylistAll(name)
 	if err != nil {
