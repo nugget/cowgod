@@ -15,6 +15,7 @@ Universal Bot Commands
 * `/bop` Vote up the current song
 * `/lame` Vote down the current song
 * `/skip` Skip the currently playing song
+* `/random n` Randomize the top *n* items in the current playlist
 
 Using
 -----

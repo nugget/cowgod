@@ -4,6 +4,7 @@ import (
 	"math/rand"
 	"os"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -152,6 +153,24 @@ func pmDJ(evt ttapi.PmmedEvt) {
 	}
 }
 
+func pmRandom(evt ttapi.PmmedEvt) {
+	re := regexp.MustCompile(`(?i)^/(random) (.+)$`)
+	res := re.FindStringSubmatch(evt.Text)
+
+	if len(res) == 3 {
+		count, err := strconv.Atoi(res[2])
+		if err != nil {
+			logrus.WithFields(logrus.Fields{
+				"input": res[2],
+				"error": err,
+			}).Error("Unable to parse number")
+			return
+		}
+
+		tt.RandomizePlaylist("", count)
+	}
+}
+
 func pmSimpleCommands(evt ttapi.PmmedEvt) {
 	re := regexp.MustCompile(`(?i)^/([^ ]+)$`)
 	res := re.FindStringSubmatch(evt.Text)
@@ -223,6 +242,7 @@ func main() {
 	tt.Bot.OnPmmed(pmLogLevel)
 	tt.Bot.OnPmmed(pmSimpleCommands)
 	tt.Bot.OnPmmed(pmDJ)
+	tt.Bot.OnPmmed(pmRandom)
 
 	// General Purpose event handlers
 	tt.Bot.OnSnagged(onSnagged)
