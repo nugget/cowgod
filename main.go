@@ -191,15 +191,26 @@ func LogLevel(level string) {
 	}).Info("Set logging level")
 }
 
+func MustGetenv(v string) string {
+	val := os.Getenv(v)
+	if val == "" {
+		logrus.WithFields(logrus.Fields{
+			"name": v,
+		}).Fatal("Mandatory environment variable missing")
+	}
+
+	return val
+}
+
 func init() {
 	rand.Seed(time.Now().UTC().UnixNano())
 	LogLevel(os.Getenv("COWGOD_LOGLEVEL"))
 }
 
 func main() {
-	auth := os.Getenv("TTAPI_AUTH")
-	userID := os.Getenv("TTAPI_USER_ID")
-	roomID := os.Getenv("TTAPI_ROOM_ID")
+	auth := MustGetenv("TTAPI_AUTH")
+	userID := MustGetenv("TTAPI_USER_ID")
+	roomID := MustGetenv("TTAPI_ROOM_ID")
 
 	logrus.Info("Connecting to turntable.fm")
 	err := tt.New(auth, userID, roomID)
