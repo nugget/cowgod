@@ -176,15 +176,30 @@ func pmSimpleCommands(evt ttapi.PmmedEvt) {
 	res := re.FindStringSubmatch(evt.Text)
 
 	if len(res) != 0 {
+		var err error
+
 		command := strings.ToLower(res[1])
 
 		switch command {
 		case "skip":
-			tt.Bot.Skip()
+			err = tt.Bot.Skip()
 		case "bop":
 			tt.Bop()
 		case "lame":
 			tt.Lame()
+		case "away":
+			err = tt.Bot.SetStatus("away")
+		case "available":
+			err = tt.Bot.SetStatus("available")
+		case "unavailable":
+			err = tt.Bot.SetStatus("unavailable")
+		}
+
+		if err != nil {
+			logrus.WithFields(logrus.Fields{
+				"command": command,
+				"error":   err,
+			}).Error("Error running simple command")
 		}
 	}
 }

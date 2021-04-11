@@ -62,13 +62,23 @@ func Skip() {
 }
 
 func RandomizePlaylist(name string, count int) error {
-	playLists, err := Bot.PlaylistListAll()
-	if err != nil {
-		logrus.WithError(err).Error("Cannot load playlists")
-		return err
-	}
+	if name == "" {
+		playLists, err := Bot.PlaylistListAll()
+		if err != nil {
+			logrus.WithError(err).Error("Cannot load playlists")
+			return err
+		}
 
-	// fmt.Printf("playLists: %+v\n", playLists)
+		for i, l := range playLists.List {
+			if l.Active {
+				name = l.Name
+				logrus.WithFields(logrus.Fields{
+					"index": i,
+					"name":  name,
+				}).Debug("Using active list")
+			}
+		}
+	}
 
 	Songs, err := Bot.PlaylistAll(name)
 	if err != nil {
