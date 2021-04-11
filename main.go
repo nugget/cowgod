@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"math/rand"
 	"os"
 	"regexp"
@@ -36,6 +35,7 @@ func onNewSong(evt ttapi.NewSongEvt) {
 	logrus.WithFields(logrus.Fields{
 		"command": evt.Command,
 		"dj":      evt.Room.Metadata.CurrentSong.Djname,
+		"djID":    evt.Room.Metadata.CurrentSong.Djid,
 		"song":    evt.Room.Metadata.CurrentSong.Metadata.Song,
 		"artist":  evt.Room.Metadata.CurrentSong.Metadata.Artist,
 		"success": evt.Success,
@@ -53,14 +53,28 @@ func onSpeak(evt ttapi.SpeakEvt) {
 }
 
 func onUpdateVotes(evt ttapi.UpdateVotesEvt) {
+	userID, vote := tt.UnpackVotelog(evt.Room.Metadata.Votelog)
+	user, err := tt.Bot.GetProfile(userID)
+	if err != nil {
+		logrus.WithFields(logrus.Fields{
+			"userID": userID,
+			"error":  err,
+		}).Error("Can't load user profile")
+	}
+
 	logrus.WithFields(logrus.Fields{
 		"command":   evt.Command,
 		"success":   evt.Success,
 		"up":        evt.Room.Metadata.Upvotes,
 		"down":      evt.Room.Metadata.Downvotes,
 		"listeners": evt.Room.Metadata.Listeners,
-		"votelog":   evt.Room.Metadata.Votelog,
+		"userID":    userID,
+		"vote":      vote,
+		"name":      user.Name,
+		"points":    user.Points,
+		"ACL":       user.ACL,
 	}).Info("Vote")
+
 }
 
 func onPmmed(evt ttapi.PmmedEvt) {
@@ -69,6 +83,39 @@ func onPmmed(evt ttapi.PmmedEvt) {
 		"senderID": evt.SenderID,
 		"text":     evt.Text,
 	}).Info("Received PM")
+}
+
+func onSnagged(evt ttapi.SnaggedEvt) {
+	user, err := tt.Bot.GetProfile(evt.UserID)
+	if err != nil {
+		logrus.WithFields(logrus.Fields{
+			"userID": evt.UserID,
+			"error":  err,
+		}).Error("Can't load user profile")
+	}
+
+	logrus.WithFields(logrus.Fields{
+		"userID":  evt.UserID,
+		"user":    user.Name,
+		"roomID":  evt.RoomID,
+		"command": evt.Command,
+	}).Info("User snagged current song")
+
+	if evt.UserID == tt.Me {
+		logrus.Debug("Ignoring self-snag")
+	} else {
+		err = tt.Bot.PlaylistAdd("", "", 0)
+		if err != nil {
+			logrus.WithError(err).Error("Cannot add to Playlist")
+		} else {
+			logrus.Info("Added current song to my playlist")
+
+			err = tt.Bot.Snag()
+			if err != nil {
+				logrus.WithError(err).Warn("Could not emote the Snag heart")
+			}
+		}
+	}
 }
 
 func pmSay(evt ttapi.PmmedEvt) {
@@ -109,8 +156,6 @@ func pmSimpleCommands(evt ttapi.PmmedEvt) {
 	re := regexp.MustCompile(`(?i)^/([^ ]+)$`)
 	res := re.FindStringSubmatch(evt.Text)
 
-	fmt.Println("pmSimple", len(res), res)
-
 	if len(res) != 0 {
 		command := strings.ToLower(res[1])
 
@@ -118,15 +163,9 @@ func pmSimpleCommands(evt ttapi.PmmedEvt) {
 		case "skip":
 			tt.Bot.Skip()
 		case "bop":
-			err := tt.Bot.VoteUp()
-			if err != nil {
-				logrus.WithError(err).Error("Unable to bop")
-			}
+			tt.Bop()
 		case "lame":
-			err := tt.Bot.VoteDown()
-			if err != nil {
-				logrus.WithError(err).Error("Unable to lame")
-			}
+			tt.Lame()
 		}
 	}
 }
@@ -175,6 +214,7 @@ func main() {
 	tt.Bot.OnPmmed(pmDJ)
 
 	// General Purpose event handlers
+	tt.Bot.OnSnagged(onSnagged)
 	tt.Bot.OnReady(onReady)
 	tt.Bot.OnNewSong(onNewSong)
 	tt.Bot.OnSpeak(onSpeak)
