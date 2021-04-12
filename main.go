@@ -171,6 +171,39 @@ func pmRandom(evt ttapi.PmmedEvt) {
 	}
 }
 
+func addFirstSearchResult(evt ttapi.SearchRes) {
+	track := evt.List[0]
+	err := tt.Bot.PlaylistAdd(track.ID, "", 0)
+	if err != nil {
+		logrus.WithError(err).Error("Cannot add to Playlist")
+	} else {
+		logrus.WithFields(logrus.Fields{
+			"song":   track.Metadata.Song,
+			"artist": track.Metadata.Artist,
+			"ID":     track.ID,
+		}).Info("Added track to top of playlist")
+		tt.LogPlaylist("", 2)
+	}
+}
+
+func pmSearch(evt ttapi.PmmedEvt) {
+	re := regexp.MustCompile(`(?i)^/(search) (.+)$`)
+	res := re.FindStringSubmatch(evt.Text)
+
+	if len(res) == 3 {
+		query := res[2]
+
+		_, err := tt.Bot.Search(query, addFirstSearchResult)
+		if err != nil {
+			logrus.WithFields(logrus.Fields{
+				"query": query,
+				"error": err,
+			}).Error("Unable to search")
+			return
+		}
+	}
+}
+
 func pmSimpleCommands(evt ttapi.PmmedEvt) {
 	re := regexp.MustCompile(`(?i)^/([^ ]+)$`)
 	res := re.FindStringSubmatch(evt.Text)
@@ -258,6 +291,7 @@ func main() {
 	tt.Bot.OnPmmed(pmSimpleCommands)
 	tt.Bot.OnPmmed(pmDJ)
 	tt.Bot.OnPmmed(pmRandom)
+	tt.Bot.OnPmmed(pmSearch)
 
 	// General Purpose event handlers
 	tt.Bot.OnSnagged(onSnagged)
