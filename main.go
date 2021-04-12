@@ -218,7 +218,7 @@ func pmAvatar(evt ttapi.PmmedEvt) {
 			return
 		}
 
-		err := tt.Bot.SetAvatar(avatar)
+		err = tt.Bot.SetAvatar(avatar)
 		if err != nil {
 			logrus.WithFields(logrus.Fields{
 				"avatar": avatar,
