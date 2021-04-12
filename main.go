@@ -209,7 +209,14 @@ func pmAvatar(evt ttapi.PmmedEvt) {
 	res := re.FindStringSubmatch(evt.Text)
 
 	if len(res) == 3 {
-		avatar := res[2]
+		avatar, err := strconv.Atoi(res[2])
+		if err != nil {
+			logrus.WithFields(logrus.Fields{
+				"input": res[2],
+				"error": err,
+			}).Error("Unable to parse number")
+			return
+		}
 
 		err := tt.Bot.SetAvatar(avatar)
 		if err != nil {
