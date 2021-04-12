@@ -1,6 +1,8 @@
 package main
 
 import (
+	"errors"
+	"fmt"
 	"math/rand"
 	"os"
 	"regexp"
@@ -12,6 +14,11 @@ import (
 
 	"github.com/alaingilbert/ttapi"
 	"github.com/sirupsen/logrus"
+)
+
+const (
+	WITH_HEART    = true
+	WITHOUT_HEARD = false
 )
 
 func RandomDelay(secs int) time.Duration {
@@ -30,6 +37,24 @@ func DelayWrapper(maxSecs int, f func()) {
 
 func onReady() {
 	logrus.WithFields(logrus.Fields{}).Info("Bot is ready")
+
+	roomInfo, err := tt.Bot.RoomInfo()
+	if err != nil {
+		logrus.WithError(err).Error("Unable to get RoomInfo")
+	} else {
+		tt.UpdateModeratorList(roomInfo)
+		tt.UpdateUsersList(roomInfo)
+	}
+}
+
+func onRoomChanged(evt ttapi.RoomInfoRes) {
+	logrus.WithFields(logrus.Fields{
+		"room":    evt.Room.Name,
+		"success": evt.Success,
+	}).Info("Room changed")
+
+	tt.UpdateModeratorList(evt)
+	tt.UpdateUsersList(evt)
 }
 
 func onNewSong(evt ttapi.NewSongEvt) {
@@ -41,6 +66,8 @@ func onNewSong(evt ttapi.NewSongEvt) {
 		"artist":  evt.Room.Metadata.CurrentSong.Metadata.Artist,
 		"success": evt.Success,
 	}).Info("New song")
+
+	tt.UpdateModeratorList(evt)
 
 	DelayWrapper(20, tt.Bop)
 }
@@ -55,13 +82,6 @@ func onSpeak(evt ttapi.SpeakEvt) {
 
 func onUpdateVotes(evt ttapi.UpdateVotesEvt) {
 	userID, vote := tt.UnpackVotelog(evt.Room.Metadata.Votelog)
-	user, err := tt.Bot.GetProfile(userID)
-	if err != nil {
-		logrus.WithFields(logrus.Fields{
-			"userID": userID,
-			"error":  err,
-		}).Error("Can't load user profile")
-	}
 
 	logrus.WithFields(logrus.Fields{
 		"command":   evt.Command,
@@ -71,33 +91,15 @@ func onUpdateVotes(evt ttapi.UpdateVotesEvt) {
 		"listeners": evt.Room.Metadata.Listeners,
 		"userID":    userID,
 		"vote":      vote,
-		"name":      user.Name,
-		"points":    user.Points,
-		"ACL":       user.ACL,
+		"name":      tt.UserNameFromID(userID),
 	}).Info("Vote")
 
 }
 
-func onPmmed(evt ttapi.PmmedEvt) {
-	logrus.WithFields(logrus.Fields{
-		"userID":   evt.Userid,
-		"senderID": evt.SenderID,
-		"text":     evt.Text,
-	}).Info("Received PM")
-}
-
 func onSnagged(evt ttapi.SnaggedEvt) {
-	user, err := tt.Bot.GetProfile(evt.UserID)
-	if err != nil {
-		logrus.WithFields(logrus.Fields{
-			"userID": evt.UserID,
-			"error":  err,
-		}).Error("Can't load user profile")
-	}
-
 	logrus.WithFields(logrus.Fields{
 		"userID":  evt.UserID,
-		"user":    user.Name,
+		"name":    tt.UserNameFromID(evt.UserID),
 		"roomID":  evt.RoomID,
 		"command": evt.Command,
 	}).Info("User snagged current song")
@@ -105,21 +107,66 @@ func onSnagged(evt ttapi.SnaggedEvt) {
 	if evt.UserID == tt.Me {
 		logrus.Debug("Ignoring self-snag")
 	} else {
-		err = tt.Bot.PlaylistAdd("", "", 0)
-		if err != nil {
-			logrus.WithError(err).Error("Cannot add to Playlist")
-		} else {
-			logrus.Info("Added current song to my playlist")
-
-			err = tt.Bot.Snag()
-			if err != nil {
-				logrus.WithError(err).Warn("Could not emote the Snag heart")
-			}
-		}
+		AddCurrentSongToPlaylist(WITH_HEART)
 	}
 }
 
+func onPmmed(evt ttapi.PmmedEvt) {
+	logrus.WithFields(logrus.Fields{
+		"userID":   evt.Userid,
+		"senderID": evt.SenderID,
+		"text":     evt.Text,
+		"name":     tt.UserNameFromID(evt.SenderID),
+	}).Info("Received PM")
+
+	tt.UpdateModeratorList(evt)
+}
+
+func onRegistered(evt ttapi.RegisteredEvt) {
+	for _, u := range evt.User {
+		logrus.WithFields(logrus.Fields{
+			"userID": u.ID,
+			"name":   u.Name,
+			"laptop": u.Laptop,
+			"acl":    u.ACL,
+			"fans":   u.Fans,
+			"points": u.Points,
+			"avatar": u.Avatarid,
+		}).Info("User joined the room")
+
+		tt.UpdateUser(u.ID, u.Name)
+	}
+}
+
+func onDeregistered(evt ttapi.DeregisteredEvt) {
+	for _, u := range evt.User {
+		logrus.WithFields(logrus.Fields{
+			"userID": u.ID,
+			"name":   u.Name,
+			"laptop": u.Laptop,
+			"acl":    u.ACL,
+			"fans":   u.Fans,
+			"points": u.Points,
+			"avatar": u.Avatarid,
+		}).Info("User left the room")
+
+		tt.UpdateUser(u.ID, u.Name)
+	}
+}
+
+func rejectUser(userID string) {
+	logrus.WithFields(logrus.Fields{
+		"senderrID": userID,
+		"name":      tt.UserNameFromID(userID),
+	}).Warn("Ignoring non-moderator")
+}
+
 func pmSay(evt ttapi.PmmedEvt) {
+	if !tt.UserIsModerator(evt.SenderID) {
+		rejectUser(evt.SenderID)
+		return
+	}
+
 	re := regexp.MustCompile(`(?i)^/(say) (.*)`)
 	res := re.FindStringSubmatch(evt.Text)
 
@@ -129,6 +176,11 @@ func pmSay(evt ttapi.PmmedEvt) {
 }
 
 func pmLogLevel(evt ttapi.PmmedEvt) {
+	if !tt.UserIsModerator(evt.SenderID) {
+		rejectUser(evt.SenderID)
+		return
+	}
+
 	re := regexp.MustCompile(`(?i)^/(loglevel) (.*)`)
 	res := re.FindStringSubmatch(evt.Text)
 
@@ -138,6 +190,11 @@ func pmLogLevel(evt ttapi.PmmedEvt) {
 }
 
 func pmDJ(evt ttapi.PmmedEvt) {
+	if !tt.UserIsModerator(evt.SenderID) {
+		rejectUser(evt.SenderID)
+		return
+	}
+
 	re := regexp.MustCompile(`(?i)^/(jump) (.+)$`)
 	res := re.FindStringSubmatch(evt.Text)
 
@@ -154,6 +211,11 @@ func pmDJ(evt ttapi.PmmedEvt) {
 }
 
 func pmRandom(evt ttapi.PmmedEvt) {
+	if !tt.UserIsModerator(evt.SenderID) {
+		rejectUser(evt.SenderID)
+		return
+	}
+
 	re := regexp.MustCompile(`(?i)^/(random) (.+)$`)
 	res := re.FindStringSubmatch(evt.Text)
 
@@ -187,6 +249,11 @@ func addFirstSearchResult(evt ttapi.SearchRes) {
 }
 
 func pmSearch(evt ttapi.PmmedEvt) {
+	if !tt.UserIsModerator(evt.SenderID) {
+		rejectUser(evt.SenderID)
+		return
+	}
+
 	re := regexp.MustCompile(`(?i)^/(search) (.+)$`)
 	res := re.FindStringSubmatch(evt.Text)
 
@@ -205,6 +272,11 @@ func pmSearch(evt ttapi.PmmedEvt) {
 }
 
 func pmAvatar(evt ttapi.PmmedEvt) {
+	if !tt.UserIsModerator(evt.SenderID) {
+		rejectUser(evt.SenderID)
+		return
+	}
+
 	re := regexp.MustCompile(`(?i)^/(avatar) (.+)$`)
 	res := re.FindStringSubmatch(evt.Text)
 
@@ -230,6 +302,11 @@ func pmAvatar(evt ttapi.PmmedEvt) {
 }
 
 func pmSimpleCommands(evt ttapi.PmmedEvt) {
+	if !tt.UserIsModerator(evt.SenderID) {
+		rejectUser(evt.SenderID)
+		return
+	}
+
 	re := regexp.MustCompile(`(?i)^/([^ ]+)$`)
 	res := re.FindStringSubmatch(evt.Text)
 
@@ -245,12 +322,16 @@ func pmSimpleCommands(evt ttapi.PmmedEvt) {
 			tt.Bop()
 		case "lame":
 			tt.Lame()
+		case "snag":
+			err = AddCurrentSongToPlaylist(WITH_HEART)
 		case "away":
 			err = tt.Bot.SetStatus("away")
 		case "available":
 			err = tt.Bot.SetStatus("available")
 		case "unavailable":
 			err = tt.Bot.SetStatus("unavailable")
+		case "avatars":
+			avatarList()
 		}
 
 		if err != nil {
@@ -260,6 +341,16 @@ func pmSimpleCommands(evt ttapi.PmmedEvt) {
 			}).Error("Error running simple command")
 		}
 	}
+}
+
+func avatarList() {
+	moo, err := tt.Bot.UserAvailableAvatars()
+	if err != nil {
+		logrus.WithError(err).Error("Can't get avatarList")
+		return
+	}
+
+	fmt.Printf("\n%+v\n", moo)
 }
 
 func LogLevel(level string) {
@@ -294,6 +385,56 @@ func MustGetenv(v string) string {
 	return val
 }
 
+func AddCurrentSongToPlaylist(withHeart bool) (err error) {
+	playlist, err := tt.CurrentPlaylist()
+	if err != nil {
+		logrus.WithError(err).Error("Cannot determine current playlist")
+		return err
+	}
+
+	Songs, err := tt.Bot.PlaylistAll(playlist)
+	if err != nil {
+		logrus.WithFields(logrus.Fields{
+			"playlist": playlist,
+			"error":    err,
+		}).Error("Cannot load playlist")
+		return err
+	}
+
+	songID := tt.Bot.CurrentSongID
+
+	for idx, Track := range Songs.List {
+		if Track.ID == songID {
+			logrus.WithFields(logrus.Fields{
+				"songID":   songID,
+				"playlist": playlist,
+				"index":    idx,
+				"artist":   Track.Metadata.Artist,
+				"song":     Track.Metadata.Song,
+			}).Info("Current song is already in playlist")
+			return errors.New("already in playlist")
+		}
+	}
+
+	err = tt.Bot.PlaylistAdd(songID, playlist, len(Songs.List))
+	if err != nil {
+		logrus.WithError(err).Error("Cannot add to Playlist")
+	} else {
+		logrus.Info("Added current song to my playlist")
+
+		if withHeart {
+			err = tt.Bot.Snag()
+			if err != nil {
+				logrus.WithError(err).Warn("Could not emote the Snag heart")
+			}
+		}
+	}
+
+	tt.LogPlaylist(playlist, 2)
+
+	return nil
+}
+
 func init() {
 	rand.Seed(time.Now().UTC().UnixNano())
 	LogLevel(os.Getenv("COWGOD_LOGLEVEL"))
@@ -326,6 +467,8 @@ func main() {
 	tt.Bot.OnSpeak(onSpeak)
 	tt.Bot.OnUpdateVotes(onUpdateVotes)
 	tt.Bot.OnPmmed(onPmmed)
+	tt.Bot.OnRegistered(onRegistered)
+	tt.Bot.OnDeregistered(onDeregistered)
 
 	tt.Bot.Start()
 }

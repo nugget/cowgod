@@ -3,6 +3,7 @@ package tt
 import (
 	"math/rand"
 
+	"github.com/alaingilbert/ttapi"
 	"github.com/sirupsen/logrus"
 )
 
@@ -21,6 +22,84 @@ func UnpackVotelog(votelog [][]string) (string, string) {
 	vote := votelog[0][1]
 
 	return userID, vote
+}
+
+func UpdateModeratorList(evt interface{}) {
+	source := "unknown"
+
+	switch t := evt.(type) {
+	case ttapi.PmmedEvt:
+		source = "PmmedEvt"
+		Moderators = t.Roomobj.Metadata.ModeratorID
+	case ttapi.NewSongEvt:
+		source = "NewSongEvt"
+		Moderators = t.Room.Metadata.ModeratorID
+	case ttapi.NoSongEvt:
+		source = "NoSongEvt"
+		Moderators = t.Room.Metadata.ModeratorID
+	case ttapi.RoomInfoRes:
+		source = "RoomInfoRes"
+		Moderators = t.Room.Metadata.ModeratorID
+	default:
+		logrus.Warn("No moderator info in this message type")
+		return
+	}
+
+	logrus.WithFields(logrus.Fields{
+		"source":     source,
+		"count":      len(Moderators),
+		"moderators": Moderators,
+	}).Debug("Updated moderator list")
+}
+
+func UpdateUsersList(evt interface{}) {
+	source := "unknown"
+
+	switch t := evt.(type) {
+	case ttapi.RoomInfoRes:
+		source = "RoomInfoRes"
+		for _, u := range t.Users {
+			Users[u.ID] = u.Name
+		}
+	default:
+		logrus.Warn("No user info in this message type")
+		return
+	}
+
+	logrus.WithFields(logrus.Fields{
+		"source": source,
+		"count":  len(Users),
+	}).Debug("Updated users list")
+}
+
+func UpdateUser(userID, name string) {
+	if userID == "" || name == "" {
+		logrus.Warn("Ignoring empty UpdateUser request")
+		return
+	}
+	Users[userID] = name
+}
+
+func UserIsModerator(userID string) bool {
+	for _, u := range Moderators {
+		if u == userID {
+			return true
+		}
+	}
+	return false
+}
+
+func UserIDFromName(name string) string {
+	return ""
+}
+
+func UserNameFromID(id string) string {
+	name, ok := Users[id]
+	if ok {
+		return name
+	} else {
+		return "unknown"
+	}
 }
 
 func Bop() {
@@ -61,22 +140,33 @@ func Skip() {
 	}
 }
 
-func RandomizePlaylist(name string, count int) error {
-	if name == "" {
-		playLists, err := Bot.PlaylistListAll()
-		if err != nil {
-			logrus.WithError(err).Error("Cannot load playlists")
-			return err
-		}
+func CurrentPlaylist() (string, error) {
+	playLists, err := Bot.PlaylistListAll()
+	if err != nil {
+		logrus.WithError(err).Error("Cannot load playlists")
+		return "", err
+	}
 
-		for i, l := range playLists.List {
-			if l.Active {
-				name = l.Name
-				logrus.WithFields(logrus.Fields{
-					"index": i,
-					"name":  name,
-				}).Debug("Using active list")
-			}
+	for i, l := range playLists.List {
+		if l.Active {
+			logrus.WithFields(logrus.Fields{
+				"index":    i,
+				"playlist": l.Name,
+			}).Debug("Using active list")
+
+			return l.Name, nil
+		}
+	}
+
+	logrus.Warn("Unable to detect current playlist")
+	return "default", nil
+}
+
+func RandomizePlaylist(name string, count int) (err error) {
+	if name == "" {
+		name, err = CurrentPlaylist()
+		if err != nil {
+			return err
 		}
 	}
 
@@ -153,4 +243,7 @@ func LogPlaylist(name string, count int) error {
 	}
 
 	return nil
+}
+
+func RememberUser(name, userID string) {
 }
