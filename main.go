@@ -204,6 +204,24 @@ func pmSearch(evt ttapi.PmmedEvt) {
 	}
 }
 
+func pmAvatar(evt ttapi.PmmedEvt) {
+	re := regexp.MustCompile(`(?i)^/(avatar) (.+)$`)
+	res := re.FindStringSubmatch(evt.Text)
+
+	if len(res) == 3 {
+		avatar := res[2]
+
+		_, err := tt.Bot.SetAvatar(avatar)
+		if err != nil {
+			logrus.WithFields(logrus.Fields{
+				"avatar": avatar,
+				"error":  err,
+			}).Error("Unable to set avatar")
+			return
+		}
+	}
+}
+
 func pmSimpleCommands(evt ttapi.PmmedEvt) {
 	re := regexp.MustCompile(`(?i)^/([^ ]+)$`)
 	res := re.FindStringSubmatch(evt.Text)
@@ -292,6 +310,7 @@ func main() {
 	tt.Bot.OnPmmed(pmDJ)
 	tt.Bot.OnPmmed(pmRandom)
 	tt.Bot.OnPmmed(pmSearch)
+	tt.Bot.OnPmmed(pmAvatar)
 
 	// General Purpose event handlers
 	tt.Bot.OnSnagged(onSnagged)
