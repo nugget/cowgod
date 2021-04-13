@@ -5,9 +5,11 @@ import (
 	"fmt"
 	"math/rand"
 	"os"
+	"os/signal"
 	"regexp"
 	"strconv"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/nugget/cowgod/lib/tt"
@@ -42,6 +44,14 @@ func onReady() {
 	if err != nil {
 		logrus.WithError(err).Error("Unable to get RoomInfo")
 	} else {
+		logrus.WithFields(logrus.Fields{
+			"room":      roomInfo.Room.Name,
+			"roomID":    roomInfo.Room.Roomid,
+			"shortcut":  roomInfo.Room.Shortcut,
+			"djs":       roomInfo.Room.Metadata.Djcount,
+			"listeners": roomInfo.Room.Metadata.Listeners,
+		}).Info("Joined room")
+
 		tt.UpdateModeratorList(roomInfo)
 		tt.UpdateUsersList(roomInfo)
 	}
@@ -435,12 +445,38 @@ func AddCurrentSongToPlaylist(withHeart bool) (err error) {
 	return nil
 }
 
+func TrapSIGTERM() {
+	logrus.Debug("Trapping SIGTERM")
+	c := make(chan os.Signal, 2)
+	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
+	go func() {
+		<-c
+		shutdown()
+	}()
+}
+
+func shutdown() {
+	logrus.Info("Orderly shutdown")
+	os.Exit(0)
+}
+
 func init() {
 	rand.Seed(time.Now().UTC().UnixNano())
 	LogLevel(os.Getenv("COWGOD_LOGLEVEL"))
 }
 
 func main() {
+	TrapSIGTERM()
+
+	logrus.WithFields(logrus.Fields{
+		"version":   Version,
+		"commit":    GitCommit,
+		"branch":    GitBranch,
+		"state":     GitState,
+		"summary":   GitSummary,
+		"builddate": BuildDate,
+	}).Info("Obey the cowgod")
+
 	auth := MustGetenv("TTAPI_AUTH")
 	userID := MustGetenv("TTAPI_USER_ID")
 	roomID := MustGetenv("TTAPI_ROOM_ID")
