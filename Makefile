@@ -1,11 +1,14 @@
 VERSION?=	$(shell cat VERSION)
 DOCKER?=	nugget/cowgod:$(VERSION)
 
-.PHONY: cowgod docker
+.PHONY: cowgod modules run docker undeploy deploy fulldeploy nocowgod clean
 
 cowgod:
 	@echo "Building cowgod (if govvv is not found, do a make modules)"
 	govvv build .
+
+clean:
+	rm -f cowgod
 
 modules:
 	go get -u
