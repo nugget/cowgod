@@ -38,6 +38,15 @@ Alternatively, you can run it via docker:
 docker run nugget/cowgod:latest
 ```
 
+The bot expects to pull its needed configuration from environment variables.
+For the TTAPI items, you can use the Auth Capture Bookmarklet linked below 
+to find out what the three values need to be.
+
+* `TTAPI_AUTH` : Your bot's turntable.fm authentication token
+* `TTAPI_USER_ID` Your bot's user ID
+* `TTAPI_ROOM_ID` Your default room ID
+* `COWGOD_LOGLEVEL` The initial loglevel (trace, debug, info, warn, error)
+
 Useful Links
 ------------
 
