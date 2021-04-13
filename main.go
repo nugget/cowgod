@@ -107,6 +107,11 @@ func onUpdateVotes(evt ttapi.UpdateVotesEvt) {
 }
 
 func onSnagged(evt ttapi.SnaggedEvt) {
+	if evt.UserID == tt.Me {
+		logrus.Debug("Ignoring self-snag")
+		return
+	}
+
 	logrus.WithFields(logrus.Fields{
 		"userID":  evt.UserID,
 		"name":    tt.UserNameFromID(evt.UserID),
@@ -114,11 +119,7 @@ func onSnagged(evt ttapi.SnaggedEvt) {
 		"command": evt.Command,
 	}).Info("User snagged current song")
 
-	if evt.UserID == tt.Me {
-		logrus.Debug("Ignoring self-snag")
-	} else {
-		AddCurrentSongToPlaylist(WITH_HEART)
-	}
+	AddCurrentSongToPlaylist(WITH_HEART)
 }
 
 func onPmmed(evt ttapi.PmmedEvt) {
