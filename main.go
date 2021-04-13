@@ -169,6 +169,8 @@ func rejectUser(userID string) {
 		"senderrID": userID,
 		"name":      tt.UserNameFromID(userID),
 	}).Warn("Ignoring non-moderator")
+
+	tt.Bot.PM(userID, "Sorry, I will only do that for room moderators.")
 }
 
 func pmSay(evt ttapi.PmmedEvt) {
@@ -342,6 +344,10 @@ func pmSimpleCommands(evt ttapi.PmmedEvt) {
 			err = tt.Bot.SetStatus("unavailable")
 		case "avatars":
 			avatarList()
+		case "rejectme":
+			rejectUser(evt.SenderID)
+		case "version":
+			tt.Bot.PM(evt.SenderID, versionInfo())
 		}
 
 		if err != nil {
@@ -453,6 +459,17 @@ func TrapSIGTERM() {
 		<-c
 		shutdown()
 	}()
+}
+
+func versionInfo() string {
+	t, err := time.ParseInLocation(time.RFC3339, BuildDate, time.UTC)
+	if err != nil {
+		logrus.WithError(err).Error("Cannot parse BuildDate")
+	}
+	return fmt.Sprintf("I am cowgod version %s built %s",
+		GitSummary,
+		t.Format("Mon 2-Jan-2006 @ 15:04 MST"),
+	)
 }
 
 func shutdown() {

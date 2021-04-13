@@ -28,3 +28,6 @@ deploy:
 fulldeploy: deploy
 	kubectl scale --replicas=1 deployment cowgod
 	kubectl scale --replicas=1 deployment pitdemon
+
+nocowgod:
+	kubectl scale --replicas=0 deployment cowgod
