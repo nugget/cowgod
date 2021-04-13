@@ -23,6 +23,8 @@ undeploy:
 
 deploy:
 	kubectl set image deployment/cowgod cowgod=$(DOCKER)
-	kubectl scale --replicas=1 deployment cowgod
 	kubectl set image deployment/pitdemon pitdemon=$(DOCKER)
+
+fulldeploy: deploy
+	kubectl scale --replicas=1 deployment cowgod
 	kubectl scale --replicas=1 deployment pitdemon
