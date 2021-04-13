@@ -7,15 +7,25 @@ Nugget's Turntable.fm alter-ego.  This bot has existed in one form or another
 for both Turntable.fm as well as Plug.DJ.  Originally written in Node/JS it has
 now been ported to Go.
 
-Universal Bot Commands
-----------------------
+DJ Bot Commands
+---------------
 
 * `/jump up` Jump up to a DJ spot if available
 * `/jump down` Go back to the pit
 * `/bop` Vote up the current song
 * `/lame` Vote down the current song
 * `/skip` Skip the currently playing song
-* `/random n` Randomize the top *n* items in the current playlist
+* `/snag` Adds the current playing song to the bottom of the current playlist
+* `/random <n>` Randomize the top *n* items in the current playlist
+* `/search <searchspec>` Search for a song and add the first hit to the top of
+  the current playlist.
+
+Admin Bot Commands
+------------------
+* `/loglevel <level>` Adjust the logging level on the console
+* `/available` Set the bot to available status
+* `/unavailable` Set the bot to unavailable status
+* `/away` Set the bot to away status
 
 Using
 -----
