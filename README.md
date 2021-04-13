@@ -26,6 +26,7 @@ Admin Bot Commands
 * `/available` Set the bot to available status
 * `/unavailable` Set the bot to unavailable status
 * `/away` Set the bot to away status
+* `/version` Report the bot's version and build information
 
 Using
 -----
