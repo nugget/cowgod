@@ -56,6 +56,6 @@ Useful Links
 * [Turntable-API](https://github.com/alaingilbert/Turntable-API) : Original Node/Javascript API
 
 [Docker image]: https://hub.docker.com/repository/docker/nugget/cowgod/general
-[Auth Capture Bookmarklet]: http://alaingilbert.github.com/Turntable-API/bookmarklet.html
+[Auth Capture Bookmarklet]: http://alaingilbert.github.io/Turntable-API/bookmarklet.html
 [Turntable.fm]: https://turntable.fm/
 [Follow the Leader Shamelessly]: https://turntable.fm/follow_the_leader_shamelessly
