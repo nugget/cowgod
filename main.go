@@ -273,7 +273,7 @@ func pmSearch(evt ttapi.PmmedEvt) {
 	if len(res) == 3 {
 		query := res[2]
 
-		_, err := tt.Bot.Search(query, addFirstSearchResult)
+		res, err := tt.Bot.Search(query)
 		if err != nil {
 			logrus.WithFields(logrus.Fields{
 				"query": query,
@@ -281,6 +281,8 @@ func pmSearch(evt ttapi.PmmedEvt) {
 			}).Error("Unable to search")
 			return
 		}
+
+		addFirstSearchResult(res)
 	}
 }
 
