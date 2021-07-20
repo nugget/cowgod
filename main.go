@@ -63,6 +63,18 @@ func onRoomChanged(evt ttapi.RoomInfoRes) {
 		"success": evt.Success,
 	}).Info("Room changed")
 
+	laptop := MustGetenv("TTAPI_LAPTOP")
+	if laptop == "" {
+		laptop = "linux"
+	}
+	err := tt.Bot.ModifyLaptop(laptop)
+	if err != nil {
+		logrus.WithFields(logrus.Fields{
+			"laptop": laptop,
+			"error":  err,
+		}).Info("Unable to set laptop")
+	}
+
 	tt.UpdateModeratorList(evt)
 	tt.UpdateUsersList(evt)
 }
@@ -316,6 +328,27 @@ func pmAvatar(evt ttapi.PmmedEvt) {
 	}
 }
 
+func pmLaptop(evt ttapi.PmmedEvt) {
+	if !tt.UserIsModerator(evt.SenderID) {
+		rejectUser(evt.SenderID)
+		return
+	}
+
+	re := regexp.MustCompile(`(?i)^/(laptop) (.+)$`)
+	res := re.FindStringSubmatch(evt.Text)
+
+	if len(res) == 3 {
+		err := tt.Bot.ModifyLaptop(res[2])
+		if err != nil {
+			logrus.WithFields(logrus.Fields{
+				"avatar": res[2],
+				"error":  err,
+			}).Error("Unable to modify laptop")
+			return
+		}
+	}
+}
+
 func pmSimpleCommands(evt ttapi.PmmedEvt) {
 	if !tt.UserIsModerator(evt.SenderID) {
 		rejectUser(evt.SenderID)
@@ -351,6 +384,9 @@ func pmSimpleCommands(evt ttapi.PmmedEvt) {
 			rejectUser(evt.SenderID)
 		case "version":
 			tt.Bot.PM(evt.SenderID, versionInfo())
+		case "restart":
+			tt.Bot.Stop()
+			os.Exit(0)
 		}
 
 		if err != nil {
@@ -515,6 +551,7 @@ func main() {
 	tt.Bot.OnPmmed(pmRandom)
 	tt.Bot.OnPmmed(pmSearch)
 	tt.Bot.OnPmmed(pmAvatar)
+	tt.Bot.OnPmmed(pmLaptop)
 
 	// General Purpose event handlers
 	tt.Bot.OnSnagged(onSnagged)
@@ -525,6 +562,7 @@ func main() {
 	tt.Bot.OnPmmed(onPmmed)
 	tt.Bot.OnRegistered(onRegistered)
 	tt.Bot.OnDeregistered(onDeregistered)
+	tt.Bot.OnRoomChanged(onRoomChanged)
 
 	tt.Bot.Start()
 }
