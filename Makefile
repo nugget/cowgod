@@ -12,7 +12,7 @@ clean:
 
 modules:
 	go get -u
-	go get github.com/ahmetb/govvv
+	go get -d github.com/ahmetb/govvv
 
 run: cowgod
 	./cowgod
