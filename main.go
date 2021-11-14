@@ -19,8 +19,9 @@ import (
 )
 
 const (
-	WITH_HEART    = true
-	WITHOUT_HEARD = false
+	WITH_HEART               = true
+	WITHOUT_HEARD            = false
+	ACTIVITY_TIMEOUT_MINUTES = 10
 )
 
 func RandomDelay(secs int) time.Duration {
@@ -35,6 +36,43 @@ func DelayWrapper(maxSecs int, f func()) {
 
 	logrus.WithField("waitTime", waitTime).Debug("Scheduling delayed bop")
 	time.AfterFunc(waitTime, f)
+}
+
+func onTimeout(evt ttapi.TimeoutEvt) {
+	logrus.WithFields(logrus.Fields{
+		"activity":       evt.LastActivity,
+		"activityAge":    evt.ActivityAge,
+		"timeoutMinutes": ACTIVITY_TIMEOUT_MINUTES,
+	}).Fatal("Timeout detected, exiting")
+}
+
+func Heartbeat() {
+	for {
+		te, err := tt.Bot.GetTimeoutInfo()
+
+		logrus.WithFields(logrus.Fields{
+			"heartbeat":      te.LastHeartbeat,
+			"heartbeatAge":   te.HeartbeatAge,
+			"activity":       te.LastActivity,
+			"activityAge":    te.ActivityAge,
+			"tiemoutMinutes": ACTIVITY_TIMEOUT_MINUTES,
+			"error":          err,
+		}).Info("Heartbeat Data")
+
+		if err != nil {
+			logrus.WithError(err).Fatal("Error getting server heartbeat")
+		}
+
+		if te.ActivityAge.Minutes() > ACTIVITY_TIMEOUT_MINUTES {
+			logrus.WithFields(logrus.Fields{
+				"activity":       te.LastActivity,
+				"activityAge":    te.ActivityAge,
+				"tiemoutMinutes": ACTIVITY_TIMEOUT_MINUTES,
+			}).Fatal("Last activity was too long ago, exiting")
+		}
+
+		time.Sleep(time.Second * 60)
+	}
 }
 
 func onReady() {
@@ -55,6 +93,8 @@ func onReady() {
 		tt.UpdateModeratorList(roomInfo)
 		tt.UpdateUsersList(roomInfo)
 	}
+
+	// go Heartbeat()
 }
 
 func onRoomChanged(evt ttapi.RoomInfoRes) {
@@ -563,6 +603,9 @@ func main() {
 	tt.Bot.OnRegistered(onRegistered)
 	tt.Bot.OnDeregistered(onDeregistered)
 	tt.Bot.OnRoomChanged(onRoomChanged)
+
+	// heartbeat handler
+	tt.Bot.OnTimeout(time.Minute*ACTIVITY_TIMEOUT_MINUTES, onTimeout)
 
 	tt.Bot.Start()
 }
