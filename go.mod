@@ -2,8 +2,9 @@ module github.com/nugget/cowgod
 
 go 1.16
 
-// replace github.com/alaingilbert/ttapi => github.com/nugget/ttapi v0.0.0-20210411214803-705c7584db23
-replace github.com/alaingilbert/ttapi => /Users/nugget/src/ttapi
+replace github.com/alaingilbert/ttapi => github.com/nugget/ttapi v0.0.0-20211114195323-6386d2936efa
+
+//replace github.com/alaingilbert/ttapi => /Users/nugget/src/ttapi
 
 require (
 	github.com/ahmetb/govvv v0.3.0 // indirect
