@@ -1,0 +1,8 @@
+services:
+  cowgod:
+    image: ghcr.io/nugget/cowgod:latest
+    environment:
+      TTAPI_AUTH: ${TTAPI_AUTH}
+      TTAPI_USER_ID: ${TTAPI_USER_ID}
+      TTAPI_ROOM_ID: ${TTAPI_ROOM_ID}
+      TTAPI_LAPTOP: ${TTAPI_LAPTOP:-linux}
