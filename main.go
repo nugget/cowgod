@@ -91,7 +91,7 @@ func onNewSong(evt ttapi.NewSongEvt) {
 
 	tt.UpdateModeratorList(evt)
 
-	DelayWrapper(20, tt.Bop)
+	DelayWrapper(40, tt.Bop)
 }
 
 func onSpeak(evt ttapi.SpeakEvt) {
